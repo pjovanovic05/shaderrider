@@ -21,8 +21,10 @@ class UnaryOP(ast.Operator):
 
 
 class NegOP(UnaryOP):
+    _type_name = "Neg"
+
     def __init__(self, operand):
-        super(NegOP, self).__init__("Neg", 1, [operand])
+        super(NegOP, self).__init__(1, [operand])
 
     def __str__(self):
         return '-(%s)' % str(self.operands[0])
@@ -43,8 +45,10 @@ class NegOP(UnaryOP):
 
 
 class ExpOP(UnaryOP):
+    _type_name = "Exp"
+
     def __init__(self, operand):
-        super(ExpOP, self).__init__("Exp", 1, [operand])
+        super(ExpOP, self).__init__(1, [operand])
 
     def __str__(self):
         return 'exp(%s)' % str(self.operands[0])
@@ -68,8 +72,10 @@ class ExpOP(UnaryOP):
 
 
 class LogOP(UnaryOP):
+    _type_name = "Log"
+
     def __init__(self, operand):
-        super(LogOP, self).__init__("Log", 1, [operand])
+        super(LogOP, self).__init__(1, [operand])
 
     def __str__(self):
         return 'log(%s)' % str(self.operands[0])
@@ -89,8 +95,10 @@ class LogOP(UnaryOP):
 
 
 class SinOP(UnaryOP):
+    _type_name = "Sin"
+
     def __init__(self, operand):
-        super(SinOP, self).__init__("Sin", 1, [operand])
+        super(SinOP, self).__init__(1, [operand])
 
     def __str__(self):
         return 'sin(%s)' % str(self.operands[0])
@@ -110,8 +118,10 @@ class SinOP(UnaryOP):
 
 
 class CosOP(UnaryOP):
+    _type_name = "Cos"
+
     def __init__(self, operand):
-        super(CosOP, self).__init__("Cos", 1, [operand])
+        super(CosOP, self).__init__(1, [operand])
 
     def __str__(self):
         return "cos(%s)" % str(self.operands[0])
@@ -131,8 +141,10 @@ class CosOP(UnaryOP):
 
 
 class TanOP(UnaryOP):
+    _type_name = "Tan"
+
     def __init__(self, operand):
-        super(TanOP, self).__init__("Tan", 1, [operand])
+        super(TanOP, self).__init__(1, [operand])
 
     def __str__(self):
         return "tan(%s)" % str(self.operands[0])
@@ -176,11 +188,12 @@ class BinaryOP(ast.Operator):
 
 
 class AddOP(BinaryOP):
+    _type_name = "Add"
     isCommutative = True
     isAssociative = True
 
     def __init__(self, op1, op2):
-        super(AddOP, self).__init__('Add', 2, [op1, op2])
+        super(AddOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s + %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -199,11 +212,12 @@ class AddOP(BinaryOP):
 
 
 class SubOP(BinaryOP):
+    _type_name = "Sub"
     isCommutative = False
     isAssociative = False
 
     def __init__(self, op1, op2):
-        super(SubOP, self).__init__("Sub", 2, [op1, op2])
+        super(SubOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s - %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -222,11 +236,12 @@ class SubOP(BinaryOP):
 
 
 class MulOP(BinaryOP):
+    _type_name = "Mul"
     isCommutative = True
     isAssociative = False
 
     def __init__(self, op1, op2):
-        super(MulOP, self).__init__("Mul", 2, [op1, op2])
+        super(MulOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s * %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -246,11 +261,12 @@ class MulOP(BinaryOP):
 
 
 class DivOP(BinaryOP):
+    _type_name = "Div"
     isCommutative = False
     isAssociative = False
 
     def __init__(self, op1, op2):
-        super(DivOP, self).__init__("Div", 2, [op1, op2])
+        super(DivOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s / %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -271,11 +287,12 @@ class DivOP(BinaryOP):
 
 
 class PowOP(BinaryOP):
+    _type_name = "Pow"
     isCommutative = False
     isAssociative = False
 
     def __init__(self, op1, op2):
-        super(PowOP, self).__init__("Pow", 2, [op1, op2])
+        super(PowOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s ^ %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -297,11 +314,12 @@ class PowOP(BinaryOP):
 # Comparisons
 
 class EqOP(BinaryOP):
+    _type_name = "Eq"
     isCommutative = True
     isAssociative = True
 
     def __init__(self, op1, op2):
-        super(EqOP, self).__init__("Eq", 2, [op1, op2])
+        super(EqOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s == %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -321,11 +339,12 @@ class EqOP(BinaryOP):
 
 
 class GtOP(BinaryOP):
+    _type_name = "Gt"
     isCommutative = False
     isAssociative = False
 
     def __init__(self, op1, op2):
-        super(GtOP, self).__init__("Gt", 2, [op1, op2])
+        super(GtOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s > %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -345,11 +364,12 @@ class GtOP(BinaryOP):
 
 
 class LtOP(BinaryOP):
+    _type_name = "Lt"
     isCommutative = False
     isAssociative = False
 
     def __init__(self, op1, op2):
-        super(LtOP, self).__init__("Lt", 2, [op1, op2])
+        super(LtOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s < %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -369,11 +389,12 @@ class LtOP(BinaryOP):
 
 
 class GeOP(BinaryOP):
+    _type_name = "Ge"
     isCommutative = False
     isAssociative = False
 
     def __init__(self, op1, op2):
-        super(GeOP, self).__init__("Ge", 2, [op1, op2])
+        super(GeOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s >= %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -393,11 +414,12 @@ class GeOP(BinaryOP):
 
 
 class LeOP(BinaryOP):
+    _type_name = "Le"
     isCommutative = False
     isAssociative = False
 
     def __init__(self, op1, op2):
-        super(LeOP, self).__init__("Le", 2, [op1, op2])
+        super(LeOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s <= %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -417,11 +439,12 @@ class LeOP(BinaryOP):
 
 
 class NeOP(BinaryOP):
+    _type_name = "Ne"
     isCommutative = True
     isAssociative = True
 
     def __init__(self, op1, op2):
-        super(NeOP, self).__init__("Ne", 2, [op1, op2])
+        super(NeOP, self).__init__(2, [op1, op2])
 
     def __str__(self):
         return '(%s != %s)' % (str(self.operands[0]), str(self.operands[1]))

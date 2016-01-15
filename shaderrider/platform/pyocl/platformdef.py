@@ -16,6 +16,11 @@ class PyOCLPlatform(object):
     def __init__(self):
         self._opevals = {
             # unary
+            sbo.NegOP.getTypeName(): bo.NegEval(),
+            sbo.ExpOP.getTypeName(): bo.ExpEval(),
+            sbo.LogOP.getTypeName(): bo.LogEval()
+            # TODO stao ovde!! Treba da napisem evaluatore za sve ostale operatore i da ih ovde instanciram
+
             # binary
             # comparisons
             # blas

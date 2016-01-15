@@ -195,13 +195,13 @@ class Operator(Formula):
     """docstring for Operator"""
     __metaclass__ = abc.ABCMeta
     _ctr = 0
+    _type_name = 'Op'
 
-    def __init__(self, type_name, arity, operands):
+    def __init__(self, arity, operands):
         Operator._ctr += 1
-        self._type_name = type_name
         self._arity = arity
         self._operands = operands     # formulas, operands
-        self._fid = type_name + str(Operator._ctr)
+        self._fid = self._type_name + str(Operator._ctr)
 
     def complexity(self):
         c = 1
@@ -245,10 +245,6 @@ class Operator(Formula):
         return self._fid
 
     @property
-    def type_name(self):
-        return self._type_name
-
-    @property
     def operands(self):
         return self._operands
 
@@ -261,3 +257,7 @@ class Operator(Formula):
 
     def isScalar(self):
         return False
+
+    @classmethod
+    def getTypeName(cls):
+        return cls._type_name
