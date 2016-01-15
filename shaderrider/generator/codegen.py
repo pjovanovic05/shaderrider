@@ -17,15 +17,15 @@ class OpGenerator(object):
         pass
 
     @abc.abstractmethod
-    def generate_before_code(self):
+    def generate_before_code(self, op):
         pass
 
     @abc.abstractmethod
-    def generate_after_code(self):
+    def generate_after_code(self, op):
         pass
 
     @abc.abstractmethod
-    def generate_eval_code(self):
+    def generate_eval_code(self, op):
         pass
 
     @abc.abstractmethod
@@ -88,13 +88,13 @@ class OpEvaluator(object):
         pass
 
     @abc.abstractmethod
-    def before(self, valuation=None):
+    def before(self, op, valuation=None):
         pass
 
     @abc.abstractmethod
-    def after(self, valueation=None):
+    def after(self, op, valueation=None):
         pass
 
     @abc.abstractmethod
-    def eval(self, valuation=None):
+    def eval(self, op, valuation=None):
         return None

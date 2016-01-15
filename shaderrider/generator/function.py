@@ -5,8 +5,8 @@ from shaderrider.symbolic import vast
 class Function(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, expr, updates=None, name=None):
-        self._expr = expr
+    def __init__(self, expressions=None, updates=None, name=None):
+        self._expressions = expressions
         self._updates = updates
         self._name = name
 
@@ -25,7 +25,7 @@ class Function(object):
 def function(expressions=None, updates=None, name=None):
     """
     TODO Creates callable object that performs calculation described by the
-    computation graph for the expression(s) to be calculated.
+    computation graph(s) for the expression(s) to be calculated.
 
     The expressions are computed first, then the updates are performed, and then
 
