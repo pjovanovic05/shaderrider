@@ -15,21 +15,27 @@ class NegEval(codegen.OpEvaluator):
     def __init__(self, ctx):
         self._ctx = ctx
 
-    def init(self):
-        self.prog = cl.Program(self._ctx, '''
-            __kernel void k_neg_f32(__global float *in, size_t n, __global float *out) {
-                int idx = get_global_id(0);
-                if (idx < n)
-                    out[idx] = !in[idx];
-            }
+    def init(self, dtype=np.float32):
+        typestr = 'float'
+        if dtype == np.float32:
+            typestr = 'float'
+        elif dtype == np.float64:
+            typestr = 'double'
+        else:
+            raise NotImplementedError('Unsupported data type on PyOpenCL platform: %s' % str(dtype))
 
-            __kernel void k_neg_f64(__global double *in, size_t n, __global double *out) {
+
+        self.prog = cl.Program(self._ctx, '''
+            __kernel void k_neg(__global %(typestr)s *in, size_t n, __global %(typestr)s *out) {
                 int idx = get_global_id(0);
                 if (idx < n)
-                    out[idx] = !in[idx];
+                    out[idx] = -in[idx];
             }
-        ''')
-        pass
+            __kernel void k_neg_inplace(__global %(typestr)s *a, size_t n) {
+                int idx = get_global_id(0);
+                if (idx < n)
+                    a[i] = -a[i];
+            }''' % locals()).build()
 
     def finalize(self):
         pass
@@ -38,7 +44,10 @@ class NegEval(codegen.OpEvaluator):
         pass
 
     def eval(self, op, valuation=None):
-        pass
+        arg = valuation[op.operands[0].fid]
+        out = valuation[op.fid]
+        # TODO wait for operand events?
+        return self.prog.k_neg(arg.data, arg.size, out.data)
 
     def after(self, op, valueation=None):
         pass

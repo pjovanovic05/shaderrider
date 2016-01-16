@@ -97,4 +97,9 @@ class OpEvaluator(object):
 
     @abc.abstractmethod
     def eval(self, op, valuation=None):
-        return None
+        pass
+
+
+class OpEvalGenerator(object):
+    def generate(self, op, valuation=None):
+        pass
