@@ -17,6 +17,7 @@ from shaderrider.platform.pyocl import elementwise
 class PyOCLPlatform(object):
     def __init__(self, ngpus=0):
         self._ngpus = ngpus
+        self._setup_context(ngpus)
 
         self._opevals = {
             # unary
@@ -43,7 +44,11 @@ class PyOCLPlatform(object):
             sblas.GemmOP.getTypeName(): blas.GemmEval(),
             sblas.GemvOP.getTypeName(): blas.GemvEval(),
             sblas.GerOP.getTypeName(): blas.GerEval()
+        }
+        # these should include elementwise, reduce, scan...
+        self._opgens = {
             # elementwise
+            sew.ElementwiseOP.getTypeName(): elementwise.ElementwiseGenerator()
         }
 
     def get_op_evaluators(self):

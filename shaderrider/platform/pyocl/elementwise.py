@@ -25,5 +25,8 @@ class ElementwiseEval(codegen.OpEvaluator):
 
 
 class ElementwiseGenerator(codegen.OpEvalGenerator):
-    def generate(self, op, valuation=None):
+    def generate(self, op):
+        # TODO get atomics (inputs), and figure out the output type and dimension
+        # TODO generate C code for the operation (what is the PYOPENCL_ELWISE_CONTINUE exactly?)
+        # TODO create the evaluator class (how?)
         pass

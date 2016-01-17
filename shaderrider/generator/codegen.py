@@ -101,5 +101,5 @@ class OpEvaluator(object):
 
 
 class OpEvalGenerator(object):
-    def generate(self, op, valuation=None):
+    def generate(self, op):
         raise NotImplementedError
