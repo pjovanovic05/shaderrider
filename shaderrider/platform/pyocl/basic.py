@@ -14,6 +14,7 @@ from shaderrider.generator import codegen
 class NegEval(codegen.OpEvaluator):
     def __init__(self, ctx):
         self._ctx = ctx
+        self.prog = None
 
     def init(self, dtype=np.float32):
         typestr = 'float'
@@ -23,7 +24,6 @@ class NegEval(codegen.OpEvaluator):
             typestr = 'double'
         else:
             raise NotImplementedError('Unsupported data type on PyOpenCL platform: %s' % str(dtype))
-
 
         self.prog = cl.Program(self._ctx, '''
             __kernel void k_neg(__global %(typestr)s *in, size_t n, __global %(typestr)s *out) {
@@ -43,13 +43,18 @@ class NegEval(codegen.OpEvaluator):
     def before(self, op, valuation=None):
         pass
 
-    def eval(self, op, valuation=None):
+    def eval(self, op, valuation=None, events=None):
         arg = valuation[op.operands[0].fid]
         out = valuation[op.fid]
-        # TODO wait for operand events?
-        return self.prog.k_neg(arg.data, arg.size, out.data)
+        waits = []
+        if events is not None and op.operands[0].fid in events:
+            waits.append(events[op.operands[0].fid])
+        myevt = self.prog.k_neg(arg.data, arg.size, out.data, wait_for=waits)
+        if events is not None:
+            events[op.fid] = myevt
+        return myevt
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -66,7 +71,7 @@ class ExpEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -83,7 +88,7 @@ class LogEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -100,7 +105,7 @@ class SinEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -117,7 +122,7 @@ class CosEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -134,7 +139,7 @@ class TanEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -153,7 +158,7 @@ class AddEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -170,7 +175,7 @@ class SubEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -187,7 +192,7 @@ class MulEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -204,7 +209,7 @@ class DivEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -221,7 +226,7 @@ class PowEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -240,7 +245,7 @@ class EqEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -257,7 +262,7 @@ class GtEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -274,7 +279,7 @@ class LtEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -291,7 +296,7 @@ class GeEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -308,7 +313,7 @@ class LeEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -325,5 +330,5 @@ class NeEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass

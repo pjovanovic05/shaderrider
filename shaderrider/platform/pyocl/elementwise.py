@@ -2,6 +2,8 @@
 WRITEME
 """
 
+import pyopencl as cl
+
 from shaderrider.generator import codegen
 
 
@@ -18,5 +20,10 @@ class ElementwiseEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
+        pass
+
+
+class ElementwiseGenerator(codegen.OpEvalGenerator):
+    def generate(self, op, valuation=None):
         pass

@@ -18,7 +18,7 @@ class GemmEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -35,7 +35,7 @@ class GemvEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
 
@@ -52,5 +52,5 @@ class GerEval(codegen.OpEvaluator):
     def eval(self, op, valuation=None):
         pass
 
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass

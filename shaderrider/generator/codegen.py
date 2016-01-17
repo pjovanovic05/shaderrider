@@ -92,7 +92,7 @@ class OpEvaluator(object):
         pass
 
     @abc.abstractmethod
-    def after(self, op, valueation=None):
+    def after(self, op, valuation=None):
         pass
 
     @abc.abstractmethod
@@ -102,4 +102,4 @@ class OpEvaluator(object):
 
 class OpEvalGenerator(object):
     def generate(self, op, valuation=None):
-        pass
+        raise NotImplementedError
