@@ -96,7 +96,7 @@ class OpEvaluator(object):
         pass
 
     @abc.abstractmethod
-    def eval(self, op, valuation=None):
+    def evaluate(self, op, valuation=None):
         pass
 
 

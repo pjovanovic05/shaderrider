@@ -2,6 +2,8 @@
 WRITEME
 """
 
+from mako.template import  Template
+
 from pyopencl.elementwise import ElementwiseKernel
 
 from shaderrider.symbolic import vast as ast
@@ -19,7 +21,7 @@ class ElementwiseEval(codegen.OpEvaluator):
     def before(self, op, valuation=None):
         pass
 
-    def eval(self, op, valuation=None):
+    def evaluate(self, op, valuation=None):
         pass
 
     def after(self, op, valuation=None):
@@ -33,7 +35,7 @@ class ElementwiseGenerator(codegen.OpEvalGenerator):
         args = []
         for a in atoms:
             if a.isArray():
-                args.append("__global %s *%s" % (a.dtype, a.name))  # TODO mozda ne treba __global
+                args.append("%s *%s" % (a.dtype, a.name))
             else:   # scalar
                 args.append("%s %s" %(a.dtype, a.name))
         argstr = ', '.join(args)
@@ -42,6 +44,42 @@ class ElementwiseGenerator(codegen.OpEvalGenerator):
         ewk = ElementwiseKernel(ctx, argstr, cexpr)
         # TODO create the evaluator class (how?)
 
+        klasstemp = '''
+class ${eval_class_name}(codegen.OpEvaluator):
+    def __init__(self, ewk, atoms):
+        self._ewk = ewk
+        self._atoms = atoms
+
+    def init(self):
+        pass
+
+    def finalize(self):
+        pass
+
+    def before(self, op, valuation):
+        pass
+
+    def after(self, op, valuation):
+        pass
+
+    def evaluate(self, op, valuation=None):
+        % for a in ${atoms}:
+        arg_${a.fid} = valuation['${a.fid}']
+        % endfor
+'''
+
+        def eval(self, myop, valuation):
+            for a in self._atoms:
+                pass
+        return type(op.fid+'_elementwise_evaluator', (codegen.OpEvaluator,), {
+            '_ewk': ewk,
+            '_atoms': atoms,
+            'init': lambda self: 1,
+            'finalize': lambda self: 1,
+            'before': lambda self, op, valuation: 1,
+            'after': lambda self, op, valuation: 1,
+            'eval': lambda self, op, valuation: 1
+        })
 
 
 def _c_expr(formula):
