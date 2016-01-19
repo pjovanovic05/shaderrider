@@ -2,7 +2,7 @@
 WRITEME
 """
 
-from mako.template import  Template
+from mako.template import Template
 
 from pyopencl.elementwise import ElementwiseKernel
 
@@ -42,7 +42,7 @@ class ElementwiseGenerator(codegen.OpEvalGenerator):
             if a.isArray():
                 args.append("%s *%s" % (a.dtype, a.name))
             else:   # scalar
-                args.append("%s %s" %(a.dtype, a.name))
+                args.append("%s %s" % (a.dtype, a.name))
         argstr = ', '.join(args)
         # TODO generate C code for the operation (what is the PYOPENCL_ELWISE_CONTINUE exactly?)
         cexpr = _c_expr(op)
@@ -93,19 +93,18 @@ class ${eval_class_name}(codegen.OpEvaluator):
                         )
 
 '''
+        exec klasstemp in globals()
 
-        def eval(self, myop, valuation):
-            for a in self._atoms:
-                pass
-        return type(op.fid+'_elementwise_evaluator', (codegen.OpEvaluator,), {
-            '_ewk': ewk,
-            '_atoms': atoms,
-            'init': lambda self: 1,
-            'finalize': lambda self: 1,
-            'before': lambda self, op, valuation: 1,
-            'after': lambda self, op, valuation: 1,
-            'eval': lambda self, op, valuation: 1
-        })
+        # TODO create the generated opevaluator instance and return it
+        # return type(op.fid+'_elementwise_evaluator', (codegen.OpEvaluator,), {
+        #     '_ewk': ewk,
+        #     '_atoms': atoms,
+        #     'init': lambda self: 1,
+        #     'finalize': lambda self: 1,
+        #     'before': lambda self, op, valuation: 1,
+        #     'after': lambda self, op, valuation: 1,
+        #     'eval': lambda self, op, valuation: 1
+        # })
 
 
 def _c_expr(formula):
