@@ -28,6 +28,11 @@ class ElementwiseEval(codegen.OpEvaluator):
         pass
 
 
+# TODO posto imam problem sa nalazenjem parametara za elementwise (koji nisu samo atomi):
+# 1) out je resen dole
+# 2) parametri koji nisu atomi ce biti pronadjeni u nekom skenu drveta pri proveri da li
+#    drvo moze da se elementwiseuje
+
 class ElementwiseGenerator(codegen.OpEvalGenerator):
     def generate(self, op, ctx):
         # TODO get atomics (inputs), and figure out the output type and dimension
@@ -62,10 +67,31 @@ class ${eval_class_name}(codegen.OpEvaluator):
     def after(self, op, valuation):
         pass
 
-    def evaluate(self, op, valuation=None):
-        % for a in ${atoms}:
-        arg_${a.fid} = valuation['${a.fid}']
+    def evaluate(self, op, valuation=None, events=None):
+        % for a in atoms:
+        % if a.isArray():
+        arg_${a.fid} = valuation['${a.fid}'].data
+        % else:
+        arg_${a.fid} = valuaion['${a.fid}']
+        % endif
         % endfor
+        out = valuation[op.fid]
+
+        if events is not None:
+            % for a in atoms:
+            % if a.isArray():
+            # TODO ovo mozda nisu samo atomi - sigmoid je elementwise ali je njegov jedan "atom" u stvari rezultat gemm-a
+            # TODO i ne bi trebalo samo o "atomima" pricati, treba i output array nekako uglaviti u parametre.
+            % endif
+            % endfor
+
+        myev = self._ewk(
+                        % for a in atoms:
+                        arg_${a.fid},
+                        % endfor
+                        out.data, wait_for=wait_for
+                        )
+
 '''
 
         def eval(self, myop, valuation):
