@@ -2,6 +2,10 @@
 WRITEME
 """
 
+from operator import itemgetter as _itemgetter
+from collections import OrderedDict
+
+import sys
 from mako.template import Template
 
 from pyopencl.elementwise import ElementwiseKernel
@@ -49,8 +53,8 @@ class ElementwiseGenerator(codegen.OpEvalGenerator):
         ewk = ElementwiseKernel(ctx, argstr, cexpr)
         # TODO create the evaluator class (how?)
 
-        klasstemp = '''
-class ${eval_class_name}(codegen.OpEvaluator):
+        template = Template('''
+class ${class_name}(codegen.OpEvaluator):
     def __init__(self, ewk, atoms):
         self._ewk = ewk
         self._atoms = atoms
@@ -91,20 +95,29 @@ class ${eval_class_name}(codegen.OpEvaluator):
                         % endfor
                         out.data, wait_for=wait_for
                         )
+        if events is not None:
+            events[op.fid] = myev
+        return myev
+        ''')
+        # TODO collect atoms taking care of those subexpressions which should behave atomically
+        klasstemp = template.render(class_name='elementwise_'+op.fid, atoms=op.getAtoms())
 
-'''
-        exec klasstemp in globals()
+        # taken from namedtuple : ~334  (https://hg.python.org/cpython/file/8527427914a2/Lib/collections.py)
+        namespace = dict(_itemgetter=_itemgetter, __name__='elementwise_%s'%op.fid,
+                         OrderedDict=OrderedDict, _property=property, _tuple=tuple)
+        try:
+            exec klasstemp in namespace
+        except SyntaxError, e:
+            raise SyntaxError(e.message + ':\n' + klasstemp)
 
-        # TODO create the generated opevaluator instance and return it
-        # return type(op.fid+'_elementwise_evaluator', (codegen.OpEvaluator,), {
-        #     '_ewk': ewk,
-        #     '_atoms': atoms,
-        #     'init': lambda self: 1,
-        #     'finalize': lambda self: 1,
-        #     'before': lambda self, op, valuation: 1,
-        #     'after': lambda self, op, valuation: 1,
-        #     'eval': lambda self, op, valuation: 1
-        # })
+        ElemwiseKlass = namespace['elementwise_%s' % op.fid]
+        try:
+            ElemwiseKlass.__module__ = sys._getframe(1).f_globals.get('__name__', '__main__')
+        except (AttributeError, ValueError):
+            pass
+
+        ewOpEval = ElemwiseKlass(ewk, atoms)
+        return ewOpEval
 
 
 def _c_expr(formula):
