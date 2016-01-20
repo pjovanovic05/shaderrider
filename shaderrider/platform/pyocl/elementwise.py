@@ -100,10 +100,10 @@ class ${class_name}(codegen.OpEvaluator):
         return myev
         ''')
         # TODO collect atoms taking care of those subexpressions which should behave atomically
-        klasstemp = template.render(class_name='elementwise_'+op.fid, atoms=op.getAtoms())
+        klasstemp = template.render(class_name='elementwise_'+op.fid, atoms=atoms)
 
         # taken from namedtuple : ~334  (https://hg.python.org/cpython/file/8527427914a2/Lib/collections.py)
-        namespace = dict(_itemgetter=_itemgetter, __name__='elementwise_%s'%op.fid,
+        namespace = dict(_itemgetter=_itemgetter, __name__='elementwise_%s' % op.fid,
                          OrderedDict=OrderedDict, _property=property, _tuple=tuple)
         try:
             exec klasstemp in namespace
