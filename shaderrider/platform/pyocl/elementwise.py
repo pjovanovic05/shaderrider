@@ -66,7 +66,7 @@ class ${class_name}(codegen.OpEvaluator):
         pass
 
     def before(self, op, valuation):
-        pass
+        pass    #TODO alloc output buffer if needed!
 
     def after(self, op, valuation):
         pass
