@@ -6,10 +6,10 @@ from shaderrider.generator import codegen
 
 
 class GemmEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -23,10 +23,10 @@ class GemmEval(codegen.OpEvaluator):
 
 
 class GemvEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -40,10 +40,10 @@ class GemvEval(codegen.OpEvaluator):
 
 
 class GerEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):

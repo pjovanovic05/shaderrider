@@ -16,7 +16,7 @@ class NegEval(codegen.OpEvaluator):
         self._ctx = ctx
         self.prog = None
 
-    def init(self, dtype=np.float32):
+    def setup(self, dtype=np.float32):
         typestr = 'float'
         if dtype == np.float32:
             typestr = 'float'
@@ -37,7 +37,7 @@ class NegEval(codegen.OpEvaluator):
                     a[i] = -a[i];
             }''' % locals()).build()
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -59,10 +59,10 @@ class NegEval(codegen.OpEvaluator):
 
 
 class ExpEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -76,10 +76,10 @@ class ExpEval(codegen.OpEvaluator):
 
 
 class LogEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -93,10 +93,10 @@ class LogEval(codegen.OpEvaluator):
 
 
 class SinEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -110,10 +110,10 @@ class SinEval(codegen.OpEvaluator):
 
 
 class CosEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -127,10 +127,10 @@ class CosEval(codegen.OpEvaluator):
 
 
 class TanEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -146,10 +146,10 @@ class TanEval(codegen.OpEvaluator):
 # binary
 
 class AddEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -163,10 +163,10 @@ class AddEval(codegen.OpEvaluator):
 
 
 class SubEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -180,10 +180,10 @@ class SubEval(codegen.OpEvaluator):
 
 
 class MulEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -197,10 +197,10 @@ class MulEval(codegen.OpEvaluator):
 
 
 class DivEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -214,10 +214,10 @@ class DivEval(codegen.OpEvaluator):
 
 
 class PowEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -233,10 +233,10 @@ class PowEval(codegen.OpEvaluator):
 # comparisons
 
 class EqEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -250,10 +250,10 @@ class EqEval(codegen.OpEvaluator):
 
 
 class GtEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -267,10 +267,10 @@ class GtEval(codegen.OpEvaluator):
 
 
 class LtEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -284,10 +284,10 @@ class LtEval(codegen.OpEvaluator):
 
 
 class GeEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -301,10 +301,10 @@ class GeEval(codegen.OpEvaluator):
 
 
 class LeEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -318,10 +318,10 @@ class LeEval(codegen.OpEvaluator):
 
 
 class NeEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):

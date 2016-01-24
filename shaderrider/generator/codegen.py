@@ -80,11 +80,11 @@ class OpEvaluator(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def init(self):
+    def setup(self):
         pass
 
     @abc.abstractmethod
-    def finalize(self):
+    def teardown(self):
         pass
 
     @abc.abstractmethod

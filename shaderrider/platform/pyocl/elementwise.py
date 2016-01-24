@@ -16,10 +16,10 @@ from shaderrider.generator import codegen
 
 
 class ElementwiseEval(codegen.OpEvaluator):
-    def init(self):
+    def setup(self):
         pass
 
-    def finalize(self):
+    def teardown(self):
         pass
 
     def before(self, op, valuation=None):
@@ -48,10 +48,9 @@ class ElementwiseGenerator(codegen.OpEvalGenerator):
             else:   # scalar
                 args.append("%s %s" % (a.dtype, a.name))
         argstr = ', '.join(args)
-        # TODO generate C code for the operation (what is the PYOPENCL_ELWISE_CONTINUE exactly?)
+
         cexpr = _c_expr(op)
         ewk = ElementwiseKernel(ctx, argstr, cexpr)
-        # TODO create the evaluator class (how?)
 
         template = Template('''
 class ${class_name}(codegen.OpEvaluator):
