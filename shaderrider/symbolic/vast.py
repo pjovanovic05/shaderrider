@@ -233,7 +233,7 @@ class Operator(Formula):
         if len(self._operands) != len(other.operands):
             return False
         for i in xrange(len(self._operands)):
-            if not self._operands[i] == other.operands[i]:
+            if self._operands[i] != other.operands[i]:
                 return False
         return True
 
