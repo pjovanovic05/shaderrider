@@ -169,7 +169,7 @@ class Atom(AtomicFormula):
         if self == wrt:
             return Constant(1)
         else:
-            return Constant(0)
+            return Constant(0)  # TODO is it?
 
     def getAtoms(self):
         return [self]
