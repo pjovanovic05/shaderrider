@@ -40,10 +40,10 @@ class ElementwiseEval(codegen.OpEvaluator):
 class ElementwiseGenerator(codegen.OpEvalGenerator):
     def generate(self, op, ctx):
         # TODO get atomics (inputs), and figure out the output type and dimension
-        atoms = op.getAtoms()   # TODO what about constants?
+        atoms = op.get_atoms()   # TODO what about constants?
         args = []
         for a in atoms:
-            if a.isArray():
+            if a.is_array():
                 args.append("%s *%s" % (a.dtype, a.name))
             else:   # scalar
                 args.append("%s %s" % (a.dtype, a.name))
@@ -121,11 +121,11 @@ class ${class_name}(codegen.OpEvaluator):
 
 def _c_expr(formula):
     if isinstance(formula, ast.Atom):
-        if formula.isArray():
+        if formula.is_array():
             return formula.name + '[i]'
         return formula.name
     if isinstance(formula, ast.Constant):
-        if formula.isArray():   # TODO check this
+        if formula.is_array():   # TODO check this
             return formula.fid + '[i]'
         return formula.fid
     if isinstance(formula, basic.NegOP):

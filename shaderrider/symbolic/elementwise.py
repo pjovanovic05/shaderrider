@@ -9,7 +9,7 @@ class ElementwiseOP(vast.Operator):
     def substitute(self, a, b):
         pass
 
-    def getShape(self):
+    def get_shape(self):
         pass
 
     def gradient(self, wrt):

@@ -13,7 +13,7 @@ class GemmOP(ast.Operator):
                  transA=ast.Constant(False), transB=ast.Constant(False)):
         super(GemmOP, self).__init__(7, [A, B, C, alpha, beta, transA, transB])
 
-        if len(A.getShape()) != 2 or len(B.getShape()) != 2 or len(C.getShape()) != 2:
+        if len(A.get_shape()) != 2 or len(B.get_shape()) != 2 or len(C.get_shape()) != 2:
             raise ValueError
             # TODO
 
@@ -39,7 +39,7 @@ class GemmOP(ast.Operator):
         return fstr % map(str, (self.operands[3].value, self.operands[0].name,
                                 self.operands[1].name, self.operands[4].value, self.operands[2].name))
 
-    def getShape(self):
+    def get_shape(self):
         # TODO
         pass
 
@@ -84,7 +84,7 @@ class GemvOP(ast.Operator):
     def gradient(self, wrt):
         pass
 
-    def getShape(self):
+    def get_shape(self):
         pass
 
     def simplify(self):
@@ -98,10 +98,10 @@ class GerOP(ast.Operator):
         super(GerOP, self).__init__(4, [alpha, X, Y, A])
         # TODO check dimensions
 
-        if len(X.getShape()) != 1 or len(Y.getShape()) != 1 or len(A.getShape()) != 2:
+        if len(X.get_shape()) != 1 or len(Y.get_shape()) != 1 or len(A.get_shape()) != 2:
             raise ValueError
-        m, n = X.getShape()[0], Y.getShape()[0]
-        if (m, n) != A.getShape():
+        m, n = X.get_shape()[0], Y.get_shape()[0]
+        if (m, n) != A.get_shape():
             raise IncompatibleDimensionsError
 
     def substitute(self, a, b):
@@ -115,8 +115,8 @@ class GerOP(ast.Operator):
     def __str__(self):
         return "GER(%f * %s * %s' + %s)" % map(str, self.operands)
 
-    def getShape(self):
-        return self.operands[1].getShape()[0], self.operands[1].getShape()[0]
+    def get_shape(self):
+        return self.operands[1].get_shape()[0], self.operands[1].get_shape()[0]
 
     def gradient(self, wrt):
         raise NotImplementedError

@@ -1,8 +1,5 @@
 import abc
 
-#TODO hteo sam da izbacim ovo i pojednostavim sve uglavljivanjem svega sto treba u simbolicki op
-# a posle implementacije neka to extenduju i rade sta im treba.
-
 
 class OpGenerator(object):
     """

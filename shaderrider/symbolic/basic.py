@@ -16,8 +16,8 @@ class UnaryOP(ast.Operator):
     def __eq__(self, other):
         return type(self) == type(other) and self.operands[0] == other.operands[0]
 
-    def getShape(self):
-        return self.operands[0].getShape()
+    def get_shape(self):
+        return self.operands[0].get_shape()
 
 
 class NegOP(UnaryOP):
@@ -176,9 +176,9 @@ class BinaryOP(ast.Operator):
                 and (self.operands[0] == other.operands[0])
                 and (self.operands[1] == other.operands[1]))
 
-    def getShape(self):  # TODO move this to broadcastable or elementwise
+    def get_shape(self):  # TODO move this to broadcastable or elementwise
         ds = []
-        for d1, d2 in zip(self.operands[0].getShape(), self.operands[1].getShape()):
+        for d1, d2 in zip(self.operands[0].get_shape(), self.operands[1].get_shape()):
             if d1 == 1 or d2 == 1 or d1 == d2:
                 ds.append(max(d1, d2))
             else:

@@ -2,6 +2,7 @@
 vast.py: Vermilion Abstract Syntax Tree
 Contains the base classes for specifying symbolic expression structure.
 """
+# TODO rename this to "expr_graph.py"
 
 import numpy as np
 import abc
@@ -16,13 +17,13 @@ class Formula(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def getAtoms(self):
+    def get_atoms(self):
         """Gets all the atomic formulas under this formula.
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def getAtomics(self):
+    def get_atomics(self):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -50,17 +51,17 @@ class Formula(object):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def getShape(self):
+    def get_shape(self):
         raise NotImplementedError
 
     @property
     def fid(self):
         raise NotImplementedError
 
-    def isArray(self):
+    def is_array(self):
         raise NotImplementedError
 
-    def isScalar(self):
+    def is_scalar(self):
         raise NotImplementedError
 
 
@@ -69,7 +70,7 @@ class AtomicFormula(Formula):
 
     __metaclass__ = abc.ABCMeta
 
-    def getAtomics(self):
+    def get_atomics(self):
         return [self]
 
     def complexity(self):
@@ -108,7 +109,7 @@ class Constant(AtomicFormula):
     def gradient(self, wrt):
         return Constant(0)
 
-    def getAtoms(self):
+    def get_atoms(self):
         return []
 
     def __eq__(self, other):
@@ -117,13 +118,13 @@ class Constant(AtomicFormula):
     def __str__(self):
         return str(self._value)
 
-    def getShape(self):
+    def get_shape(self):
         return self._value.shape
 
-    def isArray(self):
+    def is_array(self):
         return self._value.ndim != 0
 
-    def isScalar(self):
+    def is_scalar(self):
         return self._value.ndim == 0
 
 
@@ -171,7 +172,7 @@ class Atom(AtomicFormula):
         else:
             return Constant(0)  # TODO is it?
 
-    def getAtoms(self):
+    def get_atoms(self):
         return [self]
 
     def __eq__(self, other):
@@ -181,13 +182,13 @@ class Atom(AtomicFormula):
     def __str__(self):
         return self._name
 
-    def getShape(self):
+    def get_shape(self):
         return self._shape
 
-    def isArray(self):
+    def is_array(self):
         return len(self._shape) != 0
 
-    def isScalar(self):
+    def is_scalar(self):
         return len(self._shape) == 0
 
 
@@ -212,19 +213,19 @@ class Operator(Formula):
     def substitute(self, a, b):
         raise NotImplementedError
 
-    def getAtoms(self):
+    def get_atoms(self):
         atoms = []
         for op in self._operands:
-            atoms.extend(op.getAtoms())
+            atoms.extend(op.get_atoms())
         return atoms
 
-    def getAtomics(self):
+    def get_atomics(self):
         atomics = []
         for op in self._operands:
-            atomics.extend(op.getAtomics())
+            atomics.extend(op.get_atomics())
         return atomics
 
-    def getShape(self):
+    def get_shape(self):
         raise NotImplementedError
 
     def __eq__(self, other):
@@ -252,12 +253,56 @@ class Operator(Formula):
     def arity(self):
         return self._arity
 
-    def isArray(self):
+    def is_array(self):
         return True
 
-    def isScalar(self):
+    def is_scalar(self):
         return False
 
     @classmethod
     def getTypeName(cls):
         return cls._type_name
+
+    def evaluate(self, valuation=None):
+        raise NotImplementedError
+
+    def generate_eval(self):
+        """generates a zero argument function which executes the computation steps represented by this operator."""
+        raise NotImplementedError
+
+
+class NativeOperator(Operator):
+    __metaclass__ = abc.ABCMeta
+
+    def c_headers(self):
+        """Returns the list of headers to be included for this formula.
+
+        If the header name does not begin with '<' it is assumed to be
+        locally referenced (i.e. include "header.h").
+        """
+        return []
+
+    def c_header_dirs(self):
+        """Returns the list of include dirs where required headers are.
+        Optional.
+
+        """
+        return []
+
+    def c_libraries(self):
+        return []
+
+    def c_lib_dirs(self):
+        return []
+
+    def c_compile_args(self):
+        return []
+
+    def support_code(self):
+        pass
+
+    def instance_code(self):
+        pass
+
+    def eval_code(self):
+        pass
