@@ -10,7 +10,7 @@ from mako.template import Template
 
 from pyopencl.elementwise import ElementwiseKernel
 
-from shaderrider.symbolic import vast as ast
+from shaderrider.symbolic import exprgraph as ast
 from shaderrider.symbolic import basic
 from shaderrider.generator import codegen
 

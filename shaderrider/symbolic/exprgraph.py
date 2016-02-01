@@ -2,7 +2,6 @@
 vast.py: Vermilion Abstract Syntax Tree
 Contains the base classes for specifying symbolic expression structure.
 """
-# TODO rename this to "expr_graph.py"
 
 import numpy as np
 import abc
@@ -98,6 +97,7 @@ class Constant(AtomicFormula):
     @property
     def value(self):
         return self._value
+
     @value.setter
     def value(self, val):
         self._value = val
@@ -148,6 +148,7 @@ class Atom(AtomicFormula):
     @property
     def name(self):
         return self._name
+
     @name.setter
     def name(self, value):
         self._name = value
@@ -155,6 +156,7 @@ class Atom(AtomicFormula):
     @property
     def dtype(self):
         return self._dtype
+
     @dtype.setter
     def dtype(self, value):
         self._dtype = value
@@ -162,6 +164,7 @@ class Atom(AtomicFormula):
     @property
     def shape(self):
         return self._shape
+
     @shape.setter
     def shape(self, value):
         self._shape = value
@@ -177,7 +180,7 @@ class Atom(AtomicFormula):
 
     def __eq__(self, other):
         return type(self) == type(other) and self.name == other.name \
-               and self._shape == other._shape and self._dtype == other._dtype
+               and self._shape == other.get_shape() and self._dtype == other.dtype
 
     def __str__(self):
         return self._name
@@ -203,6 +206,7 @@ class Operator(Formula):
         self._arity = arity
         self._operands = operands     # formulas, operands
         self._fid = self._type_name + str(Operator._ctr)
+        self._fn = None
 
     def complexity(self):
         c = 1
@@ -239,7 +243,7 @@ class Operator(Formula):
         return True
 
     def __str__(self):
-        return '%s(%s)' % (self._fid, ', '.join([str(op) for op in  self._operands]))
+        return '%s(%s)' % (self._fid, ', '.join([str(op) for op in self._operands]))
 
     @property
     def fid(self):
@@ -260,11 +264,13 @@ class Operator(Formula):
         return False
 
     @classmethod
-    def getTypeName(cls):
+    def get_type_name(cls):
         return cls._type_name
 
     def evaluate(self, valuation=None):
-        raise NotImplementedError
+        if self._fn is None:
+            self._fn = self.generate_eval()
+        return self._fn(valuation)
 
     def generate_eval(self):
         """generates a zero argument function which executes the computation steps represented by this operator."""

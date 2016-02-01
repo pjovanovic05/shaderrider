@@ -1,5 +1,5 @@
 import abc
-from shaderrider.symbolic import vast
+from shaderrider.symbolic import exprgraph
 
 
 class Function(object):
@@ -62,7 +62,7 @@ def topsort_formula(formula):
     treestack = [formula]
     while len(treestack) > 0:
         node = treestack.pop()
-        if isinstance(node, vast.AtomicFormula):
+        if isinstance(node, exprgraph.AtomicFormula):
             outlist.append(node)
         elif not hasattr(node, '_visited'):   # expand node & return to stack
             node._visited = True

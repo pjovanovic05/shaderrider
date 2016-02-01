@@ -2,7 +2,7 @@
 Generates callable Function from expression graphs.
 """
 
-import shaderrider.symbolic.vast as ast
+import shaderrider.symbolic.exprgraph as ast
 import shaderrider.generator.function as fn
 
 

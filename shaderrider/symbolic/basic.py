@@ -1,9 +1,10 @@
-'''
+"""
 basic arithmetic operations for tensors
-'''
+"""
+
 import abc
 
-from shaderrider.symbolic import vast as ast
+from shaderrider.symbolic import exprgraph as ast
 from shaderrider.core import IncompatibleDimensionsError
 
 

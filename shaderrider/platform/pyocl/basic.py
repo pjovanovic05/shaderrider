@@ -6,17 +6,28 @@ import numpy as np
 import pyopencl as cl
 from pyopencl.array import Array
 
-from shaderrider.symbolic import vast
+from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import basic
 from shaderrider.generator import codegen
 
+from shaderrider.platform.pyocl import platformdef as platform
 
-class NegEval(codegen.OpEvaluator):
-    def __init__(self, ctx):
-        self._ctx = ctx
-        self.prog = None
 
-    def setup(self, dtype=np.float32):
+class NegOP(basic.NegOP):
+
+    def evaluate(self, valuation=None, events=None):
+        arg = valuation[op.operands[0].fid]
+        out = valuation[op.fid]
+        waits = []
+        if events is not None and self.operands[0].fid in events:
+            waits.append(events[self.operands[0].fid])
+        myevt = self.prog.k_neg(arg.data, arg.size, out.data, wait_for=waits)
+        if events is not None:
+            events[self.fid] = myevt
+        return myevt
+
+    def generate_eval(self):
+        dtype = self.operands[0].dtype
         typestr = 'float'
         if dtype == np.float32:
             typestr = 'float'
@@ -25,310 +36,88 @@ class NegEval(codegen.OpEvaluator):
         else:
             raise NotImplementedError('Unsupported data type on PyOpenCL platform: %s' % str(dtype))
 
-        self.prog = cl.Program(self._ctx, '''
+        prog = cl.Program(platform.default_ctx, '''
             __kernel void k_neg(__global %(typestr)s *in, size_t n, __global %(typestr)s *out) {
-                int idx = get_global_id(0);
-                if (idx < n)
-                    out[idx] = -in[idx];
-            }
-            __kernel void k_neg_inplace(__global %(typestr)s *a, size_t n) {
-                int idx = get_global_id(0);
-                if (idx < n)
-                    a[i] = -a[i];
+                    int idx = get_global_id(0);
+                    if (idx < n)
+                        out[idx] = -in[idx];
             }''' % locals()).build()
 
-    def teardown(self):
-        pass
+        def evaluator(valuation, events=None, device=0):
+            param = valuation[self.operands[0].fid]
+            out = valuation[self.fid]
+            waits = [events[ev.fid] for ev in self.operands] if events is not None else None
 
-    def before(self, op, valuation=None):
-        pass
+            if out is None or out.shape != param.shape:
+                out = cl.array.empty(platform.queues[device], param.shape, param.dtype)   #TODO
+            evt = prog.k_neg(platform.queues[device], param.shape, None, param.data, out.data, wait_for=waits)
+            return evt
 
-    def evaluate(self, op, valuation=None, events=None):
-        arg = valuation[op.operands[0].fid]
-        out = valuation[op.fid]
-        waits = []
-        if events is not None and op.operands[0].fid in events:
-            waits.append(events[op.operands[0].fid])
-        myevt = self.prog.k_neg(arg.data, arg.size, out.data, wait_for=waits)
-        if events is not None:
-            events[op.fid] = myevt
-        return myevt
-
-    def after(self, op, valuation=None):
-        pass
+        return evaluator
 
 
 class ExpEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class LogEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class SinEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class CosEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class TanEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 # binary
 
 class AddEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class SubEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class MulEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class DivEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class PowEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 # comparisons
 
 class EqEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class GtEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class LtEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class GeEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass
 
 
 class LeEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
-
+    pass
 
 class NeEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
+    pass

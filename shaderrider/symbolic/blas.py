@@ -2,7 +2,7 @@
 WRITEME
 """
 
-import shaderrider.symbolic.vast as ast
+import shaderrider.symbolic.exprgraph as ast
 from shaderrider.core import IncompatibleDimensionsError
 
 

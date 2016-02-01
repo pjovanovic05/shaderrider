@@ -2,10 +2,10 @@
 WRITEME
 """
 
-from shaderrider.symbolic import vast
+from shaderrider.symbolic import exprgraph
 
 
-class ElementwiseOP(vast.Operator):
+class ElementwiseOP(exprgraph.Operator):
     def substitute(self, a, b):
         pass
 
