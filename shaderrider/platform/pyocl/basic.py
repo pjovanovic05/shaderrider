@@ -15,16 +15,13 @@ from shaderrider.platform.pyocl import platformdef as platform
 
 class NegOP(basic.NegOP):
 
+    def __init__(self, operand, ctx=None, device=0):
+        super(NegOP, self).__init__(operand)
+        self._ctx = platform.default_ctx if ctx is None else ctx
+        self._fn = self.generate_eval()
+
     def evaluate(self, valuation=None, events=None):
-        arg = valuation[op.operands[0].fid]
-        out = valuation[op.fid]
-        waits = []
-        if events is not None and self.operands[0].fid in events:
-            waits.append(events[self.operands[0].fid])
-        myevt = self.prog.k_neg(arg.data, arg.size, out.data, wait_for=waits)
-        if events is not None:
-            events[self.fid] = myevt
-        return myevt
+        return self._fn(valuation, events)
 
     def generate_eval(self):
         dtype = self.operands[0].dtype
@@ -36,7 +33,7 @@ class NegOP(basic.NegOP):
         else:
             raise NotImplementedError('Unsupported data type on PyOpenCL platform: %s' % str(dtype))
 
-        prog = cl.Program(platform.default_ctx, '''
+        prog = cl.Program(self._ctx, '''
             __kernel void k_neg(__global %(typestr)s *in, size_t n, __global %(typestr)s *out) {
                     int idx = get_global_id(0);
                     if (idx < n)
