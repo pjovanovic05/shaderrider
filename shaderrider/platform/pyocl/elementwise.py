@@ -11,6 +11,7 @@ from mako.template import Template
 from pyopencl.elementwise import ElementwiseKernel
 
 from shaderrider.symbolic import exprgraph as ast
+from shaderrider.symbolic import elementwise
 from shaderrider.symbolic import basic
 from shaderrider.generator import codegen
 
@@ -117,6 +118,20 @@ class ${class_name}(codegen.OpEvaluator):
 
         ewOpEval = ElemwiseKlass(ewk, atoms)
         return ewOpEval
+
+
+class ElementwiseOP(elementwise.ElementwiseOP):
+    def __init__(self, expr, ctx=None, device=0):
+        super(ElementwiseOP, self).__init__(expr)
+        self._ctx = ctx
+        self._fn = self.generate_eval()
+
+    def evaluate(self, valuation=None):
+        return self._fn(valuation)
+
+    def generate_eval(self):
+
+        pass
 
 
 def _c_expr(formula):

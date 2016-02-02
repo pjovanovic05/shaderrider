@@ -206,7 +206,7 @@ class Operator(Formula):
         self._arity = arity
         self._operands = operands     # formulas, operands
         self._fid = self._type_name + str(Operator._ctr)
-        self._fn = None
+        self._fn = None     # TODO generate_evaluator maybe?
 
     def complexity(self):
         c = 1
