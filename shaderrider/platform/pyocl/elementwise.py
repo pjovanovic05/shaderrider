@@ -100,7 +100,7 @@ class ${class_name}(codegen.OpEvaluator):
         return myev
         ''')
         # TODO collect atoms taking care of those subexpressions which should behave atomically
-        klasstemp = template.render(class_name='elementwise_'+op.fid, atoms=atoms)
+        klasstemp = template.render(class_name='elementwise_' + op.fid, atoms=atoms)
 
         # taken from namedtuple : ~334  (https://hg.python.org/cpython/file/8527427914a2/Lib/collections.py)
         namespace = dict(_itemgetter=_itemgetter, __name__='elementwise_%s' % op.fid,
@@ -122,16 +122,40 @@ class ${class_name}(codegen.OpEvaluator):
 
 class ElementwiseOP(elementwise.ElementwiseOP):
     def __init__(self, expr, ctx=None, device=0):
+        """
+        :type expr: Formula
+        """
         super(ElementwiseOP, self).__init__(expr)
         self._ctx = ctx
+        self._expr = expr
         self._fn = self.generate_eval()
 
     def evaluate(self, valuation=None):
         return self._fn(valuation)
 
     def generate_eval(self):
+        atoms = self._expr.get_atoms()
+        args = []
+        for a in atoms:
+            if a.is_array():
+                args.append('%s *%s' % (a.dtype, a.name))b
+            else:
+                args.append('%s %s' % (a.dtype, a.name))
+        argstr = ', '.join(args)
+        argstr += ', %s *%s' % (self.dtype, self.fid)
+        cexpr = _c_expr(self._expr)
+        ewk = ElementwiseKernel(self._ctx, argstr, cexpr)
 
-        pass
+        def evaluator(valuation, events=None, device=0):
+            params = []
+            for a in atoms:
+                if valuation.has_key(a.fid):
+                    params.append(valuation[a.fid])
+                else:
+                    raise ValueError('Valuation missing parameter ' + a.fid)
+            return ewk(*params) #http://stackoverflow.com/questions/3941517/converting-list-to-args-in-python
+
+        return evaluator
 
 
 def _c_expr(formula):
