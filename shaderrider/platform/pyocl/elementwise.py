@@ -9,6 +9,8 @@ import sys
 from mako.template import Template
 
 from pyopencl.elementwise import ElementwiseKernel
+from pyopencl import array
+import pyopencl as cl
 
 from shaderrider.symbolic import exprgraph as ast
 from shaderrider.symbolic import elementwise
@@ -138,7 +140,7 @@ class ElementwiseOP(elementwise.ElementwiseOP):
         args = []
         for a in atoms:
             if a.is_array():
-                args.append('%s *%s' % (a.dtype, a.name))b
+                args.append('%s *%s' % (a.dtype, a.name))
             else:
                 args.append('%s %s' % (a.dtype, a.name))
         argstr = ', '.join(args)
@@ -153,7 +155,9 @@ class ElementwiseOP(elementwise.ElementwiseOP):
                     params.append(valuation[a.fid])
                 else:
                     raise ValueError('Valuation missing parameter ' + a.fid)
-            return ewk(*params) #http://stackoverflow.com/questions/3941517/converting-list-to-args-in-python
+            out = valuation[self.fid] if valuation.has_key(self.fid) else array.zeros(self._ctx, self.get_shape(), self.dtype)
+            params.append(out)
+            return ewk(*params)     # https://stackoverflow.com/questions/3941517/converting-list-to-args-in-python
 
         return evaluator
 
