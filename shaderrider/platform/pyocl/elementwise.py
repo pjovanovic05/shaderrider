@@ -18,110 +18,6 @@ from shaderrider.symbolic import basic
 from shaderrider.generator import codegen
 
 
-class ElementwiseEval(codegen.OpEvaluator):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def before(self, op, valuation=None):
-        pass
-
-    def evaluate(self, op, valuation=None):
-        pass
-
-    def after(self, op, valuation=None):
-        pass
-
-
-# TODO posto imam problem sa nalazenjem parametara za elementwise (koji nisu samo atomi):
-# 1) out je resen dole
-# 2) parametri koji nisu atomi ce biti pronadjeni u nekom skenu drveta pri proveri da li
-#    drvo moze da se elementwiseuje
-
-class ElementwiseGenerator(codegen.OpEvalGenerator):
-    def generate(self, op, ctx):
-        # TODO get atomics (inputs), and figure out the output type and dimension
-        atoms = op.get_atoms()   # TODO what about constants?
-        args = []
-        for a in atoms:
-            if a.is_array():
-                args.append("%s *%s" % (a.dtype, a.name))
-            else:   # scalar
-                args.append("%s %s" % (a.dtype, a.name))
-        argstr = ', '.join(args)
-
-        cexpr = _c_expr(op)
-        ewk = ElementwiseKernel(ctx, argstr, cexpr)
-
-        template = Template('''
-class ${class_name}(codegen.OpEvaluator):
-    def __init__(self, ewk, atoms):
-        self._ewk = ewk
-        self._atoms = atoms
-
-    def init(self):
-        pass
-
-    def finalize(self):
-        pass
-
-    def before(self, op, valuation):
-        pass    #TODO alloc output buffer if needed!
-
-    def after(self, op, valuation):
-        pass
-
-    def evaluate(self, op, valuation=None, events=None):
-        % for a in atoms:
-        % if a.isArray():
-        arg_${a.fid} = valuation['${a.fid}'].data
-        % else:
-        arg_${a.fid} = valuaion['${a.fid}']
-        % endif
-        % endfor
-        out = valuation[op.fid]
-
-        if events is not None:
-            % for a in atoms:
-            % if a.isArray():
-            # TODO ovo mozda nisu samo atomi - sigmoid je elementwise ali je njegov jedan "atom" u stvari rezultat gemm-a
-            # TODO i ne bi trebalo samo o "atomima" pricati, treba i output array nekako uglaviti u parametre.
-            % endif
-            % endfor
-
-        myev = self._ewk(
-                        % for a in atoms:
-                        arg_${a.fid},
-                        % endfor
-                        out.data, wait_for=wait_for
-                        )
-        if events is not None:
-            events[op.fid] = myev
-        return myev
-        ''')
-        # TODO collect atoms taking care of those subexpressions which should behave atomically
-        klasstemp = template.render(class_name='elementwise_' + op.fid, atoms=atoms)
-
-        # taken from namedtuple : ~334  (https://hg.python.org/cpython/file/8527427914a2/Lib/collections.py)
-        namespace = dict(_itemgetter=_itemgetter, __name__='elementwise_%s' % op.fid,
-                         OrderedDict=OrderedDict, _property=property, _tuple=tuple)
-        try:
-            exec klasstemp in namespace
-        except SyntaxError, e:
-            raise SyntaxError(e.message + ':\n' + klasstemp)
-
-        ElemwiseKlass = namespace['elementwise_%s' % op.fid]
-        try:
-            ElemwiseKlass.__module__ = sys._getframe(1).f_globals.get('__name__', '__main__')
-        except (AttributeError, ValueError):
-            pass
-
-        ewOpEval = ElemwiseKlass(ewk, atoms)
-        return ewOpEval
-
-
 class ElementwiseOP(elementwise.ElementwiseOP):
     def __init__(self, expr, ctx=None, device=0):
         """
@@ -152,12 +48,12 @@ class ElementwiseOP(elementwise.ElementwiseOP):
             params = []
             for a in atoms:
                 if valuation.has_key(a.fid):
-                    params.append(valuation[a.fid])
+                    params.append(valuation[a.fid].data if a.is_array() else valuation[a.fid])
                 else:
                     raise ValueError('Valuation missing parameter ' + a.fid)
             out = valuation[self.fid] if valuation.has_key(self.fid) else array.zeros(self._ctx, self.get_shape(), self.dtype)
             params.append(out)
-            return ewk(*params)     # https://stackoverflow.com/questions/3941517/converting-list-to-args-in-python
+            return ewk(*params)     # TODO pass wait_for
 
         return evaluator
 
