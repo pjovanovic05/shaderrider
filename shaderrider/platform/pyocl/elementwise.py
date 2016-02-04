@@ -2,12 +2,6 @@
 WRITEME
 """
 
-from operator import itemgetter as _itemgetter
-from collections import OrderedDict
-
-import sys
-from mako.template import Template
-
 from pyopencl.elementwise import ElementwiseKernel
 from pyopencl import array
 import pyopencl as cl
@@ -15,7 +9,6 @@ import pyopencl as cl
 from shaderrider.symbolic import exprgraph as ast
 from shaderrider.symbolic import elementwise
 from shaderrider.symbolic import basic
-from shaderrider.generator import codegen
 
 
 class ElementwiseOP(elementwise.ElementwiseOP):
@@ -46,14 +39,17 @@ class ElementwiseOP(elementwise.ElementwiseOP):
 
         def evaluator(valuation, events=None, device=0):
             params = []
+            waits = []
             for a in atoms:
-                if valuation.has_key(a.fid):
+                if a.fid in valuation:
                     params.append(valuation[a.fid].data if a.is_array() else valuation[a.fid])
                 else:
                     raise ValueError('Valuation missing parameter ' + a.fid)
-            out = valuation[self.fid] if valuation.has_key(self.fid) else array.zeros(self._ctx, self.get_shape(), self.dtype)
+                if a.fid in events:
+                    waits.append(events[a.fid])
+            out = valuation[self.fid] if self.fid in valuation else array.zeros(self._ctx, self.get_shape(), self.dtype)
             params.append(out)
-            return ewk(*params)     # TODO pass wait_for
+            return ewk(wait_for=waits, *params)
 
         return evaluator
 
@@ -101,5 +97,7 @@ def _c_expr(formula):
         return '(%s <= %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
     if isinstance(formula, basic.NeOP):
         return '(%s != %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+
+    # TODO handle blas and other more complex functions which behave as atoms in this context
 
     raise ValueError('Unable to convert formula to c expression: %s' % formula)
