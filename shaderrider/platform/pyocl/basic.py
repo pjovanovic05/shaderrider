@@ -8,7 +8,6 @@ from pyopencl.array import Array
 
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import basic
-from shaderrider.generator import codegen
 
 from shaderrider.platform.pyocl import platformdef as platform
 
@@ -53,68 +52,76 @@ class NegOP(basic.NegOP):
         return evaluator
 
 
-class ExpEval(codegen.OpEvaluator):
+class ExpOP(basic.ExpOP):
+    def __init__(self, operand, ctx=None, device=0):
+        super(ExpOP, self).__init__(operand)
+        self._ctx = platform.default_ctx if ctx is None else ctx
+
+    def evaluate(self, valuation=None, events=None):
+        pass
+
+    def generate_eval(self):
+        pass
+
+
+class LogOP(basic.LogOP):
     pass
 
 
-class LogEval(codegen.OpEvaluator):
+class SinOP(basic.SinOP):
     pass
 
 
-class SinEval(codegen.OpEvaluator):
+class CosOP(basic.CosOP):
     pass
 
 
-class CosEval(codegen.OpEvaluator):
-    pass
-
-
-class TanEval(codegen.OpEvaluator):
+class TanOP(basic.TanOP):
     pass
 
 
 # binary
 
-class AddEval(codegen.OpEvaluator):
+class AddOP(basic.AddOP):
     pass
 
 
-class SubEval(codegen.OpEvaluator):
+class SubOP(basic.SubOP):
     pass
 
 
-class MulEval(codegen.OpEvaluator):
+class MulOP(basic.MulOP):
     pass
 
 
-class DivEval(codegen.OpEvaluator):
+class DivOP(basic.DivOP):
     pass
 
 
-class PowEval(codegen.OpEvaluator):
+class PowOP(basic.PowOP):
     pass
 
 
 # comparisons
 
-class EqEval(codegen.OpEvaluator):
+class EqOP(basic.EqOP):
     pass
 
 
-class GtEval(codegen.OpEvaluator):
+class GtOP(basic.GtOP):
     pass
 
 
-class LtEval(codegen.OpEvaluator):
+class LtOP(basic.LtOP):
     pass
 
 
-class GeEval(codegen.OpEvaluator):
+class GeOP(basic.GeOP):
     pass
 
 
-class LeEval(codegen.OpEvaluator):
+class LeOP(basic.LeOP):
     pass
 
-class NeEval(codegen.OpEvaluator):
+class NeOP(basic.NegOP):
     pass
