@@ -21,6 +21,13 @@ class Function(object):
         """
         raise NotImplementedError
 
+    def _create_evaluation_path(self):
+        self._expr_evals = []
+        # for expressions
+        for expr in self._expressions:
+            pass
+        # for updates
+
 
 def function(expressions=None, updates=None, name=None):
     """
