@@ -4,9 +4,9 @@ WRITEME
 
 from pyopencl.reduction import ReductionKernel
 
-from shaderrider.generator import codegen
 
+class ReduceOP(object):
+    _type_name = 'Reduce'
 
-class ReduceGenerator(codegen.OpEvalGenerator):
-    def generate(self, op, ctx):
+    def __init__(self):
         pass
