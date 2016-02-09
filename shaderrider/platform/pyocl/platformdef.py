@@ -17,6 +17,11 @@ from shaderrider.platform.pyocl import elementwise
 
 
 def setup_context(ngpus=0):
+    """
+
+    :param ngpus:
+    :return:
+    """
     ctx = None
     qs = None
     if ngpus > 0:
@@ -61,7 +66,5 @@ class PyOCLFunction(Function):
             ts = topsort_formula(expr)
             outname = ts[-1].fid
 
-        pass
 
 # TODO where do i put the optimizations?
-
