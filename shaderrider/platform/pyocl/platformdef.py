@@ -50,9 +50,16 @@ class PyOCLFunction(Function):
         self._update_evals = []     # list of tuples (var, update_expr)
         self._inputs = []           # TODO collect inputs from exprs
 
+        if expressions is None and updates is None:
+            raise ValueError(
+                "Can't create a function for doing nothing. Provide some expressions or updates to execute.")
+
+        self._create_evaluation_path()
+
     def __call__(self, *args, **kwargs):
         valuation = {}
         events = {}
+        # TODO transfer inputs
         for ee in self._expr_evals:
             evt = ee.evaluate(valuation, events)
             # TODO update events dict
@@ -61,10 +68,12 @@ class PyOCLFunction(Function):
         for (upvar, upexpr) in self._update_evals:
             evt = upexpr.evaluate(valuation, events)
 
-    def _create_evaluation_path(self):
-        for expr in self._expressions:
-            ts = topsort_formula(expr)
-            outname = ts[-1].fid
+        # TODO transfer outputs?
+
+    def _create_evaluation_path(self, expr=0):
+        ts = topsort_formula(expr)
+        outname = ts[-1].fid
+        ops = [op for op in ts if isinstance(op, exprgraph.Operator)]
 
 
 # TODO where do i put the optimizations?
