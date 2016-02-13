@@ -3,6 +3,7 @@ Defines PyOpenCL platform.
 """
 
 import pyopencl as cl
+import pyopencl.array as clarray
 
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import basic as sbo
@@ -54,12 +55,22 @@ class PyOCLFunction(Function):
             raise ValueError(
                 "Can't create a function for doing nothing. Provide some expressions or updates to execute.")
 
+        self._collect_inputs()
         self._create_evaluation_path()
 
     def __call__(self, *args, **kwargs):
         valuation = {}
         events = {}
-        # TODO transfer inputs
+
+        for arg, i in enumerate(args):
+            if isinstance(arg, clarray.Array):
+                valuation[self._inputs[i].fid] = arg
+            else:
+                valuation[self._inputs[i].fid] = clarray.to_device(default_queue, arg)
+        # handle kwargs
+        for arg in kwargs:
+            pass    # TODO
+
         for ee in self._expr_evals:
             evt = ee.evaluate(valuation, events)
             # TODO update events dict
@@ -69,6 +80,16 @@ class PyOCLFunction(Function):
             evt = upexpr.evaluate(valuation, events)
 
         # TODO transfer outputs?
+
+    def _collect_inputs(self):
+        for expr in self._expressions:
+            for a in expr.get_atoms():
+                if a not in self._inputs:
+                    self._inputs.append(a)
+        for var, update in self._updates:
+            for a in update.get_atoms():
+                if a not in self._inputs:
+                    self._inputs.append(a)
 
     def _create_evaluation_path(self, expr=0):
         ts = topsort_formula(expr)

@@ -11,7 +11,7 @@ class Function(object):
         self._name = name
 
     @abc.abstractmethod
-    def __call__(self, valuation=None, check_inputs=True):
+    def __call__(self, *args, **kwargs):
         """
         :param valuation:
         :type valuation: dict
@@ -20,13 +20,6 @@ class Function(object):
         :type check_inputs: bool
         """
         raise NotImplementedError
-
-    def _create_evaluation_path(self):
-        self._expr_evals = []
-        # for expressions
-        for expr in self._expressions:
-            pass
-        # for updates
 
 
 def function(expressions=None, updates=None, name=None):

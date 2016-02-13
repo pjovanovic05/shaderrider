@@ -21,8 +21,8 @@ class ElementwiseOP(elementwise.ElementwiseOP):
         self._expr = expr
         self._fn = self.generate_eval()
 
-    def evaluate(self, valuation=None):
-        return self._fn(valuation)
+    def evaluate(self, valuation=None, events=None, device=0):
+        return self._fn(valuation, events, device)
 
     def generate_eval(self):
         atoms = self._expr.get_atoms()
