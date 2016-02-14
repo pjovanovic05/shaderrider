@@ -74,3 +74,7 @@ def topsort_formula(formula):
                 del node._visited   # TODO hackish...
             outlist.append(node)
     return outlist
+
+
+def validate_formula(formula):
+    pass

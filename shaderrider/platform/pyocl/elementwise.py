@@ -37,6 +37,7 @@ class ElementwiseOP(elementwise.ElementwiseOP):
         cexpr = _c_expr(self._expr)
         ewk = ElementwiseKernel(self._ctx, argstr, cexpr)
 
+        # TODO evaluator must have .fid and .evaluate
         def evaluator(valuation, events=None, device=0):
             params = []
             waits = []
