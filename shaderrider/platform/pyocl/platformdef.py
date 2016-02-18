@@ -56,7 +56,13 @@ class PyOCLFunction(Function):
                 "Can't create a function for doing nothing. Provide some expressions or updates to execute.")
 
         self._collect_inputs()
-        self._create_evaluation_path()
+
+        # create evaluation paths
+        for expr in self._expressions:
+            self._expr_evals.extend(_compile_expression(expr))
+
+        for var,update in self._updates:
+            self._update_evals.append((var, _compile_expression(update)))
 
     def __call__(self, *args, **kwargs):
         valuation = {}
@@ -99,11 +105,6 @@ class PyOCLFunction(Function):
             for a in update.get_atoms():
                 if a not in self._inputs:
                     self._inputs.append(a)
-
-    def _create_evaluation_path(self, expr=0):
-        ts = topsort_formula(expr)
-        outname = ts[-1].fid
-        ops = [op for op in ts if isinstance(op, exprgraph.Operator)]
 
 
 def _compile_expression(expr):

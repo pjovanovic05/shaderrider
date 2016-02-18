@@ -77,4 +77,5 @@ def topsort_formula(formula):
 
 
 def validate_formula(formula):
+    # TODO arity checks, type checks, shape checks, dtype checks?
     pass
