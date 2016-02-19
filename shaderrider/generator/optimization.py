@@ -14,5 +14,11 @@ class Optimizer(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def optimize(self, exprgraph, optgraph):
+    def optimize(self, exprgraph):
+        pass
+
+
+class ElementwiseOpt(Optimizer):
+
+    def optimize(self, exprgraph):
         pass
