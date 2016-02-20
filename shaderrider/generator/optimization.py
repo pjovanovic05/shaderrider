@@ -21,4 +21,5 @@ class Optimizer(object):
 class ElementwiseOpt(Optimizer):
 
     def optimize(self, exprgraph):
+
         pass

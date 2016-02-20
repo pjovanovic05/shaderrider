@@ -11,6 +11,7 @@ from shaderrider.symbolic import blas as sblas
 from shaderrider.symbolic import elementwise as sew
 
 from shaderrider.generator.function import Function, topsort_formula
+from shaderrider.generator import optimization as opt
 
 from shaderrider.platform.pyocl import basic as bo
 from shaderrider.platform.pyocl import blas

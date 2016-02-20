@@ -257,6 +257,10 @@ class Operator(Formula):
     def arity(self):
         return self._arity
 
+    @classmethod
+    def is_broadcastable(self):
+        return False
+
     def is_array(self):
         return True
 
