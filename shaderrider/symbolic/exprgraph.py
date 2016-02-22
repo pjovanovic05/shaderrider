@@ -5,6 +5,7 @@ Contains the base classes for specifying symbolic expression structure.
 
 import numpy as np
 import abc
+import weakref
 
 
 class Formula(object):
@@ -14,6 +15,9 @@ class Formula(object):
     that are to be compiled for the backend (opencl, cpu).
     """
     __metaclass__ = abc.ABCMeta
+
+    def __init__(self, parent=None):
+        self._parent = weakref.ref(parent) if parent is not None else None
 
     @abc.abstractmethod
     def get_atoms(self):
@@ -57,6 +61,14 @@ class Formula(object):
     def fid(self):
         raise NotImplementedError
 
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, val):
+        self._parent = val
+
     def is_array(self):
         raise NotImplementedError
 
@@ -89,7 +101,8 @@ class Constant(AtomicFormula):
     """docstring for Constant"""
     _ctr = 0
 
-    def __init__(self, value):
+    def __init__(self, value, parent=None):
+        super(Constant, self).__init__(parent)
         Constant._ctr += 1
         self._value = np.asarray(value)
         self._fid = 'C' + str(Constant._ctr)
@@ -132,7 +145,8 @@ class Atom(AtomicFormula):
     """docstring for Atom"""
     _ctr = 0
 
-    def __init__(self, name=None, dtype=None, shape=(), shared=False):
+    def __init__(self, name=None, dtype=None, shape=(), shared=False, parent=None):
+        super(Atom, self).__init__(parent)
         Atom._ctr += 1
         self._name = name if name!=None else 'A%d' % Atom._ctr
         self._dtype = dtype
@@ -201,7 +215,8 @@ class Operator(Formula):
     _ctr = 0
     _type_name = 'Op'
 
-    def __init__(self, arity, operands):
+    def __init__(self, arity, operands, parent=None):
+        super(Operator, self).__init__(parent)
         Operator._ctr += 1
         self._arity = arity
         self._operands = operands     # formulas, operands

@@ -21,5 +21,5 @@ class Optimizer(object):
 class ElementwiseOpt(Optimizer):
 
     def optimize(self, exprgraph):
-
+        # TODO stao kod ubacivanja parenta u operande u svim operatorima
         pass
