@@ -19,7 +19,9 @@ class Optimizer(object):
 
 
 class ElementwiseOpt(Optimizer):
-
+    """
+    Fold 'broadcastable' expressions into a single elementwise operator.
+    """
     def optimize(self, exprgraph):
-        # TODO stao kod ubacivanja parenta u operande u svim operatorima
+
         pass
