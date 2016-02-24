@@ -10,8 +10,8 @@ class GemmOP(ast.Operator):
     _type_name = "Gemm"
 
     def __init__(self, A, B, C, alpha=ast.Constant(1.0), beta=ast.Constant(0.0),
-                 transA=ast.Constant(False), transB=ast.Constant(False)):
-        super(GemmOP, self).__init__(7, [A, B, C, alpha, beta, transA, transB])
+                 transA=ast.Constant(False), transB=ast.Constant(False), parent=None):
+        super(GemmOP, self).__init__(7, [A, B, C, alpha, beta, transA, transB], parent)
 
         if len(A.get_shape()) != 2 or len(B.get_shape()) != 2 or len(C.get_shape()) != 2:
             raise ValueError
@@ -59,8 +59,8 @@ class GemmOP(ast.Operator):
 class GemvOP(ast.Operator):
     _type_name = "Gemv"
 
-    def __init__(self, A, X, Y, alpha=ast.Constant(1.0), beta=ast.Constant(0.0), transA=ast.Constant(False)):
-        super(GemvOP, self).__init__(6, [A, X, Y, alpha, beta, transA])
+    def __init__(self, A, X, Y, alpha=ast.Constant(1.0), beta=ast.Constant(0.0), transA=ast.Constant(False), parent=None):
+        super(GemvOP, self).__init__(6, [A, X, Y, alpha, beta, transA], parent)
         # TODO check dimensions compatibility
 
     def substitute(self, a, b):
@@ -94,8 +94,8 @@ class GemvOP(ast.Operator):
 class GerOP(ast.Operator):
     _type_name = "Ger"
 
-    def __init__(self, alpha, X, Y, A):
-        super(GerOP, self).__init__(4, [alpha, X, Y, A])
+    def __init__(self, alpha, X, Y, A, parent=None):
+        super(GerOP, self).__init__(4, [alpha, X, Y, A], parent)
         # TODO check dimensions
 
         if len(X.get_shape()) != 1 or len(Y.get_shape()) != 1 or len(A.get_shape()) != 2:
