@@ -45,6 +45,8 @@ default_ctx, queues = setup_context(1)
 default_queue = queues[0]
 
 
+# TODO ovo je pogresno, razmisljaj o expressionima koje dobijes kao vec proverenim i optimizovanim
+# TODO ovaj function treba samo da zameni expressione instancama svoje implementacije!
 class PyOCLFunction(Function):
     def __init__(self, expressions=None, updates=None, name=None):
         super(PyOCLFunction, self).__init__(expressions, updates, name)
@@ -108,6 +110,8 @@ class PyOCLFunction(Function):
                     self._inputs.append(a)
 
 
+optimizers = [opt.ElementwiseOpt()]
+
 def _compile_expression(expr):
     """
     Creates a list of evaluators to be called in order, which represents the execution of the expression.
@@ -126,6 +130,8 @@ def _compile_expression(expr):
 
     # optimizations
     sexpr = expr.simplify()
+    for optimizer in optimizers:
+        sexpr = optimizer.optimize(sexpr)
     # more opts ...
 
     # top sort
