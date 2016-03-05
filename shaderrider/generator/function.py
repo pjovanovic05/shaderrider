@@ -39,13 +39,18 @@ def function(expressions=None, updates=None, name=None):
     :type name: str
     """
 
-    # check graph
-    # optimize (simplify +)
-    # TODO get current platform generator
-    # generate source
-    # configure compiler
-    # compile
-    # import
+    # configure compilation
+    #   get platform
+    #   get checks
+    #   get optimizations
+    # collect inputs
+    # for each expression
+    #   run checks
+    #   optimizations
+    # for each update
+    #   run checks, maybe opts?
+    # create appropriate Function instance
+
     pass
 
 
