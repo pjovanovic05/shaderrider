@@ -53,3 +53,13 @@ class ElementwiseOpt(Optimizer):
         else:
             return []
         return myatoms
+
+
+class SimplifyOpt(Optimizer):
+    def optimize(self, expr_graph):
+        return expr_graph.simplify()
+
+
+class ConstantFoldingOpt(Optimizer):
+    def optimize(self, expr_graph):
+        pass    # TODO

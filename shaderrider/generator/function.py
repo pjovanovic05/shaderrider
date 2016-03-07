@@ -1,11 +1,14 @@
 import abc
+from shaderrider.util import OrderedSet
 from shaderrider.symbolic import exprgraph
+from shaderrider import configuration
 
 
 class Function(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, expressions=None, updates=None, name=None):
+    def __init__(self, inputs=None, expressions=None, updates=None, name=None):
+        self._inputs = inputs
         self._expressions = expressions
         self._updates = updates
         self._name = name
@@ -40,18 +43,30 @@ def function(expressions=None, updates=None, name=None):
     """
 
     # configure compilation
-    #   get platform
-    #   get checks
-    #   get optimizations
-    # collect inputs
-    # for each expression
-    #   run checks
-    #   optimizations
-    # for each update
-    #   run checks, maybe opts?
-    # create appropriate Function instance
+    platform = configuration.get_platform()
+    checks = platform.get_validations()
+    opts = platform.get_optimizations()
 
-    pass
+    # collect inputs
+    inputs = _collect_inputs(expressions, updates)
+
+    # for each expression
+    for expr in expressions:
+    #   run checks
+        for check in checks:
+            pass    #validate graph
+    #   optimizations
+        for opt in opts:
+            pass    #optimize graph
+
+    # for each update
+    for update in updates:
+    #   run checks, maybe opts?
+        pass
+
+    # create appropriate Function instance
+    fn = platform.create_function(inputs, expressions, updates, name)
+    return fn
 
 
 def topsort_formula(formula):
@@ -84,3 +99,16 @@ def topsort_formula(formula):
 def validate_formula(formula):
     # TODO arity checks, type checks, shape checks, dtype checks?
     pass
+
+
+def _collect_inputs(expressions=None, updates=None):        # TODO gde ide collect outputs?
+    inputs = OrderedSet()
+    for expr in expressions:
+        for a in expr.get_atoms():
+            if a not in inputs:     # is this necessary?
+                inputs.add(a)
+    for var, update in updates:
+        for a in update.get_atoms():
+            if a not in inputs:
+                inputs.add(a)
+    return list(inputs)

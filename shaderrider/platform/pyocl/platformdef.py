@@ -47,6 +47,7 @@ default_queue = queues[0]
 
 # TODO ovo je pogresno, razmisljaj o expressionima koje dobijes kao vec proverenim i optimizovanim
 # TODO ovaj function treba samo da zameni expressione instancama svoje implementacije!
+# TODO ovo takodje treba da resi i pomeranje vrednosti u valuaciji u PyOpencl array
 class PyOCLFunction(Function):
     def __init__(self, expressions=None, updates=None, name=None):
         super(PyOCLFunction, self).__init__(expressions, updates, name)
@@ -66,6 +67,9 @@ class PyOCLFunction(Function):
 
         for var,update in self._updates:
             self._update_evals.append((var, _compile_expression(update)))
+
+    def novi_konstruktor(self, inputs=None, expressions=None, updates=None, name=None):
+        super(PyOCLFunction, self).__init__()
 
     def __call__(self, *args, **kwargs):
         valuation = {}
@@ -139,3 +143,30 @@ def _compile_expression(expr):
     ops = [op for op in ts if isinstance(op, exprgraph.Operator)]
 
     return ops
+
+
+class PyOCLPlatform(object):
+    @classmethod
+    def get_validations(cls):
+        """gets validation objects which check the validity of an expression graph"""
+        return []
+
+
+    def get_optimizations(self):
+        """gets optimization objects which implement platform specific optimizations on an expression graph"""
+        return []
+
+
+    def write_value(self):
+        """puts something into the platform valuation (host2device)"""
+        pass
+
+
+    def read_value(self):
+        """reads something from the platform valuation (device2host)"""
+        pass
+
+
+    def create_function(self, inputs, expressions, updates, name):
+        """create appropriate function instance for this platform"""
+        return PyOCLFunction()
