@@ -153,6 +153,18 @@ def _compile_expression(expr):
 
     return ops
 
+
+op_map = {
+    'NegOP': bo.NegOP,
+    'ExpOP': bo.ExpOP,
+    'LogOP': bo.LogOP,
+    'SinOP': bo.SinOP,
+    'CosOP': bo.CosOP,
+    'TanOP': bo.TanOP,
+    'AddOP': bo.AddOP,
+}
+
+
 def _replace_ops(expression):
     """Recursively replaces syntax tree operators with platform specific operators"""
     if isinstance(expression, exprgraph.Operator):
