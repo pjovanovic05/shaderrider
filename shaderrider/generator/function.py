@@ -52,16 +52,16 @@ def function(expressions=None, updates=None, name=None):
 
     # for each expression
     for expr in expressions:
-    #   run checks
+        # run checks
         for check in checks:
             pass    #validate graph
-    #   optimizations
+        # optimizations
         for opt in opts:
             pass    #optimize graph
 
     # for each update
     for update in updates:
-    #   run checks, maybe opts?
+        # run checks, maybe opts?
         pass
 
     # create appropriate Function instance
@@ -96,7 +96,7 @@ def topsort_formula(formula):
     return outlist
 
 
-def validate_formula(formula):
+def _validate_formula(formula):
     # TODO arity checks, type checks, shape checks, dtype checks?
     pass
 

@@ -69,7 +69,15 @@ class PyOCLFunction(Function):
             self._update_evals.append((var, _compile_expression(update)))
 
     def novi_konstruktor(self, inputs=None, expressions=None, updates=None, name=None):
-        super(PyOCLFunction, self).__init__()
+        super(PyOCLFunction, self).__init__(inputs, expressions, updates, name)
+        self._expr_evals = []
+        self._update_evals = []
+
+        # TODO svaki expression zameni operatorima platforme
+        for expr in expressions:
+            self._expr_evals.append(_replace_ops(expr))
+        # TODO svaki update zameni operatorima platforme
+
 
     def __call__(self, *args, **kwargs):
         valuation = {}
@@ -116,6 +124,7 @@ class PyOCLFunction(Function):
 
 optimizers = [opt.ElementwiseOpt()]
 
+
 def _compile_expression(expr):
     """
     Creates a list of evaluators to be called in order, which represents the execution of the expression.
@@ -144,6 +153,11 @@ def _compile_expression(expr):
 
     return ops
 
+def _replace_ops(expression):
+    """Recursively replaces syntax tree operators with platform specific operators"""
+    if isinstance(expression, exprgraph.Operator):
+        if isinstance(expression, )
+
 
 class PyOCLPlatform(object):
     @classmethod
@@ -169,4 +183,5 @@ class PyOCLPlatform(object):
 
     def create_function(self, inputs, expressions, updates, name):
         """create appropriate function instance for this platform"""
+        # treba da zamenim sve operatore u grafu operatorima platforme
         return PyOCLFunction()

@@ -4,3 +4,7 @@ class IncompatibleDimensionsError(Exception):
 
 class NondifferentiableOpError(Exception):
     pass
+
+
+class GraphValidationError(Exception):
+    pass
