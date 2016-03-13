@@ -65,7 +65,7 @@ class PyOCLFunction(Function):
         for expr in self._expressions:
             self._expr_evals.extend(_compile_expression(expr))
 
-        for var,update in self._updates:
+        for var, update in self._updates:
             self._update_evals.append((var, _compile_expression(update)))
 
     def novi_konstruktor(self, inputs=None, expressions=None, updates=None, name=None):
@@ -132,14 +132,6 @@ def _compile_expression(expr):
     :type expr: Formula
     :rtype: list of evaluators
     """
-    # run graph checks
-    # run optimizations
-    #   * simplify
-    #   * fold constants
-    #   * replace blas?
-    #   * elementwise contraction
-    # top sort
-    # return exec path array
 
     # optimizations
     sexpr = expr.simplify()
@@ -155,20 +147,36 @@ def _compile_expression(expr):
 
 
 op_map = {
-    'NegOP': bo.NegOP,
-    'ExpOP': bo.ExpOP,
-    'LogOP': bo.LogOP,
-    'SinOP': bo.SinOP,
-    'CosOP': bo.CosOP,
-    'TanOP': bo.TanOP,
-    'AddOP': bo.AddOP,
+    bo.NegOP.get_type_name(): bo.NegOP,
+    bo.ExpOP.get_type_name(): bo.ExpOP,
+    bo.LogOP.get_type_name(): bo.LogOP,
+    bo.SinOP.get_type_name(): bo.SinOP,
+    bo.CosOP.get_type_name(): bo.CosOP,
+    bo.TanOP.get_type_name(): bo.TanOP,
+    bo.AddOP.get_type_name(): bo.AddOP,
+    bo.SubOP.get_type_name(): bo.SubOP,
+    bo.MulOP.get_type_name(): bo.MulOP,
+    bo.DivOP.get_type_name(): bo.DivOP,
+    bo.PowOP.get_type_name(): bo.PowOP,
+    bo.EqOP.get_type_name(): bo.EqOP,
+    bo.GtOP.get_type_name(): bo.GtOP,
+    bo.LtOP.get_type_name(): bo.LtOP,
+    bo.GeOP.get_type_name(): bo.GeOP,
+    bo.LeOP.get_type_name(): bo.LeOP,
+    bo.NeOP.get_type_name(): bo.NeOP,
+
+    elementwise.ElementwiseOP.get_type_name(): elementwise.ElementwiseOP,
+
+    blas.GemmOP.get_type_name(): blas.GemmOP,
+    blas.GemvOP.get_type_name(): blas.GemvOP,
+    blas.GerOP.get_type_name(): blas.GerOP
 }
 
 
 def _replace_ops(expression):
     """Recursively replaces syntax tree operators with platform specific operators"""
     if isinstance(expression, exprgraph.Operator):
-        if isinstance(expression, )
+        pyocl_op = op_map[expression.get_type_name()]
 
 
 class PyOCLPlatform(object):
@@ -177,21 +185,17 @@ class PyOCLPlatform(object):
         """gets validation objects which check the validity of an expression graph"""
         return []
 
-
     def get_optimizations(self):
         """gets optimization objects which implement platform specific optimizations on an expression graph"""
         return []
-
 
     def write_value(self):
         """puts something into the platform valuation (host2device)"""
         pass
 
-
     def read_value(self):
         """reads something from the platform valuation (device2host)"""
         pass
-
 
     def create_function(self, inputs, expressions, updates, name):
         """create appropriate function instance for this platform"""
