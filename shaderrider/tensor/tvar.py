@@ -13,7 +13,7 @@ import numpy as np
 
 
 class Tensor(object):
-    def __init__(self, variable=None, name=None, dtype=None, shape=None):
+    def __init__(self, data=None, name=None, dtype=None, shape=None):
         self._array = np.ndarray(shape)
         pass
 
