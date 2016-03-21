@@ -201,3 +201,71 @@ class PyOCLPlatform(object):
         """create appropriate function instance for this platform"""
         # treba da zamenim sve operatore u grafu operatorima platforme
         return PyOCLFunction()
+
+    def create_neg(self, operand):
+        pass
+
+    def create_exp(self, operand):
+        pass
+
+    def create_log(self, operand):
+        pass
+
+    def create_sin(self, operand):
+        pass
+
+    def create_cos(self, operand):
+        pass
+
+    def create_tan(self, operand):
+        pass
+
+    def create_add(self, op1, op2):
+        pass
+
+    def create_sub(self, op1, op2):
+        pass
+
+    def create_mul(self, op1, op2):
+        pass
+
+    def create_div(self, op1, op2):
+        pass
+
+    def create_pow(self, op1, op2):
+        pass
+
+    def create_eq(self, op1, op2):
+        pass
+
+    def create_gt(self, op1, op2):
+        pass
+
+    def create_lt(self, op1, op2):
+        pass
+
+    def create_ge(self, op1, op2):
+        pass
+
+    def create_le(self, op1, op2):
+        pass
+
+    def create_ne(self, op1, op2):
+        pass
+
+    def create_elementwise(self, formula):
+        pass
+
+    def create_gemm(self, A, B, C,
+                    alpha=exprgraph.Constant(1.0),
+                    beta=exprgraph.Constant(0.0),
+                    transA=exprgraph.Constant(False),
+                    transB=exprgraph.Constant(False),
+                    parent=None):
+        pass
+
+    def create_gemv(self):
+        pass
+
+    def create_ger(self):
+        pass
