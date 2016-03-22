@@ -123,5 +123,5 @@ class GeOP(basic.GeOP):
 class LeOP(basic.LeOP):
     pass
 
-class NeOP(basic.NegOP):
+class NeOP(basic.NeOP):
     pass

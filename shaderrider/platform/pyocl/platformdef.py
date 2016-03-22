@@ -203,58 +203,58 @@ class PyOCLPlatform(object):
         return PyOCLFunction()
 
     def create_neg(self, operand):
-        pass
+        return bo.NegOP(operand)
 
     def create_exp(self, operand):
-        pass
+        return bo.ExpOP(operand)
 
     def create_log(self, operand):
-        pass
+        return bo.LogOP(operand)
 
     def create_sin(self, operand):
-        pass
+        return bo.SinOP(operand)
 
     def create_cos(self, operand):
-        pass
+        return bo.CosOP(operand)
 
     def create_tan(self, operand):
-        pass
+        return bo.TanOP(operand)
 
     def create_add(self, op1, op2):
-        pass
+        return bo.AddOP(op1, op2)
 
     def create_sub(self, op1, op2):
-        pass
+        return bo.SubOP(op1, op2)
 
     def create_mul(self, op1, op2):
-        pass
+        return bo.MulOP(op1, op2)
 
     def create_div(self, op1, op2):
-        pass
+        return bo.DivOP(op1, op2)
 
     def create_pow(self, op1, op2):
-        pass
+        return bo.PowOP(op1, op2)
 
     def create_eq(self, op1, op2):
-        pass
+        return bo.EqOP(op1, op2)
 
     def create_gt(self, op1, op2):
-        pass
+        return bo.GtOP(op1, op2)
 
     def create_lt(self, op1, op2):
-        pass
+        return bo.LtOP(op1, op2)
 
     def create_ge(self, op1, op2):
-        pass
+        return bo.GeOP(op1, op2)
 
     def create_le(self, op1, op2):
-        pass
+        return bo.LeOP(op1, op2)
 
     def create_ne(self, op1, op2):
-        pass
+        return bo.NeOP(op1, op2)
 
     def create_elementwise(self, formula):
-        pass
+        return elementwise.ElementwiseOP(formula)
 
     def create_gemm(self, A, B, C,
                     alpha=exprgraph.Constant(1.0),
@@ -262,7 +262,7 @@ class PyOCLPlatform(object):
                     transA=exprgraph.Constant(False),
                     transB=exprgraph.Constant(False),
                     parent=None):
-        pass
+        return blas.GemmOP(A, B, C, alpha, beta, transA, transB, parent)
 
     def create_gemv(self):
         pass
