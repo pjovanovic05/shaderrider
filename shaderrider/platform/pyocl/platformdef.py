@@ -264,8 +264,9 @@ class PyOCLPlatform(object):
                     parent=None):
         return blas.GemmOP(A, B, C, alpha, beta, transA, transB, parent)
 
-    def create_gemv(self):
-        pass
+    def create_gemv(self, A, X, Y, alpha=exprgraph.Constant(1.0), beta=exprgraph.Constant(0.0),
+                    transA=exprgraph.Constant(False), parent=None):
+        return blas.GemvOP(A, X, Y, alpha, beta, transA, parent)
 
-    def create_ger(self):
-        pass
+    def create_ger(self, alpha, X, Y, A, parent=None):
+        return blas.GerOP(alpha, X, Y, A, parent)
