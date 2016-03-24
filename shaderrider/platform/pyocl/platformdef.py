@@ -202,6 +202,8 @@ class PyOCLPlatform(object):
         # treba da zamenim sve operatore u grafu operatorima platforme
         return PyOCLFunction()
 
+
+class FormulaFactory(object):           # TODO inherit from formula factory, make all methods static
     def create_neg(self, operand):
         return bo.NegOP(operand)
 

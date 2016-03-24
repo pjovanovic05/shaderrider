@@ -13,8 +13,9 @@ import numpy as np
 
 
 class Tensor(object):
-    def __init__(self, data=None, name=None, dtype=None, shape=None):
+    def __init__(self, data=None, name=None, dtype=None, shape=None, formula=None):
         self._array = np.ndarray(shape)
+        self._formuls = formula
         pass
 
     @property
@@ -124,7 +125,13 @@ class Tensor(object):
         pass
 
     def __add__(self, other):
-        pass
+        if isinstance(other, exprgraph.Formula):
+            pass
+        elif True:
+            pass # TODO
+        # get active formula factory
+        # use factory to make AddOP
+        # return Tensor wrapping the AddOP
 
     def __sub__(self, other):
         pass
