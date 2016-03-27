@@ -5,6 +5,7 @@ Defines PyOpenCL platform.
 import pyopencl as cl
 import pyopencl.array as clarray
 
+from shaderrider.generator.codegen import FormulaFactory
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import basic as sbo
 from shaderrider.symbolic import blas as sblas
@@ -203,7 +204,7 @@ class PyOCLPlatform(object):
         return PyOCLFunction()
 
 
-class FormulaFactory(object):           # TODO inherit from formula factory, make all methods static
+class PyOCLFFactory(FormulaFactory):
     def create_neg(self, operand):
         return bo.NegOP(operand)
 

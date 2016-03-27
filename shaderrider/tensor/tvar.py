@@ -16,8 +16,6 @@ import numpy as np
 
 class Tensor(object):
     def __init__(self, data=None, name=None, dtype=None, shape=None, formula=None):
-        # if shape is not None and dtype is not None:
-        #     self._array = np.ndarray(shape=shape, dtype=dtype)
         if formula is not None:
             self._formula = formula
         elif data is not None:
@@ -25,7 +23,7 @@ class Tensor(object):
             if name is not None:
                 self._formula.name = name
         else:
-            self._formula = exprgraph.Atom(name=name, dtype=type, shape=shape)
+            self._formula = exprgraph.Atom(name=name, dtype=dtype, shape=shape)
 
 
     @property
