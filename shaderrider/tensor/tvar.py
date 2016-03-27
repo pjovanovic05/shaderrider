@@ -7,6 +7,8 @@ Variable that abstracts the gpu tensor implementation, and implements shallow em
 # U tensoru cu drzati numpy array, a funkcija koja se konstruise s njim neka brine o pomeranju
 # izmedju host i device memorije.
 
+import numbers
+
 from shaderrider import configuration as config
 from shaderrider.symbolic import exprgraph
 import numpy as np
@@ -14,13 +16,25 @@ import numpy as np
 
 class Tensor(object):
     def __init__(self, data=None, name=None, dtype=None, shape=None, formula=None):
-        self._array = np.ndarray(shape)
-        self._formuls = formula
-        pass
+        # if shape is not None and dtype is not None:
+        #     self._array = np.ndarray(shape=shape, dtype=dtype)
+        if formula is not None:
+            self._formula = formula
+        elif data is not None:
+            self._formula = exprgraph.Constant(data)
+            if name is not None:
+                self._formula.name = name
+        else:
+            self._formula = exprgraph.Atom(name=name, dtype=type, shape=shape)
+
+
+    @property
+    def formula(self):
+        return self._formula
 
     @property
     def ndim(self):
-        return self._array.ndim
+        return len(self._formula.get_shape())   # TODO shape inference, could be slow
 
     @property
     def type(self):
@@ -28,7 +42,7 @@ class Tensor(object):
 
     @property
     def dtype(self):
-        return self._array.dtype
+        return self._array.dtype            # TODO there's no good equivalent in exprgraph
 
     @property
     def T(self):
@@ -45,6 +59,8 @@ class Tensor(object):
 
     def ravel(self):
         pass
+
+    # reductions
 
     def any(self, axis=None, keepdims=False):
         pass
@@ -124,14 +140,20 @@ class Tensor(object):
     def zeros_like(self, model, dtype=None):
         pass
 
+    # arithmetic
+
     def __add__(self, other):
+        otherf = None
         if isinstance(other, exprgraph.Formula):
-            pass
-        elif True:
-            pass # TODO
-        # get active formula factory
+            otherf = other
+        elif isinstance(other, np.ndarray) or isinstance(other, numbers.Number):
+            otherf = exprgraph.Constant(other)
+        else:
+            raise NotImplementedError('unsupported operand type')
         # use factory to make AddOP
+        newf = config.get_formula_factory().create_add(self, otherf)
         # return Tensor wrapping the AddOP
+        return Tensor(formula=newf)
 
     def __sub__(self, other):
         pass
@@ -208,10 +230,36 @@ class Tensor(object):
     def __ror__(self, other):
         pass
 
+    def __invert__(self):
+        pass
+
+    def __pos__(self):
+        pass
+
     def __neg__(self):
         pass
 
     def __abs__(self):
+        pass
+
+    # comparisons
+
+    def __eq__(self, other):
+        pass
+
+    def __ne__(self, other):
+        pass
+
+    def __lt__(self, other):
+        pass
+
+    def __le__(self, other):
+        pass
+
+    def __gt__(self, other):
+        pass
+
+    def __ge__(self, other):
         pass
 
 
@@ -245,3 +293,10 @@ def neg(t1):
 
 def exp(t1):
     pass
+
+
+# linear algebra
+
+def dot(a, b):
+    pass
+

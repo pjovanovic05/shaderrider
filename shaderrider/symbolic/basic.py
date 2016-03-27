@@ -466,5 +466,13 @@ class NeOP(BinaryOP):
 
 # Tensor ops...
 
-class Reshape(ast.Operator):
+class ReshapeOP(ast.Operator):
+    pass
+
+
+class IndexOP(ast.Operator):
+    pass
+
+
+class TransposeOP(ast.Operator):
     pass

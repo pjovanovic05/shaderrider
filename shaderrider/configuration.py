@@ -10,3 +10,7 @@ class Configuration(object):
 
 def get_platform():
     pass
+
+
+def get_formula_factory():
+    pass

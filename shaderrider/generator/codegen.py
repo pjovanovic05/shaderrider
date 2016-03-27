@@ -1,5 +1,7 @@
 import abc
 
+from shaderrider.symbolic import exprgraph
+
 
 class OpGenerator(object):
     """
@@ -103,3 +105,97 @@ class OpEvaluator(object):
 class OpEvalGenerator(object):
     def generate(self, op, ctx):
         raise NotImplementedError
+
+
+class FormulaFactory(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def create_neg(self, operand):
+        pass
+
+    @abc.abstractmethod
+    def create_exp(self, operand):
+        pass
+
+    @abc.abstractmethod
+    def create_log(self, operand):
+        pass
+
+    @abc.abstractmethod
+    def create_sin(self, operand):
+        pass
+
+    @abc.abstractmethod
+    def create_cos(self, operand):
+        pass
+
+    @abc.abstractmethod
+    def create_tan(self, operand):
+        pass
+
+    @abc.abstractmethod
+    def create_add(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_sub(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_mul(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_div(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_pow(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_eq(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_gt(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_lt(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_ge(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_le(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_ne(self, op1, op2):
+        pass
+
+    @abc.abstractmethod
+    def create_elementwise(self, formula):
+        pass
+
+    @abc.abstractmethod
+    def create_gemm(self, A, B, C,
+                    alpha=exprgraph.Constant(1.0),
+                    beta=exprgraph.Constant(0.0),
+                    transA=exprgraph.Constant(False),
+                    transB=exprgraph.Constant(False),
+                    parent=None):
+        pass
+
+    @abc.abstractmethod
+    def create_gemv(self, A, X, Y, alpha=exprgraph.Constant(1.0), beta=exprgraph.Constant(0.0),
+                    transA=exprgraph.Constant(False), parent=None):
+        pass
+
+    @abc.abstractmethod
+    def create_ger(self, alpha, X, Y, A, parent=None):
+        pass
