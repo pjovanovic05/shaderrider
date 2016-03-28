@@ -212,6 +212,10 @@ class CosOP(UnaryOP):
         raise NotImplementedError
 
 
+class CoshOP(UnaryOP):
+    pass
+
+
 class TanOP(UnaryOP):
     _type_name = "Tan"
 
@@ -248,6 +252,10 @@ class FloorOP(UnaryOP):
 
 
 class RoundOP(UnaryOP):
+    pass
+
+
+class SqrtOP(UnaryOP):
     pass
 
 
