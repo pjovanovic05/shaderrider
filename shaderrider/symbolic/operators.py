@@ -5,7 +5,8 @@ WRITEME
 """
 import abc
 
-from shaderrider.core import IncompatibleDimensionsError
+import shaderrider.configuration as config
+from shaderrider.core import IncompatibleDimensionsError, NondifferentiableOpError
 from shaderrider.generator.codegen import FormulaFactory            # TODO gradient and substitutions need to use this
 from shaderrider.symbolic import exprgraph
 
@@ -57,41 +58,182 @@ class BinaryOP(exprgraph.Operator):
 # TENSOR OPS ##########################################################
 
 class ReshapeOP(exprgraph.Operator):
-    pass
+    _type_name = 'Reshape'
+
+    def __init__(self, arr, shape, parent=None):
+        super(ReshapeOP, self).__init__(2, [arr, shape], parent)
+        assert isinstance(shape, exprgraph.Constant) or isinstance(shape, tuple)
+        # assert isinstance(arr, exprgraph.Atom)  # da li???  IPAK NE
+
+        self._shape = shape if isinstance(shape, tuple) else None   # TODO extract shape
+        # TODO check transformation compatibility
+        # multiply shape components and see if the lengths match current length
+
+    def gradient(self, wrt):
+        raise NondifferentiableOpError
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_reshape(self.operands[0].substitute(a,b), self._shape)
+
+    def get_shape(self):
+        return self._shape
+
+    def simplify(self):
+        ff = config.get_formula_factory()
+        return ff.create_reshape(self.operands[0].simplify(), self._shape)
 
 
 class IndexOP(exprgraph.Operator):
-    pass
+    _type_name = 'Index'
+    # TODO proveri kako se radi ono advanced i basic indeksiranje u Theanou i sta od toga moze u pyopenclu.
+    
+    def __init__(self, parent=None):
+        super(IndexOP, self).__init__(1,[], parent)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_index()
+
+    def simplify(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def get_shape(self):
+        pass
 
 
-class TransposeOP(exprgraph.Operator):
-    pass
+class TransposeOP(UnaryOP):
+    _type_name = 'Transpose'
+
+    def __init__(self, op, axes=None, parent=None):
+        super(TransposeOP, self).__init__(1, [op], parent)
+        self._axes = axes
+
+    def simplify(self):
+        # some ideas:
+        # if op is also a transpose on the same axes, cancel out
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_transpose(self.operands[0])
 
 
 class DimshuffleOP(exprgraph.Operator):
-    pass
+    _type_name = 'Dimshuffle'
+
+    def __init__(self, op, new_dims, parent=None):
+        super(DimshuffleOP, self).__init__(2, [op, new_dims], parent)
+
+    def simplify(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+    def get_shape(self):
+        pass
 
 
-class RavelOP(exprgraph.Operator):
-    pass
+class RavelOP(UnaryOP):
+    _type_name = 'Ravel'
+
+    def __init__(self, op, parent=None):
+        super(RavelOP, self).__init__(1, [op], parent)
+
+    def simplify(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+    def get_shape(self):
+        pass
 
 
 class DiagonalOP(exprgraph.Operator):
-    pass
+    _type_name = 'Diagonal'
+
+    def __init__(self, op, parent=None):
+        super(DiagonalOP, self).__init__(1, [op], parent)
+
+    def simplify(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+    def get_shape(self):
+        pass
 
 
 class TraceOP(exprgraph.Operator):
-    pass
+    _type_name = 'Trace'
+
+    def __init__(self, op, parent=None):
+        super(TraceOP, self).__init__(1, [op], parent)
+
+    def simplify(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+    def get_shape(self):
+        pass
 
 
 class NormOP(exprgraph.Operator):
-    pass
+    _type_name = 'Norm'
+
+    def __init__(self, op, norm, parent=None):
+        super(NormOP, self).__init__(2, [op, norm], parent)
+
+    def simplify(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+    def get_shape(self):
+        pass
 
 
 # ARITHMETIC OPS ######################################################
 
 class AbsOP(UnaryOP):
-    pass
+    _type_name = 'Abs'
+
 
 class NegOP(UnaryOP):
     _type_name = "Neg"

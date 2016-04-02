@@ -1,5 +1,5 @@
 """
-vast.py: Vermilion Abstract Syntax Tree
+exprgraph.py: Abstract Syntax Tree
 Contains the base classes for specifying symbolic expression structure.
 """
 

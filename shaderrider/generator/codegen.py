@@ -110,6 +110,15 @@ class OpEvalGenerator(object):
 class FormulaFactory(object):
     __metaclass__ = abc.ABCMeta
 
+    def create_op(self, type_name, operands):
+        if type_name == 'Neg':
+            return self.create_neg(operands[0])
+        elif type_name == 'exp':
+            return self.create_exp(operands[0])
+        # ...
+        else:
+            raise ValueError('Unknown operand type name: ' + type_name)
+
     @abc.abstractmethod
     def create_neg(self, operand):
         pass
