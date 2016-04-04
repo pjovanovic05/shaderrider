@@ -91,8 +91,14 @@ class IndexOP(exprgraph.Operator):
     _type_name = 'Index'
     # TODO proveri kako se radi ono advanced i basic indeksiranje u Theanou i sta od toga moze u pyopenclu.
     
-    def __init__(self, parent=None):
-        super(IndexOP, self).__init__(1,[], parent)
+    def __init__(self, op, key, parent=None):
+        """
+        WRITEME
+
+        :param key an integer or slice object wrapped in a exprgraph.Constant
+        """
+        super(IndexOP, self).__init__(1, [op, key], parent)
+        self._key = key
 
     def substitute(self, a, b):
         if self == a:
@@ -102,13 +108,14 @@ class IndexOP(exprgraph.Operator):
             return ff.create_index()
 
     def simplify(self):
-        pass
+        ff = config.get_formula_factory()
+        return ff.create_index(self.operands[0].simplify(), self._key, self._parent)
 
     def gradient(self, wrt):
-        pass
+        raise NondifferentiableOpError
 
     def get_shape(self):
-        pass
+        pass    # TODO calculate size and shape of the result if possible?
 
 
 class TransposeOP(UnaryOP):
@@ -124,14 +131,14 @@ class TransposeOP(UnaryOP):
         pass
 
     def gradient(self, wrt):
-        pass
+        raise NondifferentiableOpError
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_transpose(self.operands[0])
+            return ff.create_transpose(self.operands[0].substitute(a, b))
 
 
 class DimshuffleOP(exprgraph.Operator):
@@ -139,18 +146,23 @@ class DimshuffleOP(exprgraph.Operator):
 
     def __init__(self, op, new_dims, parent=None):
         super(DimshuffleOP, self).__init__(2, [op, new_dims], parent)
+        self._new_dims = new_dims
 
     def simplify(self):
         pass
 
     def gradient(self, wrt):
-        pass
+        raise NondifferentiableOpError
 
     def substitute(self, a, b):
-        pass
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_dimshuffle(self.operands[0].substitute(a, b), self._new_dims)
 
     def get_shape(self):
-        pass
+        return self._new_dims
 
 
 class RavelOP(UnaryOP):
@@ -160,16 +172,21 @@ class RavelOP(UnaryOP):
         super(RavelOP, self).__init__(1, [op], parent)
 
     def simplify(self):
+        # idea: if op is already a vector just omit this operator.
         pass
 
     def gradient(self, wrt):
-        pass
+        raise NondifferentiableOpError
 
     def substitute(self, a, b):
-        pass
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_ravel(self.operands[0].substitute(a, b))
 
     def get_shape(self):
-        pass
+        return (sum(self.operands[0].get_shape()),)
 
 
 class DiagonalOP(exprgraph.Operator):
@@ -182,10 +199,14 @@ class DiagonalOP(exprgraph.Operator):
         pass
 
     def gradient(self, wrt):
-        pass
+        raise NondifferentiableOpError
 
     def substitute(self, a, b):
-        pass
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_diagonal(self.operands[0].substitute(a, b)) # TODO parent?
 
     def get_shape(self):
         pass
@@ -201,13 +222,17 @@ class TraceOP(exprgraph.Operator):
         pass
 
     def gradient(self, wrt):
-        pass
+        raise NondifferentiableOpError
 
     def substitute(self, a, b):
-        pass
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_trace(self.operands[0].substitute(a, b))
 
     def get_shape(self):
-        pass
+        return (1,)
 
 
 class NormOP(exprgraph.Operator):
@@ -223,7 +248,11 @@ class NormOP(exprgraph.Operator):
         pass
 
     def substitute(self, a, b):
-        pass
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_norm(self.operands[0].substitute(a, b), self.operands[1])
 
     def get_shape(self):
         pass
@@ -234,6 +263,23 @@ class NormOP(exprgraph.Operator):
 class AbsOP(UnaryOP):
     _type_name = 'Abs'
 
+    def __init__(self, op, parent):
+        super(AbsOP, self).__init__(1, [op], parent)
+
+    def simplify(self):
+        # if operand is also abs, colapse it
+        # if operand is a constant, colapse this into a constant
+        pass
+
+    def gradient(self, wrt):
+        pass # <0 : -1, 0: 0, >0: 1
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_abs(self.operands[0].substitute(a, b)) # parent?
 
 class NegOP(UnaryOP):
     _type_name = "Neg"
