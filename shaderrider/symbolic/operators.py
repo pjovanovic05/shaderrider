@@ -263,7 +263,7 @@ class NormOP(exprgraph.Operator):
 class AbsOP(UnaryOP):
     _type_name = 'Abs'
 
-    def __init__(self, op, parent):
+    def __init__(self, op, parent=None):
         super(AbsOP, self).__init__(1, [op], parent)
 
     def simplify(self):
@@ -281,11 +281,12 @@ class AbsOP(UnaryOP):
             ff = config.get_formula_factory()
             return ff.create_abs(self.operands[0].substitute(a, b)) # parent?
 
+
 class NegOP(UnaryOP):
     _type_name = "Neg"
 
-    def __init__(self, operand):
-        super(NegOP, self).__init__(1, [operand])
+    def __init__(self, operand, parent=None):
+        super(NegOP, self).__init__(1, [operand], parent)
 
     def __str__(self):
         return '-(%s)' % str(self.operands[0])
@@ -293,7 +294,9 @@ class NegOP(UnaryOP):
     def substitute(self, a, b):
         if self == a:
             return b
-        return NegOP(self.operands[0].substitute(a, b))         # FIXME use factory!!
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_neg(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         return NegOP(self.operands[0].gradient(wrt))            # FIXME use factory!!
@@ -308,8 +311,8 @@ class NegOP(UnaryOP):
 class ExpOP(UnaryOP):
     _type_name = "Exp"
 
-    def __init__(self, operand):
-        super(ExpOP, self).__init__(1, [operand])
+    def __init__(self, operand, parent=None):
+        super(ExpOP, self).__init__(1, [operand], parent)
 
     def __str__(self):
         return 'exp(%s)' % str(self.operands[0])
@@ -317,7 +320,9 @@ class ExpOP(UnaryOP):
     def substitute(self, a, b):
         if self == a:
             return b
-        return ExpOP(self.operands[0].substitute(a, b))
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_exp(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         return ExpOP(self.operands[0])
@@ -334,8 +339,8 @@ class ExpOP(UnaryOP):
 class LogOP(UnaryOP):
     _type_name = "Log"
 
-    def __init__(self, operand):
-        super(LogOP, self).__init__(1, [operand])
+    def __init__(self, operand, parent=None):
+        super(LogOP, self).__init__(1, [operand], parent)
 
     def __str__(self):
         return 'log(%s)' % str(self.operands[0])
@@ -343,7 +348,9 @@ class LogOP(UnaryOP):
     def substitute(self, a, b):
         if self == a:
             return b
-        return LogOP(self.operands[0].substitute(a, b))
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_log(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -357,8 +364,8 @@ class LogOP(UnaryOP):
 class SinOP(UnaryOP):
     _type_name = "Sin"
 
-    def __init__(self, operand):
-        super(SinOP, self).__init__(1, [operand])
+    def __init__(self, operand, parent=None):
+        super(SinOP, self).__init__(1, [operand], parent)
 
     def __str__(self):
         return 'sin(%s)' % str(self.operands[0])
@@ -366,7 +373,9 @@ class SinOP(UnaryOP):
     def substitute(self, a, b):
         if self == a:
             return b
-        return SinOP(self.operands[0].substitute(a, b))
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_sin(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -380,8 +389,8 @@ class SinOP(UnaryOP):
 class CosOP(UnaryOP):
     _type_name = "Cos"
 
-    def __init__(self, operand):
-        super(CosOP, self).__init__(1, [operand])
+    def __init__(self, operand, parent=None):
+        super(CosOP, self).__init__(1, [operand], parent)
 
     def __str__(self):
         return "cos(%s)" % str(self.operands[0])
@@ -389,7 +398,9 @@ class CosOP(UnaryOP):
     def substitute(self, a, b):
         if self == a:
             return b
-        return CosOP(self.operands[0].substitute(a, b))
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_cos(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -401,14 +412,33 @@ class CosOP(UnaryOP):
 
 
 class CoshOP(UnaryOP):
-    pass
+    _type_name = 'Cosh'
+
+    def __init__(self, operand, parent=None):
+        super(CoshOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return "cos(%s)" % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_cosh(self.operands[0].substitute(a, b))
+
+    def simplify(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
 
 
 class TanOP(UnaryOP):
     _type_name = "Tan"
 
-    def __init__(self, operand):
-        super(TanOP, self).__init__(1, [operand])
+    def __init__(self, operand, parent=None):
+        super(TanOP, self).__init__(1, [operand], parent)
 
     def __str__(self):
         return "tan(%s)" % str(self.operands[0])
@@ -416,7 +446,9 @@ class TanOP(UnaryOP):
     def substitute(self, a, b):
         if self == a:
             return b
-        return TanOP(self.operands[0].substitute(a, b))
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_tan(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -428,23 +460,118 @@ class TanOP(UnaryOP):
 
 
 class SignOP(UnaryOP):
-    pass
+    _type_name = 'Sign'
+
+    def __init__(self, operand, parent=None):
+        super(SignOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return "sign(%s)" % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_sign(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
 
 
 class CeilOP(UnaryOP):
-    pass
+    _type_name = 'Ceil'
+
+    def __init__(self, operand, parent=None):
+        super(CeilOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return 'ceil(%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_ceil(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        pass    # Nondifferentiable?
+
+    def simplify(self):
+        pass
 
 
 class FloorOP(UnaryOP):
-    pass
+    _type_name = 'Floor'
+
+    def __init__(self, operand, parent=None):
+        super(FloorOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return 'floor(%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_floor(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
 
 
 class RoundOP(UnaryOP):
-    pass
+    _type_name = 'Round'
+
+    def __init__(self, operand, parent=None):
+        super(RoundOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return 'round(%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_round(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
 
 
 class SqrtOP(UnaryOP):
-    pass
+    _type_name = 'Sqrt'
+
+    def __init__(self, operand, parent=None):
+        super(SqrtOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return 'sqrt(%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_sqrt(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
 
 
 class MaximumOP(BinaryOP):
