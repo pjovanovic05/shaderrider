@@ -601,12 +601,63 @@ class ElementwiseOP(exprgraph.Operator):
         pass
 
     def simplify(self):
-        pass
+        pass    # isn't it an error to call this for elementwise?
 
 
 # SCAN OPS ############################################################
 
-# sum, max, min, mean, std,
+# sum, max, min, mean, std
+
+# mogao bih da imam map expression?
+# mogao bih da imam i expression koji se koristi za redukovanje?
+# ali mogao bih i samo da blize pratim pyopencl pristup i da prosledim konkretne parametre
+# koji bi direktno konstruisali operator?
+# Da li se moze naci gradijent toga?
+class ReduceOP(exprgraph.Operator):
+    _type_name = 'Reduce'
+    
+    def __init__(self, operands, neutral, reduce_expr, map_expr=None, parent=None):
+        super(ReduceOP, self).__init__(len(operands), operands, parent)
+        self._neutral = neutral
+        self._reduce_expr = reduce_expr
+        self._map_expr = map_expr
+
+    def get_shape(self):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
+
+
+class ScanOP(exprgraph.Operator):
+    _type_name = 'Scan'
+
+    def __init__(self, operands, input_expr, scan_expr, neutral, parent=None):
+        super(ScanOP, self).__init__(len(operands), operands, parent)
+        self._input_expr = input_expr
+        self._scan_expr = scan_expr
+        self._neutral = neutral
+
+    def get_shape(self):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
+
+
+
 
 
 # BLAS OPS ############################################################
