@@ -7,8 +7,9 @@ import abc
 
 import shaderrider.configuration as config
 from shaderrider.core import IncompatibleDimensionsError, NondifferentiableOpError
-from shaderrider.generator.codegen import FormulaFactory            # TODO gradient and substitutions need to use this
+from shaderrider.generator.codegen import FormulaFactory  # TODO gradient and substitutions need to use this
 from shaderrider.symbolic import exprgraph
+
 
 # TOC
 #  - abstract ops
@@ -65,7 +66,7 @@ class ReshapeOP(exprgraph.Operator):
         assert isinstance(shape, exprgraph.Constant) or isinstance(shape, tuple)
         # assert isinstance(arr, exprgraph.Atom)  # da li???  IPAK NE
 
-        self._shape = shape if isinstance(shape, tuple) else None   # TODO extract shape
+        self._shape = shape if isinstance(shape, tuple) else None  # TODO extract shape
         # TODO check transformation compatibility
         # multiply shape components and see if the lengths match current length
 
@@ -77,7 +78,7 @@ class ReshapeOP(exprgraph.Operator):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_reshape(self.operands[0].substitute(a,b), self._shape)
+            return ff.create_reshape(self.operands[0].substitute(a, b), self._shape)
 
     def get_shape(self):
         return self._shape
@@ -89,8 +90,9 @@ class ReshapeOP(exprgraph.Operator):
 
 class IndexOP(exprgraph.Operator):
     _type_name = 'Index'
+
     # TODO proveri kako se radi ono advanced i basic indeksiranje u Theanou i sta od toga moze u pyopenclu.
-    
+
     def __init__(self, op, key, parent=None):
         """
         WRITEME
@@ -115,7 +117,7 @@ class IndexOP(exprgraph.Operator):
         raise NondifferentiableOpError
 
     def get_shape(self):
-        pass    # TODO calculate size and shape of the result if possible?
+        pass  # TODO calculate size and shape of the result if possible?
 
 
 class TransposeOP(UnaryOP):
@@ -206,7 +208,7 @@ class DiagonalOP(exprgraph.Operator):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_diagonal(self.operands[0].substitute(a, b)) # TODO parent?
+            return ff.create_diagonal(self.operands[0].substitute(a, b))  # TODO parent?
 
     def get_shape(self):
         pass
@@ -272,14 +274,14 @@ class AbsOP(UnaryOP):
         pass
 
     def gradient(self, wrt):
-        pass # <0 : -1, 0: 0, >0: 1
+        pass  # <0 : -1, 0: 0, >0: 1
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_abs(self.operands[0].substitute(a, b)) # parent?
+            return ff.create_abs(self.operands[0].substitute(a, b))  # parent?
 
 
 class NegOP(UnaryOP):
@@ -299,13 +301,13 @@ class NegOP(UnaryOP):
             return ff.create_neg(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
-        return NegOP(self.operands[0].gradient(wrt))            # FIXME use factory!!
+        return NegOP(self.operands[0].gradient(wrt))  # FIXME use factory!!
 
     def simplify(self):
         simp_op = self.operands[0].simplify()
         if type(simp_op) == type(self):
             return simp_op.operands[0]
-        return NegOP(simp_op)                                   # FIXME use factory!!
+        return NegOP(simp_op)  # FIXME use factory!!
 
 
 class ExpOP(UnaryOP):
@@ -329,7 +331,7 @@ class ExpOP(UnaryOP):
 
     def simplify(self):
         simp_op = self.operands[0].simplify()
-                                                                # TODO wtf?
+        # TODO wtf?
         if isinstance(simp_op, ExpOP):
             return simp_op.operands[0]
 
@@ -499,7 +501,7 @@ class CeilOP(UnaryOP):
             return ff.create_ceil(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
-        pass    # Nondifferentiable?
+        pass  # Nondifferentiable?
 
     def simplify(self):
         pass
@@ -575,11 +577,118 @@ class SqrtOP(UnaryOP):
 
 
 class MaximumOP(BinaryOP):
-    pass
+    _type_name = 'Maximum'
+
+    def __init__(self, op1, op2, parent=None):
+        super(MaximumOP, self).__init__(2, [op1, op2], parent)
+
+    def substitute(self, a, b):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
 
 
 class MinimumOP(BinaryOP):
-    pass
+    _type_name = 'Minimum'
+
+    def __init__(self, op1, op2, parent=None):
+        super(MinimumOP, self).__init__(2, [op1, op2], parent)
+
+    def substitute(self, a, b):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
+
+
+class AddOP(BinaryOP):
+    _type_name = 'Add'
+    isCommutative = True
+    isAssociative = True
+
+    def __init__(self, op1, op2, parent=None):
+        super(AddOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s + %s)' % (str(self.operands[0]), str(self.operands[1]))
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_add(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        ff = config.get_formula_factory()
+        return ff.create_add(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
+
+    def simplify(self):
+        raise NotImplementedError
+
+
+class SubOP(BinaryOP):
+    _type_name = 'Sub'
+    isCommutative = False
+    isAssociative = False
+
+    def __init__(self, op1, op2, parent=None):
+        super(SubOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s - %s)' % (str(self.operands[0]), str(self.operands[1]))
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_sub(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        ff = config.get_formula_factory()
+        return ff.create_sub(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
+
+    def simplify(self):
+        raise NotImplementedError
+
+
+class MulOP(BinaryOP):
+    _type_name = 'Mul'
+    isCommutative = True
+    isAssociative = False
+
+    def __init__(self, op1, op2, parent=None):
+        super(MulOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s * %s)' % (str(self.operands[0]), str(self.operands[1]))
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        raise NotImplementedError
+
+
+class DivOP(BinaryOP):
+    _type_name = 'Div'
+
+    # TODO STAO OVDE STAO OVDE STAO OVDE STAO OVDE STAO OVDE STAO OVDE STAO OVDE
 
 
 # ELEMENTWISE OP ######################################################
@@ -601,7 +710,7 @@ class ElementwiseOP(exprgraph.Operator):
         pass
 
     def simplify(self):
-        pass    # isn't it an error to call this for elementwise?
+        pass  # isn't it an error to call this for elementwise?
 
 
 # SCAN OPS ############################################################
@@ -615,7 +724,7 @@ class ElementwiseOP(exprgraph.Operator):
 # Da li se moze naci gradijent toga?
 class ReduceOP(exprgraph.Operator):
     _type_name = 'Reduce'
-    
+
     def __init__(self, operands, neutral, reduce_expr, map_expr=None, parent=None):
         super(ReduceOP, self).__init__(len(operands), operands, parent)
         self._neutral = neutral
@@ -655,9 +764,6 @@ class ScanOP(exprgraph.Operator):
 
     def simplify(self):
         pass
-
-
-
 
 
 # BLAS OPS ############################################################
@@ -780,6 +886,5 @@ class GerOP(exprgraph.Operator):
 
     def simplify(self):
         pass
-
 
 # CONVOLUTION OPS #####################################################
