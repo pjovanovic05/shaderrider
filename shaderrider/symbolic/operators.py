@@ -553,6 +553,29 @@ class RoundOP(UnaryOP):
         pass
 
 
+class SqrOP(UnaryOP):
+    _type_name = 'Sqr'
+
+    def __init__(self, op, parent=None):
+        super(SqrOP, self).__init__(1, [op], parent)
+
+    def __str__(self):
+        return '(%s ^ 2)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_sqr(self.operands[0].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        raise NotImplementedError
+
+
 class SqrtOP(UnaryOP):
     _type_name = 'Sqrt'
 
@@ -679,7 +702,9 @@ class MulOP(BinaryOP):
             return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
 
     def gradient(self, wrt):
-        pass
+        ff = config.get_formula_factory()
+        return ff.create_add(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
+                             ff.create_mul(self.operands[0], self.operands[1].gradient(wrt)))
 
     def simplify(self):
         raise NotImplementedError
@@ -687,8 +712,55 @@ class MulOP(BinaryOP):
 
 class DivOP(BinaryOP):
     _type_name = 'Div'
+    isCommutative = False
+    isAssociative = True
 
-    # TODO STAO OVDE STAO OVDE STAO OVDE STAO OVDE STAO OVDE STAO OVDE STAO OVDE
+    def __init__(self, op1, op2, parent=None):
+        super(DivOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s / %s)' % map(str, self.operands)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_div(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        ff = config.get_formula_factory()
+        return ff.create_div(ff.create_sub(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
+                                           ff.create_mul(self.operands[0], self.operands[1].gradient(wrt))),
+                             ff.create_pow(self.operands[1], exprgraph.Constant(2)))
+
+    def simplify(self):
+        raise NotImplementedError
+
+
+class PowOP(BinaryOP):
+    _type_name = 'Pow'
+    isCommutative = False
+    isAssociative = False
+
+    def __init__(self, op1, op2, parent=None):
+        super(PowOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s ^ %s)' % (str(self.operands[0]), str(self.operands[1]))
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_pow(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        raise NotImplementedError
 
 
 # ELEMENTWISE OP ######################################################
@@ -887,4 +959,8 @@ class GerOP(exprgraph.Operator):
     def simplify(self):
         pass
 
+
 # CONVOLUTION OPS #####################################################
+
+class Conv(exprgraph.Operator):
+    _type_name = 'Conv'

@@ -264,7 +264,7 @@ class MulOP(BinaryOP):
 class DivOP(BinaryOP):
     _type_name = "Div"
     isCommutative = False
-    isAssociative = False
+    isAssociative = False   # rly?
 
     def __init__(self, op1, op2):
         super(DivOP, self).__init__(2, [op1, op2])
