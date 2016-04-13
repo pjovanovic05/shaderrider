@@ -962,5 +962,15 @@ class GerOP(exprgraph.Operator):
 
 # CONVOLUTION OPS #####################################################
 
-class Conv(exprgraph.Operator):
+class ConvOP(exprgraph.Operator):
     _type_name = 'Conv'
+
+    def __init__(self, input, filters, image_shape=None, filter_shape=None, border_mode='valid', ):
+
+
+class PoolOP(exprgraph.Operator):
+    pass
+
+
+class DownsampleOP(exprgraph.Operator):
+    pass
