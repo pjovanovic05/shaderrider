@@ -965,8 +965,9 @@ class GerOP(exprgraph.Operator):
 class ConvOP(exprgraph.Operator):
     _type_name = 'Conv'
 
-    def __init__(self, input, filters, image_shape=None, filter_shape=None, border_mode='valid', ):
-
+    def __init__(self, input, filters, image_shape=None, filter_shape=None, border_mode='valid', parent=None):
+        super(ConvOP, self).__init__(1, [input], parent)
+        # TODO input should be an Atom
 
 class PoolOP(exprgraph.Operator):
     pass
