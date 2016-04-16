@@ -147,7 +147,7 @@ class DimshuffleOP(exprgraph.Operator):
     _type_name = 'Dimshuffle'
 
     def __init__(self, op, new_dims, parent=None):
-        super(DimshuffleOP, self).__init__(2, [op, new_dims], parent)
+        super(DimshuffleOP, self).__init__(1, [op], parent)
         self._new_dims = new_dims
 
     def simplify(self):
