@@ -776,7 +776,7 @@ class ElementwiseOP(exprgraph.Operator):
         pass
 
     def get_shape(self):
-        pass
+        return self.operands[0].get_shape()     # does output have to have this dimension?
 
     def gradient(self, wrt):
         pass
