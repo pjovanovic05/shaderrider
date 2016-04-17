@@ -119,3 +119,210 @@ class CoshOP(operators.CoshOP):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.cosh(param)
         return None
+
+
+class TanOP(operators.TanOP):
+    def evaluate(self, valuation=None):
+        param = valuation[self.operands[0].fid]
+        valuation[self.fid] = clmath.tan(param)
+        return None
+
+
+class SignOP(operators.SignOP):
+    def evaluate(self, valuation=None):
+        raise NotImplementedError
+
+
+class CeilOP(operators.CeilOP):
+    def evaluate(self, valuation=None):
+        param = valuation[self.operands[0].fid]
+        valuation[self.fid] = clmath.ceil(param)
+        return None
+
+
+class FloorOP(operators.FloorOP):
+    def evaluate(self, valuation=None):
+        param = valuation[self.operands[0].fid]
+        valuation[self.fid] = clmath.floor(param)
+        return None
+
+
+class RoundOP(operators.RoundOP):
+    def evaluate(self, valuation=None):
+        param = valuation[self.operands[0].fid]
+        valuation[self.fid] = clmath.round(param)
+        return None
+
+
+class SqrOP(operators.SqrOP):
+    def evaluate(self, valuation=None):
+        param = valuation[self.operands[0].fid]
+        # valuation[self.fid] = TODO
+        raise NotImplementedError
+
+
+class SqrtOP(operators.SqrtOP):
+    def evaluate(self, valuation=None):
+        param = valuation[self.operands[0].fid]
+        valuation[self.fid] = clmath.sqrt(param)
+        return None
+
+
+class MaximumOP(operators.MaximumOP):
+    def evaluate(self, valuation=None):
+        a = valuation[self.operands[0].fid]
+        b = valuation[self.operands[1].fid]
+        out = valuation[self.fid] if self.fid in valuation else None
+        valuation[self.fid] = array.maximum(a, b, out)
+        return None
+
+
+class MinimumOP(operators.MinimumOP):
+    def evaluate(self, valuation=None):
+        a = valuation[self.operands[0].fid]
+        b = valuation[self.operands[1].fid]
+        out = valuation[self.fid] if self.fid in valuation else None
+        valuation[self.fid] = array.minimum(a, b, out)
+        return None
+
+
+class AddOP(operators.AddOP):
+    def evaluate(self, valuation=None):
+        a = valuation[self.operands[0].fid]
+        b = valuation[self.operands[1].fid]
+        valuation[self.fid] = a + b
+        return None
+
+
+class SubOP(operators.SubOP):
+    def evaluate(self, valuation=None):
+        a = valuation[self.operands[0].fid]
+        b = valuation[self.operands[1].fid]
+        valuation[self.fid] = a - b
+        return None
+
+
+class MulOP(operators.MulOP):
+    def evaluate(self, valuation=None):
+        a = valuation[self.operands[0].fid]
+        b = valuation[self.operands[1].fid]
+        valuation[self.fid] = a * b
+        return None
+
+
+class DivOP(operators.DivOP):
+    def evaluate(self, valuation=None):
+        a = valuation[self.operands[0].fid]
+        b = valuation[self.operands[1].fid]
+        valuation[self.fid] = a / b
+        return None
+
+
+class PowOP(operators.PowOP):
+    def evaluate(self, valuation=None):
+        a = valuation[self.operands[0].fid]
+        b = valuation[self.operands[1].fid]
+        valuation[self.fid] = a ** b
+        return None
+
+
+# ELEMENTWISE OP ######################################################
+
+class ElementwiseOP(operators.ElementwiseOP):
+    def __init__(self, expr, ops, ctx=None, device=0, parent=None):
+        super(ElementwiseOP, self).__init__(expr, ops, parent)
+        self._ctx = ctx
+        self._device = device
+        self.evaluate = self.generate_eval()
+
+    def generate_eval(self):
+        atoms = self._expr.get_atoms()
+
+        def evaluatefn(self, valuation, events=None, device=0):
+            pass
+
+        return evaluatefn
+
+
+def _c_expr(formula):
+    if isinstance(formula, exprgraph.Atom):
+        if formula.is_array():
+            return formula.name + '[i]'
+        return formula.name
+    if isinstance(formula, exprgraph.Constant):
+        if formula.is_array():  # TODO check this
+            return formula.fid + '[i]'
+        return formula.fid
+    if isinstance(formula, operators.NegOP):
+        return '-(%s)' % _c_expr(formula.operands[0])
+    if isinstance(formula, operators.ExpOP):
+        return 'exp(%s)' % _c_expr(formula.operands[0])
+    if isinstance(formula, operators.LogOP):
+        return 'log(%s)' % _c_expr(formula.operands[0])
+    if isinstance(formula, operators.SinOP):
+        return 'sin(%s)' % _c_expr(formula.operands[0])
+    if isinstance(formula, operators.CosOP):
+        return 'cos(%s)' % _c_expr(formula.operands[0])
+    if isinstance(formula, operators.TanOP):
+        return 'tan(%s)' % _c_expr(formula.operands[0])
+    if isinstance(formula, operators.AddOP):
+        return '(%s + %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.SubOP):
+        return '(%s - %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.MulOP):
+        return '(%s * %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.DivOP):
+        return '(%s / %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.PowOP):
+        return 'pow(%s, %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.EqOP):
+        return '(%s == %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.GtOP):
+        return '(%s > %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.LtOP):
+        return '(%s < %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.GeOP):
+        return '(%s >= %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.LeOP):
+        return '(%s <= %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+    if isinstance(formula, operators.NeOP):
+        return '(%s != %s)' % (_c_expr(formula.operands[0]), _c_expr(formula.operands[1]))
+
+    # TODO handle blas and other more complex functions which behave as atoms in this context
+
+    raise ValueError('Unable to convert formula to c expression: %s' % formula)
+
+# SCAN OPS ############################################################
+
+class ReduceOP(operators.ReduceOP):
+    pass
+
+
+class ScanOP(operators.ScanOP):
+    pass
+
+
+# BLAS OPS ############################################################
+
+class GemmOP(operators.GemmOP):
+    pass
+
+
+class GemvOP(operators.GemvOP):
+    pass
+
+
+class GerOP(operators.GerOP):
+    pass
+
+
+# CONVOLUTION OPS #####################################################
+
+class ConvOP(operators.ConvOP):
+    pass
+
+class PoolOP(operators.PoolOP):
+    pass
+
+class DownsampleOP(operators.DownsampleOP):
+    pass

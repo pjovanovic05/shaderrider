@@ -766,10 +766,11 @@ class PowOP(BinaryOP):
 # ELEMENTWISE OP ######################################################
 
 class ElementwiseOP(exprgraph.Operator):
-    _type_name = 'Elwise'
+    _type_name = 'Elementwise'
 
     def __init__(self, expr, ops, parent=None):
-        super(ElementwiseOP, self).__init__('Elwise', ops, parent=parent)
+        super(ElementwiseOP, self).__init__(len(ops), ops, parent=parent)
+        self._expr = expr
 
     def substitute(self, a, b):
         # TODO should this be supported?
@@ -969,9 +970,27 @@ class ConvOP(exprgraph.Operator):
         super(ConvOP, self).__init__(1, [input], parent)
         # TODO input should be an Atom
 
+    def substitute(self, a, b):
+        pass
+
+    def get_shape(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
+
+
 class PoolOP(exprgraph.Operator):
     pass
 
 
 class DownsampleOP(exprgraph.Operator):
     pass
+
+
+
+
+# TODO COMPARISONS!?
