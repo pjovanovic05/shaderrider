@@ -15,6 +15,7 @@ from shaderrider.symbolic import exprgraph
 #  - abstract ops
 #  - tensor ops
 #  - arithmetic ops
+#  - comparison
 #  - elementwise op
 #  - scan ops
 #  - blas ops
@@ -784,6 +785,43 @@ class ElementwiseOP(exprgraph.Operator):
 
     def simplify(self):
         pass  # isn't it an error to call this for elementwise?
+
+
+# COMPARISONS #########################################################
+
+class EqOP(BinaryOP):
+
+    _type_name = 'Eq'
+    isCommutative = True
+    isAssociative = True
+
+    def __init__(self, op1, op2, parent=None):
+        super(EqOP, self).__init__(2, [op1, op2], parent)
+
+        def gradient(self, wrt):
+            pass
+
+        def simplify(self):
+            pass
+
+        def substitute(self, a, b):
+            pass
+
+
+class GtOP(BinaryOP):
+    pass
+
+
+class LtOP(BinaryOP):
+    pass
+
+
+class GeOP(BinaryOP):
+    pass
+
+
+class LeOP(BinaryOP):
+    pass
 
 
 # SCAN OPS ############################################################
