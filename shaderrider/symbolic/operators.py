@@ -798,14 +798,19 @@ class EqOP(BinaryOP):
     def __init__(self, op1, op2, parent=None):
         super(EqOP, self).__init__(2, [op1, op2], parent)
 
-        def gradient(self, wrt):
-            pass
+    def __str__(self):
+        return '(%s == %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-        def simplify(self):
-            pass
+    def gradient(self, wrt):
+        pass
 
-        def substitute(self, a, b):
-            pass
+    def simplify(self):
+        ff = config.get_formula_factory()
+        simp_op1, simp_op2 = (op.simplify() for op in self.operands)
+        return ff.create_eq(simp_op1, simp_op2)
+
+    def substitute(self, a, b):
+        pass
 
 
 class GtOP(BinaryOP):
