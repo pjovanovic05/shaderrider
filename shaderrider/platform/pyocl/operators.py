@@ -7,6 +7,7 @@ WRITEME
 import pyopencl as cl
 from pyopencl import array
 from pyopencl import clmath
+from pyopencl.elementwise import  ElementwiseKernel
 
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import operators
@@ -229,7 +230,7 @@ class PowOP(operators.PowOP):
 # ELEMENTWISE OP ######################################################
 
 class ElementwiseOP(operators.ElementwiseOP):
-    def __init__(self, expr, ops, ctx=None, device=0, parent=None):
+    def __init__(self, expr, ops, ctx=None, device=0, parent=None):              # TODO ops should be expr.get_atoms()?
         super(ElementwiseOP, self).__init__(expr, ops, parent)
         self._ctx = ctx
         self._device = device
@@ -237,9 +238,32 @@ class ElementwiseOP(operators.ElementwiseOP):
 
     def generate_eval(self):
         atoms = self._expr.get_atoms()
+        args = []
+        for a in atoms:
+            if a.is_array():
+                args.append('%s *%s' % (a.dtype, a.fid))
+            else:
+                args.append('%s *%s' % (a.dtype, a.fid))
+        args.append('%s *%s' % (self.dtype, self.fid))
+        argstr = ', '.join(args)
+        cexpr = _c_expr(self._expr)
+        ewk = ElementwiseKernel(self._ctx, argstr, cexpr, name=self.fid + '_knl')
 
         def evaluatefn(self, valuation, events=None, device=0):
-            pass
+            params = []
+            waits = []
+            for a in atoms:
+                if a.fid in valuation:
+                    params.append(valuation[a.fid].data if a.is_array() else valuation[a.fid])
+                else:
+                    raise ValueError('Valuation missing a parameter: ' + a.fid)
+                if a.fid in events:
+                    waits.append(events[a.fid])
+            if self.fid not in valuation:
+                valuation[self.fid] = array.zeros(self._ctx, self.get_shape(), self.dtype)
+            out = valuation[self.fid]
+            params.append(out)
+            return ewk(wait_for=waits, *params)
 
         return evaluatefn
 
@@ -248,7 +272,7 @@ def _c_expr(formula):
     if isinstance(formula, exprgraph.Atom):
         if formula.is_array():
             return formula.name + '[i]'
-        return formula.name
+        return formula.name                                             # TODO da li .name ili .fid?
     if isinstance(formula, exprgraph.Constant):
         if formula.is_array():  # TODO check this
             return formula.fid + '[i]'
@@ -292,10 +316,15 @@ def _c_expr(formula):
 
     raise ValueError('Unable to convert formula to c expression: %s' % formula)
 
+
 # SCAN OPS ############################################################
 
 class ReduceOP(operators.ReduceOP):
-    pass
+    def generate_eval(self):
+        def evaluatefn(self, valuation, events=None, device=0):
+            pass
+        return evaluatefn
+
 
 
 class ScanOP(operators.ScanOP):

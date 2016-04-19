@@ -764,29 +764,6 @@ class PowOP(BinaryOP):
         raise NotImplementedError
 
 
-# ELEMENTWISE OP ######################################################
-
-class ElementwiseOP(exprgraph.Operator):
-    _type_name = 'Elementwise'
-
-    def __init__(self, expr, ops, parent=None):
-        super(ElementwiseOP, self).__init__(len(ops), ops, parent=parent)
-        self._expr = expr
-
-    def substitute(self, a, b):
-        # TODO should this be supported?
-        pass
-
-    def get_shape(self):
-        return self.operands[0].get_shape()     # does output have to have this dimension?
-
-    def gradient(self, wrt):
-        pass
-
-    def simplify(self):
-        pass  # isn't it an error to call this for elementwise?
-
-
 # COMPARISONS #########################################################
 
 class EqOP(BinaryOP):
@@ -812,21 +789,43 @@ class EqOP(BinaryOP):
     def substitute(self, a, b):
         pass
 
-
 class GtOP(BinaryOP):
     pass
-
 
 class LtOP(BinaryOP):
     pass
 
-
 class GeOP(BinaryOP):
     pass
 
-
 class LeOP(BinaryOP):
     pass
+
+class NeOP(BinaryOP):
+    pass
+
+
+# ELEMENTWISE OP ######################################################
+
+class ElementwiseOP(exprgraph.Operator):
+    _type_name = 'Elementwise'
+
+    def __init__(self, expr, ops, parent=None):
+        super(ElementwiseOP, self).__init__(len(ops), ops, parent=parent)
+        self._expr = expr
+
+    def substitute(self, a, b):
+        # TODO should this be supported?
+        pass
+
+    def get_shape(self):
+        return self.operands[0].get_shape()     # does output have to have this dimension?
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass  # isn't it an error to call this for elementwise?
 
 
 # SCAN OPS ############################################################
