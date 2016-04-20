@@ -322,19 +322,28 @@ def _c_expr(formula):
 
 class ReduceOP(operators.ReduceOP):
     def generate_eval(self):
-        atoms = self._map_expr.get_atoms() if self._map_expr is not None else self._reduce_expr.get_atoms()
-        if self._map_expr is not None:
-            # create c expression for it
-            pass
-        # create c expression for reduce using a and b as previous and current elements
-        map_op = ''
-        reduce_op = ''
-        reduck = ReductionKernel(self._ctx, self._dtype, self._neutral, reduce_op, map_op)
+        if self._map_expr is None:
+            if len(self.operands) != 1:
+                raise ValueError            # TODO better error
+
+        args = '' # TODO construct the c arguments list string
+        reduck = ReductionKernel(self._ctx, self.dtype, neutral=self._neutral,
+                                 reduce_expr=self._reduce_expr, map_expr=self._map_expr,
+                                 arguments=args, name=self.fid+'_rknl')
+
         def evaluatefn(self, valuation, events=None, device=0):
             params = []
             waits = []
-
-            pass
+            for op in self.operands:
+                if op.fid in valuation:
+                    params.append(valuation[op.fid].data if op.is_array() else valuation[op.fid])
+                else:
+                    raise ValueError('Valuation missing a parameter: ' + op.fid)
+                if op.fid in events:
+                    waits.append(events[op.fid])
+            out, event = reduck(wait_for=waits, *params)
+            valuation[self.fid] = out                               # TODO Create an ATOM out of this.
+            return event
         return evaluatefn
 
 
