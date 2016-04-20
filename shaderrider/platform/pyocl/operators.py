@@ -8,6 +8,7 @@ import pyopencl as cl
 from pyopencl import array
 from pyopencl import clmath
 from pyopencl.elementwise import  ElementwiseKernel
+from pyopencl.reduction import ReductionKernel
 
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import operators
@@ -321,7 +322,18 @@ def _c_expr(formula):
 
 class ReduceOP(operators.ReduceOP):
     def generate_eval(self):
+        atoms = self._map_expr.get_atoms() if self._map_expr is not None else self._reduce_expr.get_atoms()
+        if self._map_expr is not None:
+            # create c expression for it
+            pass
+        # create c expression for reduce using a and b as previous and current elements
+        map_op = ''
+        reduce_op = ''
+        reduck = ReductionKernel(self._ctx, self._dtype, self._neutral, reduce_op, map_op)
         def evaluatefn(self, valuation, events=None, device=0):
+            params = []
+            waits = []
+
             pass
         return evaluatefn
 
