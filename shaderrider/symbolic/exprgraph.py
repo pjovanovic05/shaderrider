@@ -286,7 +286,7 @@ class Operator(Formula):
     def get_type_name(cls):
         return cls._type_name
 
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         if self._fn is None:
             self._fn = self.generate_eval()
         return self._fn(valuation)

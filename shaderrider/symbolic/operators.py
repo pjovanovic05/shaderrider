@@ -862,11 +862,11 @@ class ReduceOP(exprgraph.Operator):
 class ScanOP(exprgraph.Operator):
     _type_name = 'Scan'
 
-    def __init__(self, operands, input_expr, scan_expr, neutral, parent=None):
+    def __init__(self, operands, input_expr, scan_expr, output_statement=None, parent=None):
         super(ScanOP, self).__init__(len(operands), operands, parent)
         self._input_expr = input_expr
         self._scan_expr = scan_expr
-        self._neutral = neutral
+        self._output_statement = output_statement
 
     def get_shape(self):
         pass

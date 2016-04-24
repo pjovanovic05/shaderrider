@@ -12,6 +12,7 @@ from pyopencl.reduction import ReductionKernel
 
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import operators
+from shaderrider.platform.pyocl.aux import clblaswrap
 
 # TOC
 #  - tensor ops
@@ -24,154 +25,154 @@ from shaderrider.symbolic import operators
 # TENSOR OPS ##########################################################
 
 class ReshapeOP(operators.ReshapeOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = array.reshape(param, self._shape)
         return None
 
 # TODO indexing in pyopencl apears primitive... maybe clarray needs to return?
 class IndexOP(operators.IndexOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = param[self._key]
         return None
 
 
 class TransposeOP(operators.TransposeOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = array.transpose(param, self._axes)
         return None
 
 
 class DimshuffleOP(operators.DimshuffleOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         # TODO no dimshuffle in PyOpencl
         raise NotImplementedError
 
 
 class RavelOP(operators.RavelOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = param.ravel()
         return None
 
 
 class DiagonalOP(operators.DiagonalOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         raise NotImplementedError
 
 
 class TraceOP(operators.TraceOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         raise NotImplementedError
 
 
 class NormOP(operators.NormOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         raise NotImplementedError
 
 
 # ARITHMETIC OPS ######################################################
 
 class AbsOP(operators.AbsOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = abs(param)
         return None
 
 
 class NegOP(operators.NegOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = -param
         return None
 
 
 class ExpOP(operators.ExpOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation = clmath.exp(param)
         return None
 
 
 class LogOP(operators.LogOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.log(param)
         return None
 
 
 class SinOP(operators.SinOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.sin(param)
         return None
 
 
 class CosOP(operators.CosOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.cos(param)
         return None
 
 
 class CoshOP(operators.CoshOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.cosh(param)
         return None
 
 
 class TanOP(operators.TanOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.tan(param)
         return None
 
 
 class SignOP(operators.SignOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         raise NotImplementedError
 
 
 class CeilOP(operators.CeilOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.ceil(param)
         return None
 
 
 class FloorOP(operators.FloorOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.floor(param)
         return None
 
 
 class RoundOP(operators.RoundOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.round(param)
         return None
 
 
 class SqrOP(operators.SqrOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         # valuation[self.fid] = TODO
         raise NotImplementedError
 
 
 class SqrtOP(operators.SqrtOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
         valuation[self.fid] = clmath.sqrt(param)
         return None
 
 
 class MaximumOP(operators.MaximumOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         out = valuation[self.fid] if self.fid in valuation else None
@@ -180,7 +181,7 @@ class MaximumOP(operators.MaximumOP):
 
 
 class MinimumOP(operators.MinimumOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         out = valuation[self.fid] if self.fid in valuation else None
@@ -189,7 +190,7 @@ class MinimumOP(operators.MinimumOP):
 
 
 class AddOP(operators.AddOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         valuation[self.fid] = a + b
@@ -197,7 +198,7 @@ class AddOP(operators.AddOP):
 
 
 class SubOP(operators.SubOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         valuation[self.fid] = a - b
@@ -205,7 +206,7 @@ class SubOP(operators.SubOP):
 
 
 class MulOP(operators.MulOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         valuation[self.fid] = a * b
@@ -213,7 +214,7 @@ class MulOP(operators.MulOP):
 
 
 class DivOP(operators.DivOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         valuation[self.fid] = a / b
@@ -221,7 +222,7 @@ class DivOP(operators.DivOP):
 
 
 class PowOP(operators.PowOP):
-    def evaluate(self, valuation=None):
+    def evaluate(self, valuation):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         valuation[self.fid] = a ** b
@@ -326,10 +327,17 @@ class ReduceOP(operators.ReduceOP):
             if len(self.operands) != 1:
                 raise ValueError            # TODO better error
 
-        args = '' # TODO construct the c arguments list string
+        args = []
+        for op in self.operands:
+            if op.is_array():
+                args.append('__global %s *%s' % (op.dtype, op.fid))
+            else:
+                args.append('%s %s' % (op.dtype, op.fid))
+        cargs = ', '.join(args)
+
         reduck = ReductionKernel(self._ctx, self.dtype, neutral=self._neutral,
                                  reduce_expr=self._reduce_expr, map_expr=self._map_expr,
-                                 arguments=args, name=self.fid+'_rknl')
+                                 arguments=cargs, name=self.fid+'_rknl')
 
         def evaluatefn(self, valuation, events=None, device=0):
             params = []
@@ -347,23 +355,69 @@ class ReduceOP(operators.ReduceOP):
         return evaluatefn
 
 
-
 class ScanOP(operators.ScanOP):
-    pass
+    def generate_eval(self):
+        args = []
+        for op in self.operands:
+            if op.is_array():
+                args.append('__global %s *%s' % (op.dtype, op.fid))
+            else:
+                args.append('%s %s' % (op.dtype, op.fid))
+        cargs = ', '.join(args)
+
+        def evaluatefn(self, valuation, events=None, device=0):
+            params = []
+            waits = []
+            for op in self.operands:
+                if op.fid in valuation:
+                    params.append(valuation[op.fid].data if op.is_array() else valuation[op.fid])
+                else:
+                    raise ValueError('Valuation missing a parameter: ' + op.fid)
+                if op.fid in events:
+                    waits.append(events[op.fid])
+            pass
+        return evaluatefn
 
 
 # BLAS OPS ############################################################
 
 class GemmOP(operators.GemmOP):
-    pass
+    def evaluate(self, valuation, events=None, device=0):
+        queue = self._ctx.queue[device]         # TODO oklen kontekst? iz configa?
+        # A, B, C, alpha, beta, transA, transB
+        A = valuation[self.operands[0].fid]
+        B = valuation[self.operands[1].fid]
+        C = valuation[self.operands[2].fid]
+        alpha = valuation[self.operands[3].fid]
+        beta = valuation[self.operands[4].fid]
+        transA = valuation[self.operands[5].fid]
+        transB = valuation[self.operands[6].fid]
+
+        waits = [events[op.fid] for op in operators if op.fid in events]
+
+        # TODO blas setup and teardown in global context!!!
+        return clblaswrap.gemm(queue, A, B, C, transA, transB, alpha, beta, wait_for=waits)
 
 
 class GemvOP(operators.GemvOP):
-    pass
+    def evaluate(self, valuation, events=None, device=0):
+        queue = None    # TODO
+        # A, X, Y, alpha, beta, transA
+        A = valuation[self.operands[0].fid]
+        X = valuation[self.operands[1].fid]
+        Y = valuation[self.operands[2].fid]
+        alpha = valuation[self.operands[3].fid]
+        beta = valuation[self.operands[4].fid]
+        transA = valuation[self.operands[5].fid]
+
+        waits = [events[op.fid] for op in operators if op.fid in events]
+
+        pass
 
 
 class GerOP(operators.GerOP):
-    pass
+    def evaluate(self, valuation, evalute=None, device=0):
+        pass
 
 
 # CONVOLUTION OPS #####################################################
