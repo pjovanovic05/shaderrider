@@ -7,7 +7,7 @@ WRITEME
 import pyopencl as cl
 from pyopencl import array
 from pyopencl import clmath
-from pyopencl.elementwise import  ElementwiseKernel
+from pyopencl.elementwise import ElementwiseKernel
 from pyopencl.reduction import ReductionKernel
 
 from shaderrider.symbolic import exprgraph
@@ -423,6 +423,8 @@ class GerOP(operators.GerOP):
 # CONVOLUTION OPS #####################################################
 
 class ConvOP(operators.ConvOP):
+    # see https://www.cs.umd.edu/~djacobs/CMSC426/Convolution.pdf
+    # see http://arxiv.org/pdf/1509.09308v2.pdf
     pass
 
 class PoolOP(operators.PoolOP):
