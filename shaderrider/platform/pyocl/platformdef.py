@@ -147,38 +147,6 @@ def _compile_expression(expr):
     return ops
 
 
-op_map = {
-    bo.NegOP.get_type_name(): bo.NegOP,
-    bo.ExpOP.get_type_name(): bo.ExpOP,
-    bo.LogOP.get_type_name(): bo.LogOP,
-    bo.SinOP.get_type_name(): bo.SinOP,
-    bo.CosOP.get_type_name(): bo.CosOP,
-    bo.TanOP.get_type_name(): bo.TanOP,
-    bo.AddOP.get_type_name(): bo.AddOP,
-    bo.SubOP.get_type_name(): bo.SubOP,
-    bo.MulOP.get_type_name(): bo.MulOP,
-    bo.DivOP.get_type_name(): bo.DivOP,
-    bo.PowOP.get_type_name(): bo.PowOP,
-    bo.EqOP.get_type_name(): bo.EqOP,
-    bo.GtOP.get_type_name(): bo.GtOP,
-    bo.LtOP.get_type_name(): bo.LtOP,
-    bo.GeOP.get_type_name(): bo.GeOP,
-    bo.LeOP.get_type_name(): bo.LeOP,
-    bo.NeOP.get_type_name(): bo.NeOP,
-
-    elementwise.ElementwiseOP.get_type_name(): elementwise.ElementwiseOP,
-
-    blas.GemmOP.get_type_name(): blas.GemmOP,
-    blas.GemvOP.get_type_name(): blas.GemvOP,
-    blas.GerOP.get_type_name(): blas.GerOP
-}
-
-
-def _replace_ops(expression):
-    """Recursively replaces syntax tree operators with platform specific operators"""
-    if isinstance(expression, exprgraph.Operator):
-        pyocl_op = op_map[expression.get_type_name()]
-
 
 class PyOCLPlatform(object):
     @classmethod

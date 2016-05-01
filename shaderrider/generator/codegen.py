@@ -1,3 +1,10 @@
+"""
+DEPRECATED!
+
+Operator now has evaluate and generate_eval methods, one of which needs to be overridden to
+eiter implement the direct evaluation or generation of direct evaluation method.
+"""
+
 import abc
 
 from shaderrider.symbolic import exprgraph

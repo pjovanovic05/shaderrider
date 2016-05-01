@@ -229,6 +229,56 @@ class PowOP(operators.PowOP):
         return None
 
 
+# COMPARISON OPS ######################################################
+
+class AnyOP(operators.AnyOP):
+    def evaluate(self, valuation):
+        # TODO
+        pass
+
+
+class AllOP(operators.AllOP):
+    def evaluate(self, valuation):
+        # TODO
+        pass
+
+
+class EqOP(operators.EqOP):
+    def evaluate(self, valuation):
+        # TODO
+        pass
+
+
+class GtOP(operators.GtOP):
+    def evaluate(self, valuation):
+        # TODO
+        pass
+
+
+class LtOP(operators.LtOP):
+    def evaluate(self, valuation):
+        # TODO
+        pass
+
+
+class GeOP(operators.GeOP):
+    def evaluate(self, valuation):
+        # TODO
+        pass
+
+
+class LeOP(operators.LeOP):
+    def evaluate(self, valuation):
+        # TODO
+        pass
+
+
+class NeOP(operators.NeOP):
+    def evaluate(self, valuation):
+        # TODO
+        pass
+
+
 # ELEMENTWISE OP ######################################################
 
 class ElementwiseOP(operators.ElementwiseOP):
@@ -425,10 +475,14 @@ class GerOP(operators.GerOP):
 class ConvOP(operators.ConvOP):
     # see https://www.cs.umd.edu/~djacobs/CMSC426/Convolution.pdf
     # see http://arxiv.org/pdf/1509.09308v2.pdf
-    pass
+    # TODO za sada samo obicna konvolucija, posle cu se baviti Winogradom.
+    # TODO check the parameter shapes and generate either 2d or 3d convolution eval.
+    def generate_eval(self):
+        pass
 
 class PoolOP(operators.PoolOP):
-    pass
+    def generate_eval(self):
+        pass
 
 class DownsampleOP(operators.DownsampleOP):
     pass

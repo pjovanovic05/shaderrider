@@ -263,11 +263,19 @@ class Tensor(object):
 
 # constructors
 
-def empty():
+def empty(shape=None, dtype=None, name=None):
+    pass
+
+
+def empty_like():
     pass
 
 
 def zeros():
+    pass
+
+
+def zeros_like():
     pass
 
 

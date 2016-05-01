@@ -1,3 +1,8 @@
+"""
+WRITEME
+
+"""
+
 import abc
 from shaderrider.util import OrderedSet
 from shaderrider.symbolic import exprgraph
@@ -30,7 +35,7 @@ def function(expressions=None, updates=None, name=None):
     TODO Creates callable object that performs calculation described by the
     computation graph(s) for the expression(s) to be calculated.
 
-    The expressions are computed first, then the updates are performed, and then
+    The expressions are computed first, then the updates are performed, and then ????
 
     :param expressions: list of expression graphs to evaluate, whose outputs will be function outputs
     :type expressions: list
@@ -40,6 +45,8 @@ def function(expressions=None, updates=None, name=None):
 
     :param name: debug name for the generated function object
     :type name: str
+
+    :rtype: Function
     """
 
     # configure compilation

@@ -766,8 +766,38 @@ class PowOP(BinaryOP):
 
 # COMPARISONS #########################################################
 
-class EqOP(BinaryOP):
+class AnyOP(UnaryOP):
+    _type_name = 'Any'
 
+    def __init__(self, op, parent=None):
+        super(AnyOP, self).__init__(1, [op], parent)
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+class AllOP(UnaryOP):
+    _type_name = 'All'
+
+    def __init__(self, op, parent=None):
+        super(AllOP, self).__init__(1, [op], parent)
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
+
+    def substitute(self, a, b):
+        pass
+
+
+class EqOP(BinaryOP):
     _type_name = 'Eq'
     isCommutative = True
     isAssociative = True
@@ -789,17 +819,22 @@ class EqOP(BinaryOP):
     def substitute(self, a, b):
         pass
 
+
 class GtOP(BinaryOP):
     pass
+
 
 class LtOP(BinaryOP):
     pass
 
+
 class GeOP(BinaryOP):
     pass
 
+
 class LeOP(BinaryOP):
     pass
+
 
 class NeOP(BinaryOP):
     pass
@@ -819,7 +854,7 @@ class ElementwiseOP(exprgraph.Operator):
         pass
 
     def get_shape(self):
-        return self.operands[0].get_shape()     # does output have to have this dimension?
+        return self.operands[0].get_shape()  # does output have to have this dimension?
 
     def gradient(self, wrt):
         pass
@@ -1010,10 +1045,19 @@ class ConvOP(exprgraph.Operator):
 
     def __init__(self, input, filters, image_shape=None, filter_shape=None, border_mode='valid', parent=None):
         super(ConvOP, self).__init__(1, [input], parent)
-        # TODO input should be an Atom
+        self._filters = filters
+        self._image_shape = image_shape
+        self._filter_shape = filter_shape
+        self._border_mode = border_mode
 
     def substitute(self, a, b):
-        pass
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_conv(self.operands[0].substitute(a, b), self._filters,
+                                  self._image_shape, self._filter_shape, self._border_mode,
+                                  self._parent)
 
     def get_shape(self):
         pass
@@ -1026,13 +1070,11 @@ class ConvOP(exprgraph.Operator):
 
 
 class PoolOP(exprgraph.Operator):
-    pass
+    _type_name = 'Pool'
+
+    def __init__(self, input, ds, mode, parent=None):
+        super(PoolOP, self).__init__()
 
 
 class DownsampleOP(exprgraph.Operator):
     pass
-
-
-
-
-# TODO COMPARISONS!?
