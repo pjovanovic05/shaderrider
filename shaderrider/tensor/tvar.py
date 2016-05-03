@@ -1,5 +1,5 @@
 """
-Variable that abstracts the gpu tensor implementation, and implements shallow embedding of the vast syntax.
+Variable that abstracts the gpu tensor implementation, and implements shallow embedding of the syntax.
 """
 
 # TODO http://www.deeplearning.net/software/theano/library/tensor/index.html
@@ -141,6 +141,18 @@ class Tensor(object):
     # arithmetic
 
     def __add__(self, other):
+        return add(self, other)
+
+    def __sub__(self, other):
+        return sub(self, other)
+
+    def __mul__(self, other):
+        return mul(self, other)
+
+    def __floordiv__(self, other):
+        raise NotImplementedError('Unsupported floordiv operator')
+
+    def __mod__(self, other):
         otherf = None
         if isinstance(other, exprgraph.Formula):
             otherf = other
@@ -148,28 +160,30 @@ class Tensor(object):
             otherf = exprgraph.Constant(other)
         else:
             raise NotImplementedError('unsupported operand type')
-        # use factory to make AddOP
-        newf = config.get_formula_factory().create_add(self, otherf)
-        # return Tensor wrapping the AddOP
+        newf = config.get_formula_factory().create_mod(self, otherf)
         return Tensor(formula=newf)
 
-    def __sub__(self, other):
-        pass
-
-    def __mul__(self, other):
-        pass
-
-    def __floordiv__(self, other):
-        pass
-
-    def __mod__(self, other):
-        pass
-
     def __divmod__(self, other):
-        pass
+        otherf = None
+        if isinstance(other, exprgraph.Formula):
+            otherf = other
+        elif isinstance(other, np.ndarray) or isinstance(other, numbers.Number):
+            otherf = exprgraph.Constant(other)
+        else:
+            raise NotImplementedError('unsupported operand type')
+        newf = config.get_formula_factory().create_divmod(self, otherf)
+        return Tensor(formula=newf)
 
     def __pow__(self, power, modulo=None):
-        pass
+        otherf = None
+        if isinstance(power, exprgraph.Formula):
+            otherf = power
+        elif isinstance(power, np.ndarray) or isinstance(power, numbers.Number):
+            otherf = exprgraph.Constant(power)
+        else:
+            raise NotImplementedError('unsupported operand type')
+        newf = config.get_formula_factory().create_pow(self, power, modulo)
+        return newf
 
     def __lshift__(self, other):
         pass
@@ -187,22 +201,22 @@ class Tensor(object):
         pass
 
     def __div__(self, other):
-        pass
+        return div(self, other)
 
     def __truediv__(self, other):
         pass
 
     def __radd__(self, other):
-        pass
+        return add(other, self)
 
     def __rsub__(self, other):
-        pass
+        return sub(other, self)
 
     def __rmul__(self, other):
-        pass
+        return mul(other, self)
 
     def __rdiv__(self, other):
-        pass
+        return div(other, self)
 
     def __rtruediv__(self, other):
         pass
@@ -267,7 +281,8 @@ def empty(shape=None, dtype=None, name=None):
     pass
 
 
-def empty_like():
+def empty_like(other, name=None):
+
     pass
 
 
@@ -275,7 +290,7 @@ def zeros():
     pass
 
 
-def zeros_like():
+def zeros_like(other, name=None):
     pass
 
 
@@ -294,12 +309,124 @@ def matrix():
 # arithmetic functions
 
 def neg(t1):
-    pass
+    op1 = None
+    if isinstance(t1, exprgraph.Formula):
+        op1 = t1
+    elif isinstance(t1, Tensor):
+        op1 = t1.formula
+    elif isinstance(t1, (np.ndarray, numbers.Number)):
+        op1 = exprgraph.Constant(t1)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    newf = config.get_formula_factory().create_neg(op1)
+    return Tensor(formula=newf)
 
 
 def exp(t1):
-    pass
+    op1 = None
+    if isinstance(t1, exprgraph.Formula):
+        op1 = t1
+    elif isinstance(t1, Tensor):
+        op1 = t1.formula
+    elif isinstance(t1, (np.ndarray, numbers.Number)):
+        op1 = exprgraph.Constant(t1)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    newf = config.get_formula_factory().create_exp(op1)
+    return Tensor(formula=newf)
 
+
+def add(t1, t2):
+    op1, op2 = None, None
+    if isinstance(t1, exprgraph.Formula):
+        op1 = t1
+    elif isinstance(t1, Tensor):
+        op1 = t1.formula
+    elif isinstance(t1, (np.ndarray, numbers.Number)):
+        op1 = exprgraph.Constant(t1)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    if isinstance(t2, exprgraph.Formula):
+        op2 = t2
+    elif isinstance(t2, Tensor):
+        op2 = t2.formula
+    elif isinstance(t2, (np.ndarray, numbers.Number)):
+        op2 = exprgraph.Constant(t2)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    newf = config.get_formula_factory().create_add(op1, op2)
+    return Tensor(formula=newf)
+
+
+def sub(t1, t2):
+    op1, op2 = None, None
+    if isinstance(t1, exprgraph.Formula):
+        op1 = t1
+    elif isinstance(t1, Tensor):
+        op1 = t1.formula
+    elif isinstance(t1, (np.ndarray, numbers.Number)):
+        op1 = exprgraph.Constant(t1)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    if isinstance(t2, exprgraph.Formula):
+        op2 = t2
+    elif isinstance(t2, Tensor):
+        op2 = t2.formula
+    elif isinstance(t2, (np.ndarray, numbers.Number)):
+        op2 = exprgraph.Constant(t2)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    newf = config.get_formula_factory().create_sub(op1, op2)
+    return Tensor(formula=newf)
+
+
+def mul(t1, t2):
+    op1, op2 = None, None
+    if isinstance(t1, exprgraph.Formula):
+        op1 = t1
+    elif isinstance(t1, Tensor):
+        op1 = t1.formula
+    elif isinstance(t1, (np.ndarray, numbers.Number)):
+        op1 = exprgraph.Constant(t1)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    if isinstance(t2, exprgraph.Formula):
+        op2 = t2
+    elif isinstance(t2, Tensor):
+        op2 = t2.formula
+    elif isinstance(t2, (np.ndarray, numbers.Number)):
+        op2 = exprgraph.Constant(t2)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    newf = config.get_formula_factory().create_mul(op1, op2)
+    return Tensor(formula=newf)
+
+
+def div(t1, t2):
+    op1, op2 = None, None
+    if isinstance(t1, exprgraph.Formula):
+        op1 = t1
+    elif isinstance(t1, Tensor):
+        op1 = t1.formula
+    elif isinstance(t1, (np.ndarray, numbers.Number)):
+        op1 = exprgraph.Constant(t1)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    if isinstance(t2, exprgraph.Formula):
+        op2 = t2
+    elif isinstance(t2, Tensor):
+        op2 = t2.formula
+    elif isinstance(t2, (np.ndarray, numbers.Number)):
+        op2 = exprgraph.Constant(t2)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    newf = config.get_formula_factory().create_div(op1, op2)
+    return Tensor(formula=newf)
+
+
+# bitwise
+
+# comparisons
 
 # linear algebra
 
