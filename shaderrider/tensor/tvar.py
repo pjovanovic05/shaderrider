@@ -153,15 +153,7 @@ class Tensor(object):
         raise NotImplementedError('Unsupported floordiv operator')
 
     def __mod__(self, other):
-        otherf = None
-        if isinstance(other, exprgraph.Formula):
-            otherf = other
-        elif isinstance(other, np.ndarray) or isinstance(other, numbers.Number):
-            otherf = exprgraph.Constant(other)
-        else:
-            raise NotImplementedError('unsupported operand type')
-        newf = config.get_formula_factory().create_mod(self, otherf)
-        return Tensor(formula=newf)
+        return mod(self, other)
 
     def __divmod__(self, other):
         otherf = None
@@ -421,6 +413,28 @@ def div(t1, t2):
     else:
         raise NotImplementedError('unsupported operand type')
     newf = config.get_formula_factory().create_div(op1, op2)
+    return Tensor(formula=newf)
+
+
+def mod(t1, t2):
+    op1, op2 = None, None
+    if isinstance(t1, exprgraph.Formula):
+        op1 = t1
+    elif isinstance(t1, Tensor):
+        op1 = t1.formula
+    elif isinstance(t1, (np.ndarray, numbers.Number)):
+        op1 = exprgraph.Constant(t1)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    if isinstance(t2, exprgraph.Formula):
+        op2 = t2
+    elif isinstance(t2, Tensor):
+        op2 = t2.formula
+    elif isinstance(t2, (np.ndarray, numbers.Number)):
+        op2 = exprgraph.Constant(t2)
+    else:
+        raise NotImplementedError('unsupported operand type')
+    newf = config.get_formula_factory().create_mod(op1, op2)
     return Tensor(formula=newf)
 
 
