@@ -278,7 +278,7 @@ def empty_like(other, name=None):
     pass
 
 
-def zeros():
+def zeros(shape, dtype=None, name=None):
     pass
 
 
@@ -295,6 +295,10 @@ def vector():
 
 
 def matrix():
+    pass
+
+
+def tensor(shape=None, dtype=None, ndims=0, name=None):
     pass
 
 
@@ -446,4 +450,3 @@ def mod(t1, t2):
 
 def dot(a, b):
     pass
-
