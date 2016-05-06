@@ -274,7 +274,9 @@ def empty(shape=None, dtype=None, name=None):
 
 
 def empty_like(other, name=None):
-
+    #TODO
+    #TODO       alokacija memorije pri kreiranju atoma je nepotrebna posto vrednost dolazi tek u pozivu
+    #TODO       znaci, alokacija treba tek u pozivu i pomeranje? sta sa shared varijablama?
     pass
 
 
