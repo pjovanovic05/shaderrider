@@ -269,14 +269,19 @@ class Tensor(object):
 
 # constructors
 
+def valuation(inputs, shared=None):
+    """create valuation object with variables and shared variables?"""
+    pass
+
+
 def empty(shape=None, dtype=None, name=None):
     pass
 
 
 def empty_like(other, name=None):
-    #TODO
-    #TODO       alokacija memorije pri kreiranju atoma je nepotrebna posto vrednost dolazi tek u pozivu
-    #TODO       znaci, alokacija treba tek u pozivu i pomeranje? sta sa shared varijablama?
+    # TODO
+    # TODO       alokacija memorije pri kreiranju atoma je nepotrebna posto vrednost dolazi tek u pozivu
+    # TODO       znaci, alokacija treba tek u pozivu i pomeranje? sta sa shared varijablama?
     pass
 
 
@@ -303,6 +308,9 @@ def matrix():
 def tensor(shape=None, dtype=None, ndims=0, name=None):
     pass
 
+
+def shared(x):
+    pass
 
 # arithmetic functions
 

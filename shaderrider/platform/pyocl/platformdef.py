@@ -7,11 +7,8 @@ import pyopencl.array as clarray
 
 from shaderrider.generator.codegen import FormulaFactory
 from shaderrider.symbolic import exprgraph
-from shaderrider.symbolic import basic as sbo
-from shaderrider.symbolic import blas as sblas
-from shaderrider.symbolic import elementwise as sew
 
-from shaderrider.generator.function import Function, topsort_formula
+from shaderrider.generator.function import Function, topsort_formula, Valuation
 from shaderrider.generator import optimization as opt
 
 from shaderrider.platform.pyocl import basic as bo
@@ -80,9 +77,9 @@ class PyOCLFunction(Function):
         # TODO svaki update zameni operatorima platforme
 
 
-    def __call__(self, *args, **kwargs):
-        valuation = {}
-        events = {}
+    def evaluate(self, valuation):
+        # valuation = {}
+        # events = {}
 
         for arg, i in enumerate(args):
             if isinstance(arg, clarray.Array):
@@ -147,6 +144,16 @@ def _compile_expression(expr):
     return ops
 
 
+class PyOCLValuation(Valuation):
+    def add(self, name, value):
+        pass
+
+    def add_shared(self, name, value):
+        pass
+
+    def get(self, name):
+        pass
+
 
 class PyOCLPlatform(object):
     @classmethod
@@ -173,6 +180,9 @@ class PyOCLPlatform(object):
 
 
 class PyOCLFFactory(FormulaFactory):
+    def create_valuation(vdict):
+        pass
+
     def create_neg(self, operand):
         return bo.NegOP(operand)
 

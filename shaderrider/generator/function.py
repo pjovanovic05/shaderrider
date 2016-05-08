@@ -9,6 +9,28 @@ from shaderrider.symbolic import exprgraph
 from shaderrider import configuration
 
 
+class Valuation(object):
+    def __init__(self):
+        self._shared = {}
+        self._vars = {}
+        self._events = {}
+
+    def add(self, name, value, async=False):
+        pass
+
+    def add_shared(self, name, value, async=False):
+        pass
+
+    def get(self, name):
+        pass
+
+    def set(self, name, value):
+        pass
+
+    def clear(self):
+        pass
+
+
 class Function(object):
     __metaclass__ = abc.ABCMeta
 
@@ -18,15 +40,17 @@ class Function(object):
         self._updates = updates
         self._name = name
 
-    @abc.abstractmethod
     def __call__(self, *args, **kwargs):
         """
         :param valuation:
-        :type valuation: dict
-
-        :param check_inputs:
-        :type check_inputs: bool
+        :type valuation: Valuation
         """
+        assert 'valuation' in kwargs
+
+        return self.evaluate(kwargs['valuation'])
+
+    @abc.abstractmethod
+    def evaluate(self, valuation):
         raise NotImplementedError
 
 
