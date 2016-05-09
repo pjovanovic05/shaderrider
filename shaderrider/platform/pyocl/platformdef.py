@@ -43,66 +43,43 @@ default_ctx, queues = setup_context(1)
 default_queue = queues[0]
 
 
-# TODO ovo je pogresno, razmisljaj o expressionima koje dobijes kao vec proverenim i optimizovanim
-# TODO ovaj function treba samo da zameni expressione instancama svoje implementacije!
-# TODO ovo takodje treba da resi i pomeranje vrednosti u valuaciji u PyOpencl array
 class PyOCLFunction(Function):
-    def __init__(self, expressions=None, updates=None, name=None):
-        super(PyOCLFunction, self).__init__(expressions, updates, name)
-        self._expr_evals = []
-        self._update_evals = []  # list of tuples (var, update_expr)
-        self._inputs = []  # TODO collect inputs from exprs
+    # def __init__(self, expressions=None, updates=None, name=None):
+    #     super(PyOCLFunction, self).__init__(expressions, updates, name)
+    #     self._expr_evals = []
+    #     self._update_evals = []  # list of tuples (var, update_expr)
+    #     self._inputs = []  # TODO collect inputs from exprs
+    #
+    #     if expressions is None and updates is None:
+    #         raise ValueError(
+    #             "Can't create a function for doing nothing. Provide some expressions or updates to execute.")
+    #
+    #     self._collect_inputs()
+    #
+    #     # create evaluation paths
+    #     for expr in self._expressions:
+    #         self._expr_evals.extend(_compile_expression(expr))
+    #
+    #     for var, update in self._updates:
+    #         self._update_evals.append((var, _compile_expression(update)))
 
-        if expressions is None and updates is None:
-            raise ValueError(
-                "Can't create a function for doing nothing. Provide some expressions or updates to execute.")
-
-        self._collect_inputs()
-
-        # create evaluation paths
-        for expr in self._expressions:
-            self._expr_evals.extend(_compile_expression(expr))
-
-        for var, update in self._updates:
-            self._update_evals.append((var, _compile_expression(update)))
-
-    def novi_konstruktor(self, inputs=None, expressions=None, updates=None, name=None):
+    def __init__(self, inputs=None, expressions=None, updates=None, name=None):
         super(PyOCLFunction, self).__init__(inputs, expressions, updates, name)
         self._expr_evals = []
         self._update_evals = []
 
-        # TODO svaki expression zameni operatorima platforme
-        for expr in expressions:
-            self._expr_evals.append(_replace_ops(expr))
-        # TODO svaki update zameni operatorima platforme
-
-
     def evaluate(self, valuation):
-        # valuation = {}
-        # events = {}
-
-        for arg, i in enumerate(args):
-            if isinstance(arg, clarray.Array):
-                valuation[self._inputs[i].fid] = arg
-            else:
-                valuation[self._inputs[i].fid] = clarray.to_device(default_queue, arg)
-        # handle kwargs
-        for arg in kwargs:
-            # TODO treba proveriti da li je arg u inputima i proveriti tip ako treba.
-            if isinstance(kwargs[arg], clarray.Array):
-                valuation[arg] = kwargs[arg]
-            else:
-                valuation[arg] = clarray.to_device(default_queue, kwargs[arg])
+        # check inputs?
 
         for ee in self._expr_evals:
-            evt = ee.evaluate(valuation, events)
-            events[ee.fid] = evt
+            evt = ee.evaluate(valuation, valuation.events)
+            valuation.events[ee.fid] = evt
 
         for (upvar, upexpr) in self._update_evals:
-            evt = upexpr.evaluate(valuation, events)
-            events[upvar.fid] = evt
+            evt = upexpr.evaluate(valuation, valuation.events)
+            valuation.events[upvar.fid] = evt
 
-        # collect outputs
+        # collect outputs   TODO move to host memory?
         outs = []
         for ex in self._expressions:
             outs.append(valuation[ex.fid])
@@ -145,13 +122,20 @@ def _compile_expression(expr):
 
 
 class PyOCLValuation(Valuation):
-    def add(self, name, value):
+    def add(self, name, value, async=False):
+
         pass
 
-    def add_shared(self, name, value):
+    def add_shared(self, name, value, async=False):
         pass
 
-    def get(self, name):
+    def get(self, name, async=False):
+        pass
+
+    def set(self, name, value, async=False):
+        pass
+
+    def clear(self, async=False):
         pass
 
 

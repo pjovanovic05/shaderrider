@@ -15,19 +15,23 @@ class Valuation(object):
         self._vars = {}
         self._events = {}
 
+    @property
+    def events(self):
+        return self._events
+
     def add(self, name, value, async=False):
         pass
 
     def add_shared(self, name, value, async=False):
         pass
 
-    def get(self, name):
+    def get(self, name, async=False):
         pass
 
-    def set(self, name, value):
+    def set(self, name, value, async=False):
         pass
 
-    def clear(self):
+    def clear(self, async=False):
         pass
 
 
