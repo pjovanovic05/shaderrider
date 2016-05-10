@@ -152,11 +152,11 @@ class Variable(Atom):
     def __init__(self, name=None, dtype=None, shape=(), shared=False, parent=None):
         super(Variable, self).__init__(parent)
         Variable._ctr += 1
-        self._name = name if name!=None else 'A%d' % Variable._ctr
+        self._name = name if name!=None else 'V%d' % Variable._ctr
         self._dtype = dtype
         self._shape = shape
         self._shared = shared
-        self._fid = 'A' + str(Variable._ctr)
+        self._fid = 'V' + str(Variable._ctr)
         # atoms should not have values, they are assigned in valuations
 
     @property

@@ -123,7 +123,7 @@ def _compile_expression(expr):
 
 class PyOCLValuation(Valuation):
     def add(self, name, value, async=False):
-
+        # STAO OVDE kod pomeranja varijabli iz ndarray value-a u cl_array
         pass
 
     def add_shared(self, name, value, async=False):
