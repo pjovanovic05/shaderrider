@@ -56,7 +56,7 @@ class ElementwiseOP(elementwise.ElementwiseOP):
 
 
 def _c_expr(formula):
-    if isinstance(formula, ast.Atom):
+    if isinstance(formula, ast.Variable):
         if formula.is_array():
             return formula.name + '[i]'
         return formula.name

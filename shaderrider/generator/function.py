@@ -117,7 +117,7 @@ def topsort_formula(formula):
     treestack = [formula]
     while len(treestack) > 0:
         node = treestack.pop()
-        if isinstance(node, exprgraph.AtomicFormula):
+        if isinstance(node, exprgraph.Atom):
             outlist.append(node)
         elif not hasattr(node, '_visited'):   # expand node & return to stack
             node._visited = True

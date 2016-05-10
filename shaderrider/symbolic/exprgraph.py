@@ -76,8 +76,8 @@ class Formula(object):
         raise NotImplementedError
 
 
-class AtomicFormula(Formula):
-    """docstring for AtomicFormula"""
+class Atom(Formula):
+    """docstring for Atom"""
 
     __metaclass__ = abc.ABCMeta
 
@@ -97,7 +97,11 @@ class AtomicFormula(Formula):
         return self
 
 
-class Constant(AtomicFormula):
+class Literal(Atom):
+    pass
+
+
+class Constant(Atom):
     """docstring for Constant"""
     _ctr = 0
 
@@ -141,18 +145,18 @@ class Constant(AtomicFormula):
         return self._value.ndim == 0
 
 
-class Atom(AtomicFormula):
-    """docstring for Atom"""
+class Variable(Atom):
+    """docstring for Variable"""
     _ctr = 0
 
     def __init__(self, name=None, dtype=None, shape=(), shared=False, parent=None):
-        super(Atom, self).__init__(parent)
-        Atom._ctr += 1
-        self._name = name if name!=None else 'A%d' % Atom._ctr
+        super(Variable, self).__init__(parent)
+        Variable._ctr += 1
+        self._name = name if name!=None else 'A%d' % Variable._ctr
         self._dtype = dtype
         self._shape = shape
         self._shared = shared
-        self._fid = 'A' + str(Atom._ctr)
+        self._fid = 'A' + str(Variable._ctr)
         # atoms should not have values, they are assigned in valuations
 
     @property

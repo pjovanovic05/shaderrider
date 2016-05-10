@@ -23,7 +23,7 @@ class Tensor(object):
             if name is not None:
                 self._formula.name = name
         else:
-            self._formula = exprgraph.Atom(name=name, dtype=dtype, shape=shape)
+            self._formula = exprgraph.Variable(name=name, dtype=dtype, shape=shape)
 
 
     @property

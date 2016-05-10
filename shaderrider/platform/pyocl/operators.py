@@ -321,7 +321,7 @@ class ElementwiseOP(operators.ElementwiseOP):
 
 
 def _c_expr(formula):
-    if isinstance(formula, exprgraph.Atom):
+    if isinstance(formula, exprgraph.Variable):
         if formula.is_array():
             return formula.name + '[i]'
         return formula.name                                             # TODO da li .name ili .fid?

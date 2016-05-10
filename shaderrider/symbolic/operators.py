@@ -65,7 +65,7 @@ class ReshapeOP(exprgraph.Operator):
     def __init__(self, arr, shape, parent=None):
         super(ReshapeOP, self).__init__(2, [arr, shape], parent)
         assert isinstance(shape, exprgraph.Constant) or isinstance(shape, tuple)
-        # assert isinstance(arr, exprgraph.Atom)  # da li???  IPAK NE
+        # assert isinstance(arr, exprgraph.Variable)  # da li???  IPAK NE
 
         self._shape = shape if isinstance(shape, tuple) else None  # TODO extract shape
         # TODO check transformation compatibility
