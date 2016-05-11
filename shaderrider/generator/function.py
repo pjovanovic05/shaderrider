@@ -19,26 +19,42 @@ class Valuation(object):
     def events(self):
         return self._events
 
-    def add(self, name, value, async=False):
-        pass
+    def add(self, name, value):
+        if name in self._shared:
+            raise KeyError('Shared variable "' + name + "' already present in valuation.")
+        if name in self._vars:
+            raise KeyError('Variable "' + name + "' already present in valuation. Use set to overwrite.")
+        self._vars[name] = value
 
-    def add_shared(self, name, value, async=False):
-        pass
+    def add_shared(self, name, value):
+        if name in self._shared:
+            raise KeyError('Shared variable "' + name + "' already present in valuation.")
+        if name in self._vars:
+            raise KeyError('Variable "' + name + "' already present in valuation. Use set to overwrite.")
+        self._shared[name] = value
 
-    def get(self, name, async=False):
-        pass
+    def get(self, name):
+        if name in self._shared:
+            return self._shared[name]
+        elif name in self._vars:
+            return self._vars[name]
+        else:
+            raise KeyError('Variable "' + name + '" not found in valuation.')
 
-    def set(self, name, value, async=False):
-        pass
+    def set(self, name, value):
+        if name in self._shared:
+            self._shared[name] = value
+        elif name in self._vars:
+            self._shared[name] = value
 
-    def clear(self, async=False):
-        pass
+    def clear(self):
+        self._vars.clear()
 
 
 class Function(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, inputs=None, expressions=None, updates=None, name=None):
+    def __init__(self, inputs=None, expressions=None, updates=None, name=None): # TODO name could be mandatory
         self._inputs = inputs
         self._expressions = expressions
         self._updates = updates

@@ -1,6 +1,9 @@
 """
 Defines PyOpenCL platform.
 """
+from numbers import Number
+
+import numpy as np
 
 import pyopencl as cl
 import pyopencl.array as clarray
@@ -14,6 +17,7 @@ from shaderrider.generator import optimization as opt
 from shaderrider.platform.pyocl import basic as bo
 from shaderrider.platform.pyocl import blas
 from shaderrider.platform.pyocl import elementwise
+from shaderrider.tensor.tvar import Tensor
 
 
 def setup_context(ngpus=0):
@@ -124,7 +128,14 @@ def _compile_expression(expr):
 class PyOCLValuation(Valuation):
     def add(self, name, value, async=False):
         # STAO OVDE kod pomeranja varijabli iz ndarray value-a u cl_array
-        pass
+        if isinstance(value, np.ndarray):
+            pass    # TODO wrap array into atom (var? const?)
+        elif isinstance(value, Number):
+            pass    # TODO wrap into Literal
+        elif isinstance(value, Tensor):
+            pass    # TODO get value
+
+        super(PyOCLValuation, self).add(name, value)
 
     def add_shared(self, name, value, async=False):
         pass
