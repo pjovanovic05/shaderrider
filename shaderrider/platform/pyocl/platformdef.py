@@ -138,6 +138,9 @@ class PyOCLValuation(Valuation):
         super(PyOCLValuation, self).add(name, value)
 
     def add_shared(self, name, value, async=False):
+        if not isinstance(value, Tensor):
+            pass    # TODO raise something
+        # check if tensor value is Variable or Constant
         pass
 
     def get(self, name, async=False):
