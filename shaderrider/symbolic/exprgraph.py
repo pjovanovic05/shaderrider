@@ -4,7 +4,7 @@ Contains the base classes for specifying symbolic expression structure.
 """
 
 import numpy as np
-import abc
+from abc import ABCMeta, abstractproperty, abstractmethod
 import weakref
 
 
@@ -14,46 +14,46 @@ class Formula(object):
     Formulas are generic interfaces for representations of symbolic expressions
     that are to be compiled for the backend (opencl, cpu).
     """
-    __metaclass__ = abc.ABCMeta
+    __metaclass__ = ABCMeta
 
     def __init__(self, parent=None):
         self._parent = weakref.ref(parent) if parent is not None else None
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_atoms(self):
         """Gets all the atomic formulas under this formula.
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_atomics(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def complexity(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def substitute(self, a, b):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def gradient(self, wrt):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def simplify(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __eq__(self, other):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __str__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_shape(self):
         raise NotImplementedError
 
@@ -78,8 +78,11 @@ class Formula(object):
 
 class Atom(Formula):
     """docstring for Atom"""
+    __metaclass__ = ABCMeta
 
-    __metaclass__ = abc.ABCMeta
+    @abstractproperty
+    def value(self):
+        pass
 
     def get_atomics(self):
         return [self]
@@ -98,7 +101,16 @@ class Atom(Formula):
 
 
 class Literal(Atom):
-    pass
+    """docstring for Literal"""
+    _ctr = 0
+
+    def __init__(self, value, parent=None):
+        super(Literal, self).__init__(parent)
+        # TODO check type to be primitive (literal) (int, float, bool)
+        self._value = value
+
+    def value(self):
+        return self._value
 
 
 class Constant(Atom):
@@ -215,7 +227,7 @@ class Variable(Atom):
 
 class Operator(Formula):
     """docstring for Operator"""
-    __metaclass__ = abc.ABCMeta
+    __metaclass__ = ABCMeta
     _ctr = 0
     _type_name = 'Op'
 
@@ -296,12 +308,13 @@ class Operator(Formula):
         return self._fn(valuation)
 
     def generate_eval(self):
-        """generates a zero argument function which executes the computation steps represented by this operator."""
+        """generates a zero argument function which executes the computation
+        steps represented by this operator."""
         raise NotImplementedError
 
 
 class NativeOperator(Operator):
-    __metaclass__ = abc.ABCMeta
+    __metaclass__ = ABCMeta
 
     def c_headers(self):
         """Returns the list of headers to be included for this formula.

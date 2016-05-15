@@ -25,7 +25,6 @@ class Tensor(object):
         else:
             self._formula = exprgraph.Variable(name=name, dtype=dtype, shape=shape)
 
-
     @property
     def formula(self):
         return self._formula

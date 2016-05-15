@@ -66,6 +66,7 @@ class Function(object):
         :type valuation: Valuation
         """
         assert 'valuation' in kwargs
+        # TODO umotavanje parametara u valuation bi moglo ovde da se desi?
 
         return self.evaluate(kwargs['valuation'])
 

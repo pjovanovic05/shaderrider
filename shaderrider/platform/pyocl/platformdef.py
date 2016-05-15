@@ -106,7 +106,8 @@ optimizers = [opt.ElementwiseOpt()]
 
 def _compile_expression(expr):
     """
-    Creates a list of evaluators to be called in order, which represents the execution of the expression.
+    Creates a list of evaluators to be called in order, which represents the execution
+    of the expression.
 
     :type expr: Formula
     :rtype: list of evaluators
@@ -132,8 +133,16 @@ class PyOCLValuation(Valuation):
             pass    # TODO wrap array into atom (var? const?)
         elif isinstance(value, Number):
             pass    # TODO wrap into Literal
-        elif isinstance(value, Tensor):
+        elif isinstance(value, Tensor):     # ovo i ne bi trebalo da se desi??????????
             pass    # TODO get value
+        elif isinstance(value, (exprgraph.Variable, exprgraph.Constant)):
+            # TODO ovde pomeram value iz variablinog ndarray-a u cl_array!!
+            pass
+        elif isinstance(value, exprgraph.Formula):
+            # rezultat izvrsavanja nekog operatora
+            pass
+        else:
+            pass    # TODO raise somthing
 
         super(PyOCLValuation, self).add(name, value)
 
@@ -141,7 +150,11 @@ class PyOCLValuation(Valuation):
         if not isinstance(value, Tensor):
             pass    # TODO raise something
         # check if tensor value is Variable or Constant
-        pass
+        # call can still function with kwargs and args, but they automatically get into valuation which
+        # takes care of data movement between memories?
+        if not isinstance(value.value, (exprgraph.Variable, exprgraph.Constant)):
+            # a da ovde gore ne treba proveriti da li je cl_array ili ndarray?
+            pass
 
     def get(self, name, async=False):
         pass
