@@ -127,9 +127,10 @@ def _compile_expression(expr):
 
 
 class PyOCLValuation(Valuation):
-    def add(self, name, value, async=False):
+    def add(self, name, value, const=False, async=False):
         # STAO OVDE kod pomeranja varijabli iz ndarray value-a u cl_array
         if isinstance(value, np.ndarray):
+            val = exprgraph.Variable(name, value.dtype, )
             pass    # TODO wrap array into atom (var? const?)
         elif isinstance(value, Number):
             pass    # TODO wrap into Literal
@@ -142,7 +143,7 @@ class PyOCLValuation(Valuation):
             # rezultat izvrsavanja nekog operatora
             pass
         else:
-            pass    # TODO raise somthing
+            pass    # TODO raise something
 
         super(PyOCLValuation, self).add(name, value)
 

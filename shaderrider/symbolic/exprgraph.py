@@ -161,13 +161,18 @@ class Variable(Atom):
     """docstring for Variable"""
     _ctr = 0
 
-    def __init__(self, name=None, dtype=None, shape=(), shared=False, parent=None):
+    def __init__(self, name=None, dtype=None, shape=None, array=None, shared=False, parent=None):
         super(Variable, self).__init__(parent)
         Variable._ctr += 1
-        self._name = name if name!=None else 'V%d' % Variable._ctr
+        self._name = name if name is not None else 'V%d' % Variable._ctr
         self._dtype = dtype
-        self._shape = shape
+        self._shape = shape if shape is not None else ()
         self._shared = shared
+        if array is not None:
+            self._dtype = array.dtype
+            self._shape = array.shape
+            # TODO sacuvaj array y ._value i u valuaciji napravi ._gpu_array i preseli memoriju gde treba
+
         self._fid = 'V' + str(Variable._ctr)
         # atoms should not have values, they are assigned in valuations
 
