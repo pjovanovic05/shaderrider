@@ -172,9 +172,9 @@ class Variable(Atom):
             self._dtype = array.dtype
             self._shape = array.shape
             # TODO sacuvaj array y ._value i u valuaciji napravi ._gpu_array i preseli memoriju gde treba
+            self._value = array
 
         self._fid = 'V' + str(Variable._ctr)
-        # atoms should not have values, they are assigned in valuations
 
     @property
     def fid(self):
@@ -187,6 +187,10 @@ class Variable(Atom):
     @name.setter
     def name(self, value):
         self._name = value
+
+    @property
+    def value(self):
+        return self._value
 
     @property
     def dtype(self):

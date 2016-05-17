@@ -130,8 +130,10 @@ class PyOCLValuation(Valuation):
     def add(self, name, value, const=False, async=False):
         # STAO OVDE kod pomeranja varijabli iz ndarray value-a u cl_array
         if isinstance(value, np.ndarray):
-            val = exprgraph.Variable(name, value.dtype, )
-            pass    # TODO wrap array into atom (var? const?)
+            val = exprgraph.Variable(name, array=value)
+            super(PyOCLValuation, self).add(name, val)
+            # TODO check if const
+            # TODO make and transfer to _gpu_array member in variable/constant
         elif isinstance(value, Number):
             pass    # TODO wrap into Literal
         elif isinstance(value, Tensor):     # ovo i ne bi trebalo da se desi??????????
