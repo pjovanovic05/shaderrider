@@ -128,44 +128,86 @@ def _compile_expression(expr):
 
 class PyOCLValuation(Valuation):
     def add(self, name, value, const=False, async=False):
-        # STAO OVDE kod pomeranja varijabli iz ndarray value-a u cl_array
-        if isinstance(value, np.ndarray):
-            val = exprgraph.Variable(name, array=value)
-            super(PyOCLValuation, self).add(name, val)
-            # TODO check if const
-            # TODO make and transfer to _gpu_array member in variable/constant
-        elif isinstance(value, Number):
-            pass    # TODO wrap into Literal
-        elif isinstance(value, Tensor):     # ovo i ne bi trebalo da se desi??????????
-            pass    # TODO get value
-        elif isinstance(value, (exprgraph.Variable, exprgraph.Constant)):
-            # TODO ovde pomeram value iz variablinog ndarray-a u cl_array!!
-            pass
-        elif isinstance(value, exprgraph.Formula):
-            # rezultat izvrsavanja nekog operatora
-            pass
-        else:
-            pass    # TODO raise something
+        if name in self._shared:
+            raise KeyError('Shared variable "' + name + '" already present in valuation.')
+        if name in self._vars:
+            raise KeyError('Variable "' + name + '" already present in valuation. Use set to overwrite.')
 
-        super(PyOCLValuation, self).add(name, value)
+        if isinstance(value, np.ndarray):
+            val = exprgraph.Variable(name, array=value) if not const else exprgraph.Constant(value)
+            val._gpu_array = clarray.to_device(default_queue, val.value, async=async)
+            self._vars[name] = val
+        elif isinstance(value, Number):
+            val = exprgraph.Literal(value)
+            self._vars[name] = val
+        elif isinstance(value, (exprgraph.Variable, exprgraph.Constant)):
+            # ovde pomeram value iz variablinog ndarray-a u cl_array!!
+            value._gpu_array = clarray.to_device(default_queue, value.value, async=async)
+            self._vars[name] = value
+        elif isinstance(value, clarray.Array):
+            pass    # TODO
+        else:
+            raise ValueError        # TODO better throwable needed
 
     def add_shared(self, name, value, async=False):
-        if not isinstance(value, Tensor):
-            pass    # TODO raise something
-        # check if tensor value is Variable or Constant
-        # call can still function with kwargs and args, but they automatically get into valuation which
-        # takes care of data movement between memories?
-        if not isinstance(value.value, (exprgraph.Variable, exprgraph.Constant)):
-            # a da ovde gore ne treba proveriti da li je cl_array ili ndarray?
-            pass
+        if name in self._shared:
+            raise KeyError('Shared variable "' + name + '" already present in valuation.')
+        if name in self._vars:
+            raise KeyError('Variable "' + name + '" already present in valuation. Use set to overwrite.')
+
+        if isinstance(value, np.ndarray):
+            val = exprgraph.Variable(name=name, array=value)
+            val._gpu_array = clarray.to_device(default_queue, value, async=async)
+            self._shared[name] = val
+        elif isinstance(value, (exprgraph.Variable, exprgraph.Constant)):
+            value._gpu_array = clarray.to_device(default_queue, value.value)
+            self._shared[name] = value
+        elif isinstance(value, clarray.Array):
+            val = exprgraph.Variable(name=name)
+            val._gpu_array = value
+            self._shared[name] = val
+        else:
+            raise ValueError        # TODO raise better exception
 
     def get(self, name, async=False):
-        pass
+        if name in self._vars:
+            # do the movement with clarray.get()
+            val = self._vars[name]
+            if val.value is None:
+                val.value = val._gpu_array.get(async=async) # TODO can this be async at all???????????????????????
+            else:
+                val._gpu_array.get(ary=val.value, async=async)
+            return val
+        elif name in self._shared:
+            val = self._shared[name]
+            if val.value is None:
+                val.value = val._gpu_array.get(async=async)
+            else:
+                val._gpu_array.get(ary=val.value, async=async)  # TODO check if asynchronicity returns events
+        else:
+            raise KeyError('Variable "' + name + '" not found in valuation.')
+
+    def read(self, name):
+        if name in self._vars:
+            # just get the _gpu_arrays
+            return self._vars[name]._gpu_array
+        elif name in self._shared:
+            return self._shared[name]._gpu_array
+        else:
+            raise KeyError('Variable "' + name + '" not found in valuation.')
 
     def set(self, name, value, async=False):
-        pass
+        if name in self._shared:
+            # TODO check value type (needs to be ndarray of the same type and size)
+            self._shared[name]._gpu_array.set(value, async=async)
+        elif name in self._vars:
+            self._vars[name]._gpu_array.set(value, async=async)
+        else:
+            raise KeyError('Variable "' + name + '" not found in this valuation.')
 
     def clear(self, async=False):
+        # TODO clear _vars, leave _shared
+        # TODO add remove method to remove specific vars?
         pass
 
 
