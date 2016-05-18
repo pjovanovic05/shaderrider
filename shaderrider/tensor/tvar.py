@@ -159,7 +159,7 @@ class Tensor(object):
         if isinstance(other, exprgraph.Formula):
             otherf = other
         elif isinstance(other, np.ndarray) or isinstance(other, numbers.Number):
-            otherf = exprgraph.Constant(other)
+            otherf = exprgraph.Constant(other)  # TODO Literal if is instance of Number!!!!!!!!!!!!!!!!!!!!!!?????
         else:
             raise NotImplementedError('unsupported operand type')
         newf = config.get_formula_factory().create_divmod(self, otherf)

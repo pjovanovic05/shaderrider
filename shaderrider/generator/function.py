@@ -55,6 +55,10 @@ class Valuation(object):
     def clear(self):
         self._vars.clear()
 
+    def remove(self, name):
+        self._vars.pop(name, 0)
+        self._shared.pop(name, 0)
+
 
 class Function(object):
     __metaclass__ = abc.ABCMeta

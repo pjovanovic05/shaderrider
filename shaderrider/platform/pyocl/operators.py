@@ -26,9 +26,14 @@ from shaderrider.platform.pyocl.aux import clblaswrap
 
 class ReshapeOP(operators.ReshapeOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = array.reshape(param, self._shape)
+        """
+
+        :type valuation: PyOCLValuation
+        """
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, array.reshape(param, self._shape))
         return None
+
 
 # TODO indexing in pyopencl apears primitive... maybe clarray needs to return?
 class IndexOP(operators.IndexOP):

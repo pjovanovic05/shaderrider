@@ -145,7 +145,9 @@ class PyOCLValuation(Valuation):
             value._gpu_array = clarray.to_device(default_queue, value.value, async=async)
             self._vars[name] = value
         elif isinstance(value, clarray.Array):
-            pass    # TODO
+            val = exprgraph.Variable(name=name)
+            val._gpu_array = value
+            self._vars[name] = val
         else:
             raise ValueError        # TODO better throwable needed
 
@@ -208,7 +210,9 @@ class PyOCLValuation(Valuation):
     def clear(self, async=False):
         # TODO clear _vars, leave _shared
         # TODO add remove method to remove specific vars?
-        pass
+        for var in self._vars:
+            var._gpu_array.data.release();
+        self._vars.clear()
 
 
 class PyOCLPlatform(object):
