@@ -25,7 +25,7 @@ class ElementwiseOP(elementwise.ElementwiseOP):
         return self._fn(valuation, events, device)
 
     def generate_eval(self):
-        atoms = self._expr.get_atoms()
+        atoms = self._expr.get_variables()
         args = []
         for a in atoms:
             if a.is_array():

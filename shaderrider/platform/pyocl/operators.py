@@ -22,6 +22,7 @@ from shaderrider.platform.pyocl.aux import clblaswrap
 #  - blas ops
 #  - convolution ops
 
+
 # TENSOR OPS ##########################################################
 
 class ReshapeOP(operators.ReshapeOP):
@@ -287,14 +288,14 @@ class NeOP(operators.NeOP):
 # ELEMENTWISE OP ######################################################
 
 class ElementwiseOP(operators.ElementwiseOP):
-    def __init__(self, expr, ops, ctx=None, device=0, parent=None):              # TODO ops should be expr.get_atoms()?
+    def __init__(self, expr, ops, ctx=None, device=0, parent=None):              # TODO ops should be expr.get_variables()?
         super(ElementwiseOP, self).__init__(expr, ops, parent)
         self._ctx = ctx
         self._device = device
         self.evaluate = self.generate_eval()
 
     def generate_eval(self):
-        atoms = self._expr.get_atoms()
+        atoms = self._expr.get_variables()
         args = []
         for a in atoms:
             if a.is_array():

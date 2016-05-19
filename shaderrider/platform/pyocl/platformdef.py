@@ -92,11 +92,11 @@ class PyOCLFunction(Function):
 
     def _collect_inputs(self):
         for expr in self._expressions:
-            for a in expr.get_atoms():
+            for a in expr.get_variables():
                 if a not in self._inputs:
                     self._inputs.append(a)
         for var, update in self._updates:
-            for a in update.get_atoms():
+            for a in update.get_variables():
                 if a not in self._inputs:
                     self._inputs.append(a)
 
