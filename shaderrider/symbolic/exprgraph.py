@@ -26,7 +26,7 @@ class Formula(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_atomics(self):
+    def get_atoms(self):
         raise NotImplementedError
 
     @abstractmethod
@@ -84,7 +84,7 @@ class Atom(Formula):
     def value(self):
         pass
 
-    def get_atomics(self):
+    def get_atoms(self):
         return [self]
 
     def complexity(self):
@@ -290,10 +290,10 @@ class Operator(Formula):
             atoms.extend(op.get_variables())
         return atoms
 
-    def get_atomics(self):
+    def get_atoms(self):
         atomics = []
         for op in self._operands:
-            atomics.extend(op.get_atomics())
+            atomics.extend(op.get_atoms())
         return atomics
 
     def get_shape(self):
@@ -348,39 +348,39 @@ class Operator(Formula):
         steps represented by this operator."""
         raise NotImplementedError
 
-
-class NativeOperator(Operator):
-    __metaclass__ = ABCMeta
-
-    def c_headers(self):
-        """Returns the list of headers to be included for this formula.
-
-        If the header name does not begin with '<' it is assumed to be
-        locally referenced (i.e. include "header.h").
-        """
-        return []
-
-    def c_header_dirs(self):
-        """Returns the list of include dirs where required headers are.
-        Optional.
-
-        """
-        return []
-
-    def c_libraries(self):
-        return []
-
-    def c_lib_dirs(self):
-        return []
-
-    def c_compile_args(self):
-        return []
-
-    def support_code(self):
-        pass
-
-    def instance_code(self):
-        pass
-
-    def eval_code(self):
-        pass
+# TODO is there any need for this?
+# class NativeOperator(Operator):
+#     __metaclass__ = ABCMeta
+#
+#     def c_headers(self):
+#         """Returns the list of headers to be included for this formula.
+#
+#         If the header name does not begin with '<' it is assumed to be
+#         locally referenced (i.e. include "header.h").
+#         """
+#         return []
+#
+#     def c_header_dirs(self):
+#         """Returns the list of include dirs where required headers are.
+#         Optional.
+#
+#         """
+#         return []
+#
+#     def c_libraries(self):
+#         return []
+#
+#     def c_lib_dirs(self):
+#         return []
+#
+#     def c_compile_args(self):
+#         return []
+#
+#     def support_code(self):
+#         pass
+#
+#     def instance_code(self):
+#         pass
+#
+#     def eval_code(self):
+#         pass

@@ -5,7 +5,7 @@ WRITEME
 """
 
 import pyopencl as cl
-from pyopencl import array
+from pyopencl import array as clarray
 from pyopencl import clmath
 from pyopencl.elementwise import ElementwiseKernel
 from pyopencl.reduction import ReductionKernel
@@ -32,7 +32,7 @@ class ReshapeOP(operators.ReshapeOP):
         :type valuation: PyOCLValuation
         """
         param = valuation.read(self.operands[0].fid)
-        valuation.add(self.fid, array.reshape(param, self._shape))
+        valuation.add(self.fid, clarray.reshape(param, self._shape))
         return None
 
 
@@ -47,7 +47,7 @@ class IndexOP(operators.IndexOP):
 class TransposeOP(operators.TransposeOP):
     def evaluate(self, valuation):
         param = valuation[self.operands[0].fid]
-        valuation[self.fid] = array.transpose(param, self._axes)
+        valuation[self.fid] = clarray.transpose(param, self._axes)
         return None
 
 
@@ -83,8 +83,9 @@ class NormOP(operators.NormOP):
 
 class AbsOP(operators.AbsOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = abs(param)
+        param = valuation.read(self.operands[0].fid)
+        #param = valuation[self.operands[0].fid]
+        valuation.add(self.fid, clarray.abs(param))
         return None
 
 
@@ -182,7 +183,7 @@ class MaximumOP(operators.MaximumOP):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         out = valuation[self.fid] if self.fid in valuation else None
-        valuation[self.fid] = array.maximum(a, b, out)
+        valuation[self.fid] = clarray.maximum(a, b, out)
         return None
 
 
@@ -191,7 +192,7 @@ class MinimumOP(operators.MinimumOP):
         a = valuation[self.operands[0].fid]
         b = valuation[self.operands[1].fid]
         out = valuation[self.fid] if self.fid in valuation else None
-        valuation[self.fid] = array.minimum(a, b, out)
+        valuation[self.fid] = clarray.minimum(a, b, out)
         return None
 
 
@@ -318,7 +319,7 @@ class ElementwiseOP(operators.ElementwiseOP):
                 if a.fid in events:
                     waits.append(events[a.fid])
             if self.fid not in valuation:
-                valuation[self.fid] = array.zeros(self._ctx, self.get_shape(), self.dtype)
+                valuation[self.fid] = clarray.zeros(self._ctx, self.get_shape(), self.dtype)
             out = valuation[self.fid]
             params.append(out)
             return ewk(wait_for=waits, *params)
