@@ -39,15 +39,15 @@ class ReshapeOP(operators.ReshapeOP):
 # TODO indexing in pyopencl apears primitive... maybe clarray needs to return?
 class IndexOP(operators.IndexOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = param[self._key]
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, param[self._key])
         return None
 
 
 class TransposeOP(operators.TransposeOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clarray.transpose(param, self._axes)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clarray.transpose(param, self._axes))
         return None
 
 
@@ -59,8 +59,8 @@ class DimshuffleOP(operators.DimshuffleOP):
 
 class RavelOP(operators.RavelOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = param.ravel()
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, param.ravel())
         return None
 
 
@@ -84,57 +84,56 @@ class NormOP(operators.NormOP):
 class AbsOP(operators.AbsOP):
     def evaluate(self, valuation):
         param = valuation.read(self.operands[0].fid)
-        #param = valuation[self.operands[0].fid]
-        valuation.add(self.fid, clarray.abs(param))
+        valuation.add(self.fid, abs(param))
         return None
 
 
 class NegOP(operators.NegOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = -param
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, -param)
         return None
 
 
 class ExpOP(operators.ExpOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation = clmath.exp(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.exp(param))
         return None
 
 
 class LogOP(operators.LogOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.log(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.log(param))
         return None
 
 
 class SinOP(operators.SinOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.sin(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.sin(param))
         return None
 
 
 class CosOP(operators.CosOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.cos(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.cos(param))
         return None
 
 
 class CoshOP(operators.CoshOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.cosh(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.cosh(param))
         return None
 
 
 class TanOP(operators.TanOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.tan(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.tan(param))
         return None
 
 
@@ -145,94 +144,94 @@ class SignOP(operators.SignOP):
 
 class CeilOP(operators.CeilOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.ceil(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.ceil(param))
         return None
 
 
 class FloorOP(operators.FloorOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.floor(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.floor(param))
         return None
 
 
 class RoundOP(operators.RoundOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.round(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.round(param))
         return None
 
 
 class SqrOP(operators.SqrOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
+        param = valuation.read(self.operands[0].fid)
         # valuation[self.fid] = TODO
         raise NotImplementedError
 
 
 class SqrtOP(operators.SqrtOP):
     def evaluate(self, valuation):
-        param = valuation[self.operands[0].fid]
-        valuation[self.fid] = clmath.sqrt(param)
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clmath.sqrt(param))
         return None
 
 
 class MaximumOP(operators.MaximumOP):
     def evaluate(self, valuation):
-        a = valuation[self.operands[0].fid]
-        b = valuation[self.operands[1].fid]
-        out = valuation[self.fid] if self.fid in valuation else None
-        valuation[self.fid] = clarray.maximum(a, b, out)
+        a = valuation.read(self.operands[0].fid)
+        b = valuation.read(self.operands[1].fid)
+        out = valuation.read(self.fid) if self.fid in valuation else None
+        valuation.add(self.fid, clarray.maximum(a, b, out))                     # TODO maybe set?
         return None
 
 
 class MinimumOP(operators.MinimumOP):
     def evaluate(self, valuation):
-        a = valuation[self.operands[0].fid]
-        b = valuation[self.operands[1].fid]
-        out = valuation[self.fid] if self.fid in valuation else None
-        valuation[self.fid] = clarray.minimum(a, b, out)
+        a = valuation.read(self.operands[0].fid)
+        b = valuation.read(self.operands[1].fid)
+        out = valuation.read(self.fid) if self.fid in valuation else None
+        valuation.add(self.fid, clarray.minimum(a, b, out))                     # TODO maybe set?
         return None
 
 
 class AddOP(operators.AddOP):
     def evaluate(self, valuation):
-        a = valuation[self.operands[0].fid]
-        b = valuation[self.operands[1].fid]
-        valuation[self.fid] = a + b
+        a = valuation.read(self.operands[0].fid)
+        b = valuation.read(self.operands[1].fid)
+        valuation.add(self.fid, a + b)
         return None
 
 
 class SubOP(operators.SubOP):
     def evaluate(self, valuation):
-        a = valuation[self.operands[0].fid]
-        b = valuation[self.operands[1].fid]
-        valuation[self.fid] = a - b
+        a = valuation.read(self.operands[0].fid)
+        b = valuation.read(self.operands[1].fid)
+        valuation.add(self.fid, a - b)
         return None
 
 
 class MulOP(operators.MulOP):
     def evaluate(self, valuation):
-        a = valuation[self.operands[0].fid]
-        b = valuation[self.operands[1].fid]
-        valuation[self.fid] = a * b
+        a = valuation.read(self.operands[0].fid)
+        b = valuation.read(self.operands[1].fid)
+        valuation.add(self.fid, a * b)
         return None
 
 
 class DivOP(operators.DivOP):
     def evaluate(self, valuation):
-        a = valuation[self.operands[0].fid]
-        b = valuation[self.operands[1].fid]
-        valuation[self.fid] = a / b
+        a = valuation.read(self.operands[0].fid)
+        b = valuation.read(self.operands[1].fid)
+        valuation.add(self.fid, a / b)
         return None
 
 
 class PowOP(operators.PowOP):
     def evaluate(self, valuation):
-        a = valuation[self.operands[0].fid]
-        b = valuation[self.operands[1].fid]
-        valuation[self.fid] = a ** b
+        a = valuation.read(self.operands[0].fid)
+        b = valuation.read(self.operands[1].fid)
+        valuation.add(self.fid, a ** b)
         return None
 
 
@@ -319,7 +318,7 @@ class ElementwiseOP(operators.ElementwiseOP):
                 if a.fid in events:
                     waits.append(events[a.fid])
             if self.fid not in valuation:
-                valuation[self.fid] = clarray.zeros(self._ctx, self.get_shape(), self.dtype)
+                valuation[self.fid] = clarray.empty(self._ctx, self.get_shape(), self.dtype)
             out = valuation[self.fid]
             params.append(out)
             return ewk(wait_for=waits, *params)
@@ -468,8 +467,7 @@ class GemvOP(operators.GemvOP):
         transA = valuation[self.operands[5].fid]
 
         waits = [events[op.fid] for op in operators if op.fid in events]
-
-        pass
+        # TODO
 
 
 class GerOP(operators.GerOP):
@@ -487,9 +485,11 @@ class ConvOP(operators.ConvOP):
     def generate_eval(self):
         pass
 
+
 class PoolOP(operators.PoolOP):
     def generate_eval(self):
         pass
+
 
 class DownsampleOP(operators.DownsampleOP):
     pass

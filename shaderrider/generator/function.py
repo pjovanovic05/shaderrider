@@ -36,6 +36,9 @@ class Valuation(object):
             raise KeyError('Variable "' + name + '" already present in valuation. Use set to overwrite.')
         self._shared[name] = value
 
+    def __contains__(self, item):
+        return (item in self._vars) or (item in self._shared)
+
     def get(self, name):
         if name in self._shared:
             return self._shared[name]
