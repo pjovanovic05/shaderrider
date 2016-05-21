@@ -17,6 +17,7 @@ from shaderrider.platform.pyocl.aux import clblaswrap
 # TOC
 #  - tensor ops
 #  - arithmetic ops
+#  - comparison ops
 #  - elementwise op
 #  - scan ops
 #  - blas ops
@@ -492,4 +493,5 @@ class PoolOP(operators.PoolOP):
 
 
 class DownsampleOP(operators.DownsampleOP):
-    pass
+    def generate_eval(self):
+        pass

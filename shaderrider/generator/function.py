@@ -59,8 +59,8 @@ class Valuation(object):
         self._vars.clear()
 
     def remove(self, name):
-        self._vars.pop(name, 0)
-        self._shared.pop(name, 0)
+        del self._vars[name]
+        del self._shared[name]
 
 
 class Function(object):
