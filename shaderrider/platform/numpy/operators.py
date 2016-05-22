@@ -120,99 +120,101 @@ class FloorOP(operators.FloorOP):
 
 class RoundOP(operators.RoundOP):
     def evaluate(self, valuation):
-        pass
-
+        valuation.add(self.fid, np.round(valuation.get(self.operands[0].fid)))
 
 class SqrOP(operators.SqrOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.square(valuation.get(self.operands[0].fid)))
 
 
 class SqrtOP(operators.SqrtOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.sqrt(valuation.get(self.operands[0].fid)))
 
 
 class MaximumOP(operators.MaximumOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.maximum(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class MinimumOP(operators.MinimumOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.minimum(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class AddOP(operators.AddOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.add(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class SubOP(operators.SubOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.subtract(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class MulOP(operators.MulOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.multiply(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class DivOP(operators.DivOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.divide(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class PowOP(operators.PowOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.power(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 # COMPARISON OPS ######################################################
 
 class AnyOP(operators.AnyOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.any(valuation.get(self.operands[0].fid)))
 
 
 class AllOP(operators.AllOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.all(valuation.get(self.operands[0].fid)))
 
 
 class EqOP(operators.EqOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.equal(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class GtOP(operators.GtOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.greater(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class LtOP(operators.LtOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.less(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class GeOP(operators.GeOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.greater_equal(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class LeOP(operators.LeOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.less_equal(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 class NeOP(operators.NeOP):
     def evaluate(self, valuation):
-        pass
+        valuation.add(self.fid, np.not_equal(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 # ELEMENTWISE OP ######################################################
 
 class ElementwiseOP(operators.ElementwiseOP):
+    def __init__(self, expr, ctx=None, device=0, parent=None):
+        pass
+
     def generate_eval(self):
         pass
 

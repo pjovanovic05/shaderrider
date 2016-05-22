@@ -7,4 +7,5 @@ syntax: glob
 .idea/*
 *.o
 *.so
+*.orig
 

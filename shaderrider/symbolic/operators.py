@@ -22,6 +22,40 @@ from shaderrider.symbolic import exprgraph
 #  - convolution ops
 
 
+# TODO operators reorganization:
+# - Array creation ops
+#   - ones and zeroes
+#   - from existing data
+#   - numerical ranges
+# - Array manipulation ops
+#   - basic ops
+#   - changing shape
+#   - transpose-like ops
+#   - changing number of dimensions
+#   - joining arrays
+#   - splitting arrays
+#   - tiling arrays
+#   - rearranging elements ?
+# - Binary ops
+#   - elementwise bit operations
+#   - bit packing
+#   - output formatting
+# - Indexing ops
+# - Linear algebra ops (BLAS)
+#   - matrix and vector products
+#   - decompositions?
+#   - matrix eigenvalues
+#   - norms and other numbers
+#   - solving equations and inverting matrices
+# - Logic ops
+#   - truth value testing
+#   - array contents
+#   - logical operations
+#   - comparisons
+# - FFT
+# - Convolution
+# -
+
 # ABSTRACT OPS ########################################################
 
 class UnaryOP(exprgraph.Operator):
