@@ -6,7 +6,7 @@ WRITEME
 import abc
 from shaderrider.util import OrderedSet
 from shaderrider.symbolic import exprgraph
-from shaderrider import configuration
+from shaderrider import configuration as config
 
 
 class Valuation(object):
@@ -65,12 +65,14 @@ class Valuation(object):
 
 class Function(object):
     __metaclass__ = abc.ABCMeta
+    _ctr = 0
 
     def __init__(self, inputs=None, expressions=None, updates=None, name=None): # TODO name could be mandatory
         self._inputs = inputs
         self._expressions = expressions
         self._updates = updates
-        self._name = name
+        self._name = name if name is not None else 'f'+str(Function._ctr)
+        Function._ctr += 1
 
     def __call__(self, *args, **kwargs):
         """
@@ -87,7 +89,8 @@ class Function(object):
         raise NotImplementedError
 
 
-def function(expressions=None, updates=None, name=None):
+def function(expressions=None, updates=None, name=None, skip_opts=False,
+             skip_symbolic_opts=False, skip_platform_opts=False):
     """
     TODO Creates callable object that performs calculation described by the
     computation graph(s) for the expression(s) to be calculated.
@@ -107,21 +110,14 @@ def function(expressions=None, updates=None, name=None):
     """
 
     # configure compilation
-    platform = configuration.get_platform()
-    checks = platform.get_validations()
-    opts = platform.get_optimizations()
+    platform = config.get_platform()
 
     # collect inputs
     inputs = _collect_inputs(expressions, updates)
 
     # for each expression
     for expr in expressions:
-        # run checks
-        for check in checks:
-            pass    #validate graph
-        # optimizations
-        for opt in opts:
-            pass    #optimize graph
+        pass
 
     # for each update
     for update in updates:
@@ -131,6 +127,15 @@ def function(expressions=None, updates=None, name=None):
     # create appropriate Function instance
     fn = platform.create_function(inputs, expressions, updates, name)
     return fn
+
+
+def valuation(shared=None, temps=None, platform=None):
+    factory = None
+    if platform is not None:
+        factory = config.platforms[platform]
+    else:
+        factory = config.get_factory()
+    return factory.create_valuation(shared, temps)
 
 
 def topsort_formula(formula):

@@ -210,8 +210,8 @@ class PyOCLValuation(Valuation):
     def clear(self, async=False):
         # TODO clear _vars, leave _shared
         # TODO add remove method to remove specific vars?
-        for var in self._vars:
-            var._gpu_array.data.release();
+        # for var in self._vars:
+        #     var._gpu_array.data.release();        # risky!! what if a var is used as a function output?
         self._vars.clear()
 
 

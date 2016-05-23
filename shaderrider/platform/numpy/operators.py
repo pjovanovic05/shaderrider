@@ -64,8 +64,12 @@ class NormOP(operators.NormOP):
 # ARITHMETIC OPS ######################################################
 
 class AbsOP(operators.AbsOP):
-    def evaluate(self, valuation):
-        valuation.add(self.fid, np.absolute(valuation.get(self.operands[0].fid)))
+    def evaluate(self, valuation):                                                  # TODO is this faster?
+        if self.fid not in valuation:
+            valuation.add(self.fid, np.absolute(valuation.get(self.operands[0].fid)))
+        else:
+            outvar = valuation.get(self.fid)
+            np.absolute(valuation.get(self.operands[0].fid), out=outvar)
 
 
 class NegOP(operators.NegOP):

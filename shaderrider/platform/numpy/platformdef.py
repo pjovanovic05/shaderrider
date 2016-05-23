@@ -44,7 +44,7 @@ class NPFactory(FormulaFactory):
 
 
 class NPFunction(Function):
-    def __init__(self):
+    def __init__(self, inputs=None, expressions=None, updates=None, name=None):
         pass
 
     def evaluate(self, valuation):
