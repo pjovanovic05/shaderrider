@@ -47,6 +47,10 @@ default_ctx, queues = setup_context(1)
 default_queue = queues[0]
 
 
+def platform_init():
+    pass                    # TODO
+
+
 class PyOCLFunction(Function):
     # def __init__(self, expressions=None, updates=None, name=None):
     #     super(PyOCLFunction, self).__init__(expressions, updates, name)
