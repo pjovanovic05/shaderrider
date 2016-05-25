@@ -3,10 +3,36 @@ WRITEME
 
 """
 
-import abc
+from abc import ABCMeta, abstractmethod
 from shaderrider.util import OrderedSet
 from shaderrider.symbolic import exprgraph
 from shaderrider import configuration as config
+
+
+class PlatformFactory(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def init_platform(self):
+        pass
+
+    @abstractmethod
+    def finalize_platform(self):
+        pass
+
+    @abstractmethod
+    def create_valuation(self):
+        pass
+
+    @abstractmethod
+    def create_function(self):
+        pass
+
+    @abstractmethod
+    def create_op(self, type_name, operands):
+        pass
+
+    # TODO factory methods for each op type
 
 
 class Valuation(object):
@@ -64,7 +90,7 @@ class Valuation(object):
 
 
 class Function(object):
-    __metaclass__ = abc.ABCMeta
+    __metaclass__ = ABCMeta
     _ctr = 0
 
     def __init__(self, inputs=None, expressions=None, updates=None, name=None): # TODO name could be mandatory
@@ -84,7 +110,7 @@ class Function(object):
 
         return self.evaluate(kwargs['valuation'])
 
-    @abc.abstractmethod
+    @abstractmethod
     def evaluate(self, valuation):
         raise NotImplementedError
 
