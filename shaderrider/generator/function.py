@@ -10,6 +10,7 @@ from shaderrider import configuration as config
 
 
 class PlatformFactory(object):
+    """Abstract factory that defines a platform."""
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -33,6 +34,96 @@ class PlatformFactory(object):
         pass
 
     # TODO factory methods for each op type
+    # ARRAY CREATION
+    # ???
+
+    # ARRAY MANIPULATION
+
+    @abstractmethod
+    def create_reshape(self, a, newshape):
+        pass
+
+    @abstractmethod
+    def create_ravel(self, a):
+        pass
+
+    @abstractmethod
+    def create_concatenate(self, a1, a2):
+        pass    # TODO think this through
+
+    @abstractmethod
+    def create_stack(self, xs, axis):
+        pass    # TODO think this through
+
+    @abstractmethod
+    def create_split(self, a, indicies):
+        pass    # TODO think this through
+
+    @abstractmethod
+    def create_repeat(self, a, repeats, axis):
+        pass    # TODO think this through
+
+    # BINARY OPERATIONS
+
+    @abstractmethod
+    def create_bitwise_and(self, x1, x2):
+        pass
+
+    @abstractmethod
+    def create_bitwise_or(self, x1, x2):
+        pass
+
+    @abstractmethod
+    def create_bitwise_xor(self, x1, x2):
+        pass
+
+    @abstractmethod
+    def create_invert(self, x):
+        pass
+
+    @abstractmethod
+    def create_left_shift(self, x1, x2):
+        pass
+
+    @abstractmethod
+    def create_right_shift(self, x1, x2):
+        pass
+
+    # INDEXING OPS
+    # TODO
+
+    # LINEAR ALGEBRA
+
+    @abstractmethod
+    def create_dot(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_vdot(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_inner(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_outer(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_matmul(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_eig(self, a):
+        pass
+
+    @abstractmethod
+    def create_eigvals(self, a):
+        pass
+
+    # LOGIC OPS
+
 
 
 class Valuation(object):
