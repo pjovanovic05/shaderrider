@@ -11,13 +11,12 @@ import pyopencl.array as clarray
 from shaderrider.generator.codegen import FormulaFactory
 from shaderrider.symbolic import exprgraph
 
-from shaderrider.generator.function import Function, topsort_formula, Valuation
+from shaderrider.generator.function import Function, topsort_formula, Valuation, PlatformFactory
 from shaderrider.generator import optimization as opt
 
 from shaderrider.platform.pyocl import basic as bo
 from shaderrider.platform.pyocl import blas
 from shaderrider.platform.pyocl import elementwise
-from shaderrider.tensor.tvar import Tensor
 
 
 def setup_context(ngpus=0):
@@ -219,30 +218,6 @@ class PyOCLValuation(Valuation):
         self._vars.clear()
 
 
-class PyOCLPlatform(object):
-    @classmethod
-    def get_validations(cls):
-        """gets validation objects which check the validity of an expression graph"""
-        return []
-
-    def get_optimizations(self):
-        """gets optimization objects which implement platform specific optimizations on an expression graph"""
-        return []
-
-    def write_value(self):
-        """puts something into the platform valuation (host2device)"""
-        pass
-
-    def read_value(self):
-        """reads something from the platform valuation (device2host)"""
-        pass
-
-    def create_function(self, inputs, expressions, updates, name):
-        """create appropriate function instance for this platform"""
-        # treba da zamenim sve operatore u grafu operatorima platforme
-        return PyOCLFunction()
-
-
 class PyOCLFFactory(FormulaFactory):
     def create_valuation(vdict):
         pass
@@ -315,3 +290,7 @@ class PyOCLFFactory(FormulaFactory):
 
     def create_ger(self, alpha, X, Y, A, parent=None):
         return blas.GerOP(alpha, X, Y, A, parent)
+
+
+class PyOCLFactory(PlatformFactory):
+    pass

@@ -35,7 +35,7 @@ class PlatformFactory(object):
 
     # TODO factory methods for each op type
     # ARRAY CREATION
-    # ???
+    # ??? TODO do i need this? valuation creates my arrays, but what about initialization (zeros, ones, random...)?
 
     # ARRAY MANIPULATION
 
@@ -124,6 +124,265 @@ class PlatformFactory(object):
 
     # LOGIC OPS
 
+    @abstractmethod
+    def create_all(self, a):
+        pass
+
+    @abstractmethod
+    def create_any(self, a):
+        pass
+
+    @abstractmethod
+    def create_and(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_or(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_not(self, a):
+        pass
+
+    @abstractmethod
+    def create_xor(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_greater(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_less(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_greater_equal(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_less_equal(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_equal(self, a, b):
+        pass
+
+    @abstractmethod
+    def create_not_equal(self, a, b):
+        pass
+
+    # MATHEMATICAL OPS
+
+    @abstractmethod
+    def create_sin(self, x):
+        pass
+
+    @abstractmethod
+    def create_cos(self, x):
+        pass
+
+    @abstractmethod
+    def create_tan(self, x):
+        pass
+
+    @abstractmethod
+    def create_arcsin(self, x):
+        pass
+
+    @abstractmethod
+    def create_arccos(self, x):
+        pass
+
+    @abstractmethod
+    def create_arctan(self, x):
+        pass
+
+    @abstractmethod
+    def create_sinh(self, x):
+        pass
+
+    @abstractmethod
+    def create_cosh(self, x):
+        pass
+
+    @abstractmethod
+    def create_tanh(self, x):
+        pass
+
+    @abstractmethod
+    def create_arcsinh(self, x):
+        pass
+
+    @abstractmethod
+    def create_arccosh(self, x):
+        pass
+
+    @abstractmethod
+    def create_arctanh(self, x):
+        pass
+
+    @abstractmethod
+    def create_round(self, a, decimals=None, out=None):
+        pass
+
+    @abstractmethod
+    def create_floor(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_ceil(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_prod(self, a, axis, dtype, out, keepdims):
+        pass
+
+    @abstractmethod
+    def create_sum(self, a, axis, dtype, out, keepdims):
+        pass
+
+    @abstractmethod
+    def create_nansum(self, a, axis, dtype, out, keepdims):
+        pass
+
+    @abstractmethod
+    def create_cumprod(self, a, axis, dtype, out, keepdims):
+        pass
+
+    @abstractmethod
+    def create_cumsum(self, a, axis, dtype, out, keepdims):
+        pass
+
+    @abstractmethod
+    def create_exp(self, x):
+        pass
+
+    @abstractmethod
+    def create_exp2(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_log(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_log10(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_log2(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_log1p(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_add(self, x1, x2, out=None):
+        pass
+
+    @abstractmethod
+    def create_reciprocal(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_negative(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_multiply(self, x1, x2, out=None):
+        pass
+
+    @abstractmethod
+    def create_divide(self, x1, x2, out=None):
+        pass
+
+    @abstractmethod
+    def create_power(self, x1, x2, out=None):
+        pass
+
+    @abstractmethod
+    def create_subtract(self, x1, x2, out=None):
+        pass
+
+    @abstractmethod
+    def create_true_divide(self, x1, x2, out=None):
+        pass
+
+    @abstractmethod
+    def create_floor_divide(self, x1, x2, out=None):
+        pass
+
+    @abstractmethod
+    def create_mod(self, x1, x2, out=None):
+        pass
+
+    # @abstractmethod
+    # def create_convolve(self, a, v, mode=None):
+    #     pass
+
+    @abstractmethod
+    def create_clip(self, a, a_min, a_max, out=None):
+        pass
+
+    @abstractmethod
+    def create_sqrt(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_square(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_absolute(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_sign(self, x, out=None):
+        pass
+
+    @abstractmethod
+    def create_maximum(self, x1, x2, out=None):
+        pass
+
+    @abstractmethod
+    def create_minimum(self, x1, x2, out=None):
+        pass
+
+    # @abstractmethod
+    # def create_nan_to_num(self, x):
+    #     pass
+
+    # STATISTICS OPS
+
+    @abstractmethod
+    def create_median(self, a): #[axis, out, overwrite_input, keepdims]
+        pass
+
+    @abstractmethod
+    def create_average(self, a):    #[axis, weights, returned]
+        pass
+
+    @abstractmethod
+    def create_mean(self, a):   #[axis, dtype, out, keepdims]
+        pass
+
+    @abstractmethod
+    def create_std(self, a):    #[axis, dtype, out, ddof, keepdims]
+        pass
+
+    @abstractmethod
+    def create_var(self, a):    #[axis, dtype, out, ddof, keepdims]
+        pass
+
+    @abstractmethod
+    def create_correlate(self, a, v, mode=None):
+        pass
+
+    @abstractmethod
+    def create_cov(self, m):    #[y, rowvar, bias, ddof, fweights, ...]
+        pass
 
 
 class Valuation(object):

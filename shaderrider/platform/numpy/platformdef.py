@@ -6,8 +6,7 @@ from numbers import Number
 import numpy as np
 
 from shaderrider.symbolic import exprgraph
-from shaderrider.generator.function import Function, topsort_formula, Valuation
-from shaderrider.generator.codegen import FormulaFactory
+from shaderrider.generator.function import Function, Valuation, PlatformFactory
 
 
 class NPValuation(Valuation):
@@ -39,13 +38,13 @@ class NPValuation(Valuation):
         pass
 
 
-class NPFactory(FormulaFactory):
-    pass
-
-
 class NPFunction(Function):
     def __init__(self, inputs=None, expressions=None, updates=None, name=None):
         pass
 
     def evaluate(self, valuation):
         pass
+
+
+class NPFactory(PlatformFactory):
+    pass
