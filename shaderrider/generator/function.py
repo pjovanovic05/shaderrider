@@ -15,10 +15,16 @@ class PlatformFactory(object):
 
     @abstractmethod
     def init_platform(self):
+        """
+        Performs platform initialization, like context and queue creation.
+        """
         pass
 
     @abstractmethod
     def finalize_platform(self):
+        """
+        Finalizes the platform, closing the queues and contexts.
+        """
         pass
 
     @abstractmethod
