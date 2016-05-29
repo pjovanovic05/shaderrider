@@ -235,15 +235,15 @@ class PlatformFactory(object):
         pass
 
     @abstractmethod
-    def create_prod(self, a, axis, dtype, out, keepdims):
+    def create_prod(self, a, axis=None, dtype=None, out=None, keepdims=None):
         pass
 
     @abstractmethod
-    def create_sum(self, a, axis, dtype, out, keepdims):
+    def create_sum(self, a, axis=None, dtype=None, out=None, keepdims=None):
         pass
 
     @abstractmethod
-    def create_nansum(self, a, axis, dtype, out, keepdims):
+    def create_nansum(self, a, axis=None, dtype=None, out=None, keepdims=None):
         pass
 
     @abstractmethod
