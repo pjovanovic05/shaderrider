@@ -14,3 +14,7 @@ def get_platform():
 
 def get_formula_factory():
     pass
+
+
+def get_platform_factory():
+    pass

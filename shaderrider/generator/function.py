@@ -530,9 +530,9 @@ def function(expressions=None, updates=None, name=None, skip_opts=False,
     """
 
     # configure compilation
-    platform = config.get_platform()
+    platform = config.get_platform_factory()
 
-    # collect inputs
+    # collect inputs            TODO STAO OVDE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     inputs = _collect_inputs(expressions, updates)
 
     # for each expression
