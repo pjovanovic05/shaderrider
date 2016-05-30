@@ -18,82 +18,120 @@ class PlatformFactory(object):
         """
         Performs platform initialization, like context and queue creation.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def finalize_platform(self):
         """
         Finalizes the platform, closing the queues and contexts.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_valuation(self):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_function(self):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_op(self, type_name, operands):
-        pass
+        raise NotImplementedError
 
-    # TODO factory methods for each op type
     # ARRAY CREATION
-    # ??? TODO do i need this? valuation creates my arrays, but what about initialization (zeros, ones, random...)?
+    @abstractmethod
+    def empty(self, shape, dtype=None, order='C'):
+        raise NotImplementedError
 
+    @abstractmethod
+    def empty_like(self, a, dtype=None, order='C'):
+        raise NotImplementedError
+
+    @abstractmethod
+    def eye(self, N, M=0, k=0, dtype=None):
+        raise NotImplementedError
+
+    @abstractmethod
+    def identity(self, N, dtype=None):
+        raise NotImplementedError
+
+    @abstractmethod
+    def ones(self, shape, dtype=None, order='C'):
+        raise NotImplementedError
+
+    @abstractmethod
+    def ones_like(self, a, dtype=None, order='C'):
+        raise NotImplementedError
+
+    @abstractmethod
+    def from_data(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def arange(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def linspace(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def logspace(self):
+        raise NotImplementedError
+
+    # factory methods for each op type
     # ARRAY MANIPULATION
 
     @abstractmethod
     def create_reshape(self, a, newshape):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_ravel(self, a):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_concatenate(self, a1, a2):
-        pass    # TODO think this through
+        raise NotImplementedError    # TODO think this through
 
     @abstractmethod
     def create_stack(self, xs, axis):
-        pass    # TODO think this through
+        raise NotImplementedError    # TODO think this through
 
     @abstractmethod
     def create_split(self, a, indicies):
-        pass    # TODO think this through
+        raise NotImplementedError    # TODO think this through
 
     @abstractmethod
     def create_repeat(self, a, repeats, axis):
-        pass    # TODO think this through
+        raise NotImplementedError    # TODO think this through
 
     # BINARY OPERATIONS
 
     @abstractmethod
     def create_bitwise_and(self, x1, x2):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_bitwise_or(self, x1, x2):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_bitwise_xor(self, x1, x2):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_invert(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_left_shift(self, x1, x2):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_right_shift(self, x1, x2):
-        pass
+        raise NotImplementedError
 
     # INDEXING OPS
     # TODO
@@ -102,293 +140,293 @@ class PlatformFactory(object):
 
     @abstractmethod
     def create_dot(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_vdot(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_inner(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_outer(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_matmul(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_eig(self, a):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_eigvals(self, a):
-        pass
+        raise NotImplementedError
 
     # LOGIC OPS
 
     @abstractmethod
     def create_all(self, a):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_any(self, a):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_and(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_or(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_not(self, a):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_xor(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_greater(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_less(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_greater_equal(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_less_equal(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_equal(self, a, b):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_not_equal(self, a, b):
-        pass
+        raise NotImplementedError
 
     # MATHEMATICAL OPS
 
     @abstractmethod
     def create_sin(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_cos(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_tan(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_arcsin(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_arccos(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_arctan(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_sinh(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_cosh(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_tanh(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_arcsinh(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_arccosh(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_arctanh(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_round(self, a, decimals=None, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_floor(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_ceil(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_prod(self, a, axis=None, dtype=None, out=None, keepdims=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_sum(self, a, axis=None, dtype=None, out=None, keepdims=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_nansum(self, a, axis=None, dtype=None, out=None, keepdims=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_cumprod(self, a, axis, dtype, out, keepdims):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_cumsum(self, a, axis, dtype, out, keepdims):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_exp(self, x):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_exp2(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_log(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_log10(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_log2(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_log1p(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_add(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_reciprocal(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_negative(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_multiply(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_divide(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_power(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_subtract(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_true_divide(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_floor_divide(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_mod(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     # @abstractmethod
     # def create_convolve(self, a, v, mode=None):
-    #     pass
+    #     raise NotImplementedError
 
     @abstractmethod
     def create_clip(self, a, a_min, a_max, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_sqrt(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_square(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_absolute(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_sign(self, x, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_maximum(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_minimum(self, x1, x2, out=None):
-        pass
+        raise NotImplementedError
 
     # @abstractmethod
     # def create_nan_to_num(self, x):
-    #     pass
+    #     raise NotImplementedError
 
     # STATISTICS OPS
 
     @abstractmethod
     def create_median(self, a): #[axis, out, overwrite_input, keepdims]
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_average(self, a):    #[axis, weights, returned]
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_mean(self, a):   #[axis, dtype, out, keepdims]
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_std(self, a):    #[axis, dtype, out, ddof, keepdims]
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_var(self, a):    #[axis, dtype, out, ddof, keepdims]
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_correlate(self, a, v, mode=None):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def create_cov(self, m):    #[y, rowvar, bias, ddof, fweights, ...]
-        pass
+        raise NotImplementedError
 
 
 class Valuation(object):
