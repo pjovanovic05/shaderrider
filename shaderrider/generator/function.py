@@ -32,7 +32,7 @@ class PlatformFactory(object):
         raise NotImplementedError
 
     @abstractmethod
-    def create_function(self):
+    def create_function(self, expressions=None, updates=None, name=None, skip_platform_opts=False):
         raise NotImplementedError
 
     @abstractmethod
@@ -487,8 +487,7 @@ class Function(object):
     __metaclass__ = ABCMeta
     _ctr = 0
 
-    def __init__(self, inputs=None, expressions=None, updates=None, name=None): # TODO name could be mandatory
-        self._inputs = inputs
+    def __init__(self, expressions=None, updates=None, name=None):
         self._expressions = expressions
         self._updates = updates
         self._name = name if name is not None else 'f'+str(Function._ctr)
@@ -532,9 +531,6 @@ def function(expressions=None, updates=None, name=None, skip_opts=False,
     # configure compilation
     platform = config.get_platform_factory()
 
-    # collect inputs            TODO STAO OVDE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    inputs = _collect_inputs(expressions, updates)
-
     # for each expression
     for expr in expressions:
         pass
@@ -545,7 +541,7 @@ def function(expressions=None, updates=None, name=None, skip_opts=False,
         pass
 
     # create appropriate Function instance
-    fn = platform.create_function(inputs, expressions, updates, name)
+    fn = platform.create_function(expressions, updates, name)
     return fn
 
 
