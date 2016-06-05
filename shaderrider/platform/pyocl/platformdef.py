@@ -70,10 +70,19 @@ class PyOCLFunction(Function):
     #     for var, update in self._updates:
     #         self._update_evals.append((var, _compile_expression(update)))
 
+    #           (self, expression, outvarnames, name)                                                           <- TODO
     def __init__(self, inputs=None, expressions=None, updates=None, name=None):
         super(PyOCLFunction, self).__init__(inputs, expressions, updates, name)
         self._expr_evals = []
         self._update_evals = []
+        # bice samo jedan expression po funkciji
+        # primice apstraktni simbolicki graf
+        # graf ce vec proci (opciono) kroz generalne optimizacije
+        #   treba da prodje i kroz platformske
+        # onda se topsort_formula pozove
+        # i napravi se niz evaluatora koji ce se pozivati   (evaluator == operator za platformu)
+        # outvarnames je niz varijabli u valuaciji koje ce biti napravljene ili updateovane kao rezultati funkcije
+        # evaluacija treba da vrati samo event koji se ceka? ili da ga samo podesi u svojim rezultatima u valuaciji!
 
     def evaluate(self, valuation):
         # check inputs?

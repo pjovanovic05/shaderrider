@@ -488,8 +488,8 @@ class Function(object):
     _ctr = 0
 
     def __init__(self, expressions=None, updates=None, name=None):
-        self._expressions = expressions
-        self._updates = updates
+        self._expressions = expressions     # TODO assert types?
+        self._updates = updates             # TODO same here...
         self._name = name if name is not None else 'f'+str(Function._ctr)
         Function._ctr += 1
 

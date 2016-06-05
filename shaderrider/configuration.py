@@ -9,7 +9,7 @@ class Configuration(object):
 
 
 def get_platform():
-    pass
+    raise NotImplementedError
 
 
 def get_formula_factory():
