@@ -51,30 +51,20 @@ def platform_init():
 
 
 class PyOCLFunction(Function):
-    # def __init__(self, expressions=None, updates=None, name=None):
-    #     super(PyOCLFunction, self).__init__(expressions, updates, name)
-    #     self._expr_evals = []
-    #     self._update_evals = []  # list of tuples (var, update_expr)
-    #     self._inputs = []  # TODO collect inputs from exprs
-    #
-    #     if expressions is None and updates is None:
-    #         raise ValueError(
-    #             "Can't create a function for doing nothing. Provide some expressions or updates to execute.")
-    #
-    #     self._collect_inputs()
-    #
-    #     # create evaluation paths
-    #     for expr in self._expressions:
-    #         self._expr_evals.extend(_compile_expression(expr))
-    #
-    #     for var, update in self._updates:
-    #         self._update_evals.append((var, _compile_expression(update)))
 
     #           (self, expression, outvarnames, name)                                                           <- TODO
     def __init__(self, inputs=None, expressions=None, updates=None, name=None):
         super(PyOCLFunction, self).__init__(inputs, expressions, updates, name)
         self._expr_evals = []
         self._update_evals = []
+
+        for expr in self._expressions:
+            # TODO create platform expression from abstract expression (topsorted and everything else)
+            pass
+        for (v, e) in updates:
+            # TODO create platform expr from e
+            # TODO save pair (v,platform_e) in update evals or something
+            pass
         # bice samo jedan expression po funkciji
         # primice apstraktni simbolicki graf
         # graf ce vec proci (opciono) kroz generalne optimizacije
@@ -301,5 +291,122 @@ class PyOCLFFactory(FormulaFactory):
         return blas.GerOP(alpha, X, Y, A, parent)
 
 
-class PyOCLFactory(PlatformFactory):
+# OPERATOR FACTORIES
+
+# ARRAY MANIPULATION
+def create_reshape(a, newshape):
     pass
+
+
+def create_ravel(a):
+    pass
+
+
+def create_concatenate(a1, a2):
+    pass
+
+
+def create_stack(xs, axis):
+    pass
+
+
+def create_split(a, indicies):
+    pass
+
+
+def create_repeat(a, repeats, axis):
+    pass
+
+
+# BINARY OPERATIONS
+
+def create_bitwise_and(x1, x2):
+    pass
+
+
+def create_bitwise_or(x1, x2):
+    pass
+
+
+def create_bitwise_xor(x1, x2):
+    pass
+
+
+def create_invert(x1, x2):
+    pass
+
+
+def create_left_shift(x1, x2):
+    pass
+
+
+def create_right_shift(x1, x2):
+    pass
+
+
+# INDEXING OPS
+# TODO
+
+# LINEAR ALGEBRA
+
+def create_dot(a, b):
+    pass
+
+
+def create_vdot(a, b):
+    pass
+
+
+def create_inner(a, b):
+    pass
+
+
+factories = dict(reshape=create_reshape)
+
+
+class PyOCLFactory(PlatformFactory):
+    def init_platform(self):
+        pass
+
+    def finalize_platform(self):
+        pass
+
+    def create_valuation(self):
+        pass
+
+    def create_function(self, expressions=None, updates=None, name=None, skip_platform_opts=False):
+        pass
+
+    def create_op(self, type_name, operands):
+        return factories[type_name](*operands)
+
+    # ARRAY CREATION                                        TODO da li su ovo zapravo samo operatori bez operanada?
+    def empty(self, shape, dtype=None, order='C'):
+        pass
+
+    def empty_like(self, a, dtype=None, order='C'):
+        pass
+
+    def eye(self, N, M=0, k=0, dtype=None):
+        pass
+
+    def identity(self, N, dtype=None):
+        pass
+
+    def ones(self, shape, dtype=None, order='C'):
+        pass
+
+    def ones_like(self, a, dtype=None, order='C'):
+        pass
+
+    def from_data(self):
+        pass
+
+    def arange(self):
+        pass
+
+    def linspace(self):
+        pass
+
+    def logspace(self):
+        pass

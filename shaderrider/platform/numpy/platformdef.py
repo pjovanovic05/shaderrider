@@ -47,4 +47,6 @@ class NPFunction(Function):
 
 
 class NPFactory(PlatformFactory):
-    pass
+    def __init__(self):
+        self._factories = {}
+
