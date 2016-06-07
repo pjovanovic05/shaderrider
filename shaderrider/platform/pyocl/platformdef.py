@@ -8,15 +8,11 @@ import numpy as np
 import pyopencl as cl
 import pyopencl.array as clarray
 
-from shaderrider.generator.codegen import FormulaFactory
 from shaderrider.symbolic import exprgraph
+from shaderrider.symbolic import operators
 
 from shaderrider.generator.function import Function, topsort_formula, Valuation, PlatformFactory
 from shaderrider.generator import optimization as opt
-
-from shaderrider.platform.pyocl import basic as bo
-from shaderrider.platform.pyocl import blas
-from shaderrider.platform.pyocl import elementwise
 
 
 def setup_context(ngpus=0):
@@ -217,81 +213,7 @@ class PyOCLValuation(Valuation):
         self._vars.clear()
 
 
-class PyOCLFFactory(FormulaFactory):
-    def create_valuation(vdict):
-        pass
-
-    def create_neg(self, operand):
-        return bo.NegOP(operand)
-
-    def create_exp(self, operand):
-        return bo.ExpOP(operand)
-
-    def create_log(self, operand):
-        return bo.LogOP(operand)
-
-    def create_sin(self, operand):
-        return bo.SinOP(operand)
-
-    def create_cos(self, operand):
-        return bo.CosOP(operand)
-
-    def create_tan(self, operand):
-        return bo.TanOP(operand)
-
-    def create_add(self, op1, op2):
-        return bo.AddOP(op1, op2)
-
-    def create_sub(self, op1, op2):
-        return bo.SubOP(op1, op2)
-
-    def create_mul(self, op1, op2):
-        return bo.MulOP(op1, op2)
-
-    def create_div(self, op1, op2):
-        return bo.DivOP(op1, op2)
-
-    def create_pow(self, op1, op2):
-        return bo.PowOP(op1, op2)
-
-    def create_eq(self, op1, op2):
-        return bo.EqOP(op1, op2)
-
-    def create_gt(self, op1, op2):
-        return bo.GtOP(op1, op2)
-
-    def create_lt(self, op1, op2):
-        return bo.LtOP(op1, op2)
-
-    def create_ge(self, op1, op2):
-        return bo.GeOP(op1, op2)
-
-    def create_le(self, op1, op2):
-        return bo.LeOP(op1, op2)
-
-    def create_ne(self, op1, op2):
-        return bo.NeOP(op1, op2)
-
-    def create_elementwise(self, formula):
-        return elementwise.ElementwiseOP(formula)
-
-    def create_gemm(self, A, B, C,
-                    alpha=exprgraph.Constant(1.0),
-                    beta=exprgraph.Constant(0.0),
-                    transA=exprgraph.Constant(False),
-                    transB=exprgraph.Constant(False),
-                    parent=None):
-        return blas.GemmOP(A, B, C, alpha, beta, transA, transB, parent)
-
-    def create_gemv(self, A, X, Y, alpha=exprgraph.Constant(1.0), beta=exprgraph.Constant(0.0),
-                    transA=exprgraph.Constant(False), parent=None):
-        return blas.GemvOP(A, X, Y, alpha, beta, transA, parent)
-
-    def create_ger(self, alpha, X, Y, A, parent=None):
-        return blas.GerOP(alpha, X, Y, A, parent)
-
-
-# OPERATOR FACTORIES
+# OPERATOR FACTORIES                TODO move into operator module - each after the op it creates ##########################################################################################
 
 # ARRAY MANIPULATION
 def create_reshape(a, newshape):
@@ -361,7 +283,158 @@ def create_inner(a, b):
     pass
 
 
-factories = dict(reshape=create_reshape)
+def create_outer(a, b):
+    pass
+
+
+def create_matmul(a, b):
+    pass
+
+
+def create_eig(a):
+    pass
+
+
+def create_eigvals(a):
+    pass
+
+
+# LOGIC OPS
+
+def create_all(a):
+    pass
+
+
+def create_any(a):
+    pass
+
+
+def create_and(a, b):
+    pass
+
+
+def create_or(a, b):
+    pass
+
+
+def create_not(a):
+    pass
+
+
+def create_xor(a, b):
+    pass
+
+
+def create_greater(a, b):
+    pass
+
+
+def create_less(a, b):
+    pass
+
+
+def create_greater_equal(a, b):
+    pass
+
+
+def create_less_equal(a, b):
+    pass
+
+
+def create_equal(a, b):
+    pass
+
+
+def create_not_equal(a, b):
+    pass
+
+
+# MATHEMATICAL OPS
+
+def create_sin(x):
+    pass
+
+
+def create_cos(x):
+    pass
+
+
+def create_tan(x):
+    pass
+
+
+def create_arcsin(x):
+    pass
+
+
+def create_arccos(x):
+    pass
+
+
+def create_arctan(x):
+    pass
+
+
+def create_sinh(x):
+    pass
+
+
+def create_cosh(x):
+    pass
+
+
+def create_tanh(x):
+    pass
+
+
+def create_arcsinh(x):
+    pass
+
+
+def create_arccosh(x):
+    pass
+
+
+def create_arctanh(x):
+    pass
+
+
+def create_round(a, decimal=None, out=None):
+    pass
+
+
+def create_floor(x, out=None):
+    pass
+
+
+def create_ceil(x, out=None):
+    pass
+
+
+def create_prod(a, axis=None, dtype=None, out=None, keepdims=None):
+    pass
+
+
+def create_sum(a, axis=None, dtype=None, out=None, keepdims=None):
+    pass
+
+
+def create_nansum(a, axis=None, dtype=None, out=None, keepdims=None):
+    pass
+
+
+def create_cumprod(a, axis=None, dtype=None, out=None, keepdims=None):
+    pass
+
+
+#######################################################################
+
+factories = {
+    operators.ReshapeOP.get_type_name() : create_reshape,
+    operators.RavelOP.get_type_name(): create_ravel,
+    operators.ConcatenateOP.get_type_name(): create_concatenate,
+    'stack': create_stack
+}
 
 
 class PyOCLFactory(PlatformFactory):
