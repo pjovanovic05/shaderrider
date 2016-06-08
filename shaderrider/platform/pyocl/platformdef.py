@@ -427,6 +427,34 @@ def create_cumprod(a, axis=None, dtype=None, out=None, keepdims=None):
     pass
 
 
+def create_cumsum(a, axis, dtype, out, keepdims):
+    pass
+
+
+def create_exp(x):
+    pass
+
+
+def create_exp2(x, out=None):
+    pass
+
+
+def create_log(x, out=None):
+    pass
+
+
+def create_log10(x, out=None):
+    pass
+
+
+def create_log1p(x, out=None):
+    pass
+
+
+def create_add(x1, x2, out=None):
+    pass
+
+
 #######################################################################
 
 factories = {
