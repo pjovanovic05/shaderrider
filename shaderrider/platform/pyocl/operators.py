@@ -24,6 +24,329 @@ from shaderrider.platform.pyocl.aux import clblaswrap
 #  - convolution ops
 
 
+
+
+
+
+# OPERATOR FACTORIES                TODO move into operator module - each after the op it creates ##########################################################################################
+
+# ARRAY MANIPULATION
+def create_reshape(a, newshape):
+    pass
+
+
+def create_ravel(a):
+    pass
+
+
+def create_concatenate(a1, a2):
+    pass
+
+
+def create_stack(xs, axis):
+    pass
+
+
+def create_split(a, indicies):
+    pass
+
+
+def create_repeat(a, repeats, axis):
+    pass
+
+
+# BINARY OPERATIONS
+
+def create_bitwise_and(x1, x2):
+    pass
+
+
+def create_bitwise_or(x1, x2):
+    pass
+
+
+def create_bitwise_xor(x1, x2):
+    pass
+
+
+def create_invert(x1, x2):
+    pass
+
+
+def create_left_shift(x1, x2):
+    pass
+
+
+def create_right_shift(x1, x2):
+    pass
+
+
+# INDEXING OPS
+# TODO
+
+# LINEAR ALGEBRA
+
+def create_dot(a, b):
+    pass
+
+
+def create_vdot(a, b):
+    pass
+
+
+def create_inner(a, b):
+    pass
+
+
+def create_outer(a, b):
+    pass
+
+
+def create_matmul(a, b):
+    pass
+
+
+def create_eig(a):
+    pass
+
+
+def create_eigvals(a):
+    pass
+
+
+# LOGIC OPS
+
+def create_all(a):
+    pass
+
+
+def create_any(a):
+    pass
+
+
+def create_and(a, b):
+    pass
+
+
+def create_or(a, b):
+    pass
+
+
+def create_not(a):
+    pass
+
+
+def create_xor(a, b):
+    pass
+
+
+def create_greater(a, b):
+    pass
+
+
+def create_less(a, b):
+    pass
+
+
+def create_greater_equal(a, b):
+    pass
+
+
+def create_less_equal(a, b):
+    pass
+
+
+def create_equal(a, b):
+    pass
+
+
+def create_not_equal(a, b):
+    pass
+
+
+# MATHEMATICAL OPS
+
+def create_sin(x):
+    pass
+
+
+def create_cos(x):
+    pass
+
+
+def create_tan(x):
+    pass
+
+
+def create_arcsin(x):
+    pass
+
+
+def create_arccos(x):
+    pass
+
+
+def create_arctan(x):
+    pass
+
+
+def create_sinh(x):
+    pass
+
+
+def create_cosh(x):
+    pass
+
+
+def create_tanh(x):
+    pass
+
+
+def create_arcsinh(x):
+    pass
+
+
+def create_arccosh(x):
+    pass
+
+
+def create_arctanh(x):
+    pass
+
+
+def create_round(a, decimal=None, out=None):
+    pass
+
+
+def create_floor(x, out=None):
+    pass
+
+
+def create_ceil(x, out=None):
+    pass
+
+
+def create_prod(a, axis=None, dtype=None, out=None, keepdims=None):
+    pass
+
+
+def create_sum(a, axis=None, dtype=None, out=None, keepdims=None):
+    pass
+
+
+def create_nansum(a, axis=None, dtype=None, out=None, keepdims=None):
+    pass
+
+
+def create_cumprod(a, axis=None, dtype=None, out=None, keepdims=None):
+    pass
+
+
+def create_cumsum(a, axis, dtype, out, keepdims):
+    pass
+
+
+def create_exp(x):
+    pass
+
+
+def create_exp2(x, out=None):
+    pass
+
+
+def create_log(x, out=None):
+    pass
+
+
+def create_log10(x, out=None):
+    pass
+
+
+def create_log1p(x, out=None):
+    pass
+
+
+def create_add(x1, x2, out=None):
+    pass
+
+
+def create_reciprocal(x, out=None):
+    pass
+
+
+def create_negative(x, out=None):
+    pass
+
+
+def create_multiply(x1, x2, out=None):
+    pass
+
+
+def create_divide(x1, x2, out=None):
+    pass
+
+
+def create_power(x1, x2, out=None):
+    pass
+
+
+def create_subtract(x1, x2, out=None):
+    pass
+
+
+def create_true_divide(x1, x2, out=None):
+    pass
+
+
+def create_floor_divide(x1, x2, out=None):
+    pass
+
+
+def create_mod(x1, x2, out=None):
+    pass
+
+
+# STATISTICS OPS
+
+def create_median(a, axis=None, out=None, overwrite_input=False, keepdims=None):
+    pass
+
+
+def create_average(a, axis=None, weights=None, returned=None):          # TODO sta je returned?
+    pass
+
+
+def create_mean(a, axis=None, out=None, keepdims=None):
+    pass
+
+
+def create_std(a, axis=None, out=None, ddof=None, keepdims=None):       # TODO sta je ddof?
+    pass
+
+
+def create_var(a, axis=None, out=None, ddof=None, keepdims=None):
+    pass
+
+
+def create_correlate(a, v, mode=None):
+    pass
+
+
+def create_cov(m, y, rowvar, bias, ddof, fweights):                     #TODO ima jos nepoznatih parametara
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+
 # TENSOR OPS ##########################################################
 
 class ReshapeOP(operators.ReshapeOP):

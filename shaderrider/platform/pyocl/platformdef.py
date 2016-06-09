@@ -14,6 +14,8 @@ from shaderrider.symbolic import operators
 from shaderrider.generator.function import Function, topsort_formula, Valuation, PlatformFactory
 from shaderrider.generator import optimization as opt
 
+from shaderrider.platform.pyocl import operators as ops
+
 
 def setup_context(ngpus=0):
     """
@@ -213,255 +215,79 @@ class PyOCLValuation(Valuation):
         self._vars.clear()
 
 
-# OPERATOR FACTORIES                TODO move into operator module - each after the op it creates ##########################################################################################
-
-# ARRAY MANIPULATION
-def create_reshape(a, newshape):
-    pass
-
-
-def create_ravel(a):
-    pass
-
-
-def create_concatenate(a1, a2):
-    pass
-
-
-def create_stack(xs, axis):
-    pass
-
-
-def create_split(a, indicies):
-    pass
-
-
-def create_repeat(a, repeats, axis):
-    pass
-
-
-# BINARY OPERATIONS
-
-def create_bitwise_and(x1, x2):
-    pass
-
-
-def create_bitwise_or(x1, x2):
-    pass
-
-
-def create_bitwise_xor(x1, x2):
-    pass
-
-
-def create_invert(x1, x2):
-    pass
-
-
-def create_left_shift(x1, x2):
-    pass
-
-
-def create_right_shift(x1, x2):
-    pass
-
-
-# INDEXING OPS
-# TODO
-
-# LINEAR ALGEBRA
-
-def create_dot(a, b):
-    pass
-
-
-def create_vdot(a, b):
-    pass
-
-
-def create_inner(a, b):
-    pass
-
-
-def create_outer(a, b):
-    pass
-
-
-def create_matmul(a, b):
-    pass
-
-
-def create_eig(a):
-    pass
-
-
-def create_eigvals(a):
-    pass
-
-
-# LOGIC OPS
-
-def create_all(a):
-    pass
-
-
-def create_any(a):
-    pass
-
-
-def create_and(a, b):
-    pass
-
-
-def create_or(a, b):
-    pass
-
-
-def create_not(a):
-    pass
-
-
-def create_xor(a, b):
-    pass
-
-
-def create_greater(a, b):
-    pass
-
-
-def create_less(a, b):
-    pass
-
-
-def create_greater_equal(a, b):
-    pass
-
-
-def create_less_equal(a, b):
-    pass
-
-
-def create_equal(a, b):
-    pass
-
-
-def create_not_equal(a, b):
-    pass
-
-
-# MATHEMATICAL OPS
-
-def create_sin(x):
-    pass
-
-
-def create_cos(x):
-    pass
-
-
-def create_tan(x):
-    pass
-
-
-def create_arcsin(x):
-    pass
-
-
-def create_arccos(x):
-    pass
-
-
-def create_arctan(x):
-    pass
-
-
-def create_sinh(x):
-    pass
-
-
-def create_cosh(x):
-    pass
-
-
-def create_tanh(x):
-    pass
-
-
-def create_arcsinh(x):
-    pass
-
-
-def create_arccosh(x):
-    pass
-
-
-def create_arctanh(x):
-    pass
-
-
-def create_round(a, decimal=None, out=None):
-    pass
-
-
-def create_floor(x, out=None):
-    pass
-
-
-def create_ceil(x, out=None):
-    pass
-
-
-def create_prod(a, axis=None, dtype=None, out=None, keepdims=None):
-    pass
-
-
-def create_sum(a, axis=None, dtype=None, out=None, keepdims=None):
-    pass
-
-
-def create_nansum(a, axis=None, dtype=None, out=None, keepdims=None):
-    pass
-
-
-def create_cumprod(a, axis=None, dtype=None, out=None, keepdims=None):
-    pass
-
-
-def create_cumsum(a, axis, dtype, out, keepdims):
-    pass
-
-
-def create_exp(x):
-    pass
-
-
-def create_exp2(x, out=None):
-    pass
-
-
-def create_log(x, out=None):
-    pass
-
-
-def create_log10(x, out=None):
-    pass
-
-
-def create_log1p(x, out=None):
-    pass
-
-
-def create_add(x1, x2, out=None):
-    pass
 
 
 #######################################################################
 
 factories = {
-    operators.ReshapeOP.get_type_name() : create_reshape,
-    operators.RavelOP.get_type_name(): create_ravel,
-    operators.ConcatenateOP.get_type_name(): create_concatenate,
-    'stack': create_stack
+    operators.ReshapeOP.get_type_name() : ops.create_reshape,
+    operators.RavelOP.get_type_name(): ops.create_ravel,
+    operators.ConcatenateOP.get_type_name(): ops.create_concatenate,
+    operators.StackOP.get_type_name(): ops.create_stack,
+    operators.SplitOP.get_type_name(): ops.create_split,
+    operators.RepeatOP.get_type_name(): ops.create_repeat,
+    operators.BitwiseAndOP.get_type_name(): ops.create_bitwise_and,
+    operators.BitwiseOrOP.get_type_name(): ops.create_bitwise_or,
+    operators.BitwiseXorOP.get_type_name(): ops.create_bitwise_xor,
+    operators.InvertOP.get_type_name(): ops.create_invert,
+    operators.LeftShiftOP.get_type_name(): ops.create_left_shift,
+    operators.RightShiftOP.get_type_name(): ops.create_right_shift,
+    operators.DotOP.get_type_name(): ops.create_dot,
+    operators.VdotOP.get_type_name(): ops.create_vdot,
+    operators.InnerOP.get_type_name(): ops.create_inner,
+    operators.OuterOP.get_type_name(): ops.create_outer,
+    operators.MatmulOP.get_type_name(): ops.create_matmul,
+    operators.EigOP.get_type_name(): ops.create_eig,
+    operators.EigvalsOP.get_type_name(): ops.create_eigvals,
+    operators.AllOP.get_type_name(): ops.create_all,
+    operators.AnyOP.get_type_name(): ops.create_any,
+    operators.AndOP.get_type_name(): ops.create_and,
+    operators.OrOP.get_type_name(): ops.create_or,
+    operators.NotOP.get_type_name(): ops.create_not,
+    operators.XorOP.get_type_name(): ops.create_xor,
+    operators.GtOP.get_type_name(): ops.create_greater,
+    operators.LtOP.get_type_name(): ops.create_less,
+    operators.GeOP.get_type_name(): ops.create_greater_equal,
+    operators.LeOP.get_type_name(): ops.create_less_equal,
+    operators.EqOP.get_type_name(): ops.create_equal,
+    operators.NeOP.get_type_name(): ops.create_not_equal,
+    operators.SinOP.get_type_name(): ops.create_sin,
+    operators.CosOP.get_type_name(): ops.create_cos,
+    operators.TanOP.get_type_name(): ops.create_tan,
+    operators.ArcsinOP.get_type_name(): ops.create_arcsin,
+    operators.ArccosOP.get_type_name(): ops.create_arccos,
+    operators.ArctanOP.get_type_name(): ops.create_arctan,
+    operators.SinhOP.get_type_name(): ops.create_sinh,
+    operators.CoshOP.get_type_name(): ops.create_cosh,
+    operators.TanhOP.get_type_name(): ops.create_tanh,
+    operators.ArcsinhOP.get_type_name(): ops.create_arcsinh,
+    operators.ArccoshOP.get_type_name(): ops.create_arccosh,
+    operators.ArctanhOP.get_type_name(): ops.create_arctanh,
+    operators.RoundOP.get_type_name(): ops.create_round,
+    operators.FloorOP.get_type_name(): ops.create_floor,
+    operators.CeilOP.get_type_name(): ops.create_ceil,
+    operators.ProdOP.get_type_name(): ops.create_prod,
+    operators.SumOP.get_type_name(): ops.create_sum,
+    operators.NansumOP.get_type_name(): ops.create_nansum,
+    operators.CumprodOP.get_type_name(): ops.create_cumprod,
+    operators.CumsumOP.get_type_name(): ops.create_cumsum,
+    operators.ExpOP.get_type_name(): ops.create_exp,
+    operators.Exp2OP.get_type_name(): ops.create_exp2,
+    operators.LogOP.get_type_name(): ops.create_log,
+    operators.Log10OP.get_type_name(): ops.create_log10,
+    operators.Log1pOP.get_type_naem(): ops.create_log1p,
+    operators.AddOP.get_type_name(): ops.create_add,
+    operators.ReciprocalOP.get_type_name(): ops.create_reciprocal,
+    operators.NegOP.get_type_name(): ops.create_negative,
+    operators.MulOP.get_type_name(): ops.create_multiply,
+    operators.DivOP.get_type_name(): ops.create_divide,
+    operators.PowOP.get_type_name(): ops.create_power,
+    operators.SubOP.get_type_name(): ops.create_subtract(),
+    operators.TrueDivideOP.get_type_name(): ops.create_true_divide,
+    operators.FloorDivideOP.get_type_name(): ops.create_floor_divide,
+    operators.ModOP.get_type_name(): ops.create_mod,
+    # TODO dovrsi ovo a onda predji na pomeranje factory metoda i dodavanje operatora izmedju njih, pogotovo ovih sto fale
+    # TODO a ondak, sredi konacno Function i function()
 }
 
 
