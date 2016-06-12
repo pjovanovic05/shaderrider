@@ -24,61 +24,104 @@ from shaderrider.platform.pyocl.aux import clblaswrap
 #  - convolution ops
 
 
-
-
-
-
-# OPERATOR FACTORIES                TODO move into operator module - each after the op it creates ##########################################################################################
-
 # ARRAY MANIPULATION
+
+class ReshapeOP(operators.ReshapeOP):
+    def evaluate(self, valuation):
+        """
+
+        :type valuation: PyOCLValuation
+        """
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clarray.reshape(param, self._shape))
+        return None
+
+
 def create_reshape(a, newshape):
-    pass
+    raise NotImplementedError
+
+
+class RavelOP(operators.RavelOP):
+    def evaluate(self, valuation):
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, param.ravel())
+        return None
 
 
 def create_ravel(a):
+    raise NotImplementedError
+
+
+class ConcatenateOP(operators.ConcatenateOP):
+    # TODO
     pass
 
 
 def create_concatenate(a1, a2):
-    pass
+    raise NotImplementedError
 
 
 def create_stack(xs, axis):
-    pass
+    raise NotImplementedError
 
 
 def create_split(a, indicies):
-    pass
+    raise NotImplementedError
 
 
 def create_repeat(a, repeats, axis):
-    pass
+    raise NotImplementedError
 
 
 # BINARY OPERATIONS
 
+class BitwiseAndOP(operators.BitwiseAndOP):
+    # TODO
+    pass
+
+
 def create_bitwise_and(x1, x2):
+    raise NotImplementedError
+
+
+class BitwiseOrOP(operators.BitwiseOrOP):
     pass
 
 
 def create_bitwise_or(x1, x2):
+    raise NotImplementedError
+
+
+class BitwiseXorOP(operators.BitwiseXorOP):
     pass
 
 
 def create_bitwise_xor(x1, x2):
+    raise NotImplementedError
+
+
+class InvertOP(operators.InvertOP):
     pass
 
 
 def create_invert(x1, x2):
+    raise NotImplementedError
+
+
+class LeftShiftOP(operators.LeftShiftOP):
     pass
 
 
 def create_left_shift(x1, x2):
+    raise NotImplementedError
+
+
+class RightShiftOP(operators.RightShiftOP):
     pass
 
 
 def create_right_shift(x1, x2):
-    pass
+    raise NotImplementedError
 
 
 # INDEXING OPS
@@ -86,254 +129,262 @@ def create_right_shift(x1, x2):
 
 # LINEAR ALGEBRA
 
+class DotOP(operators.DotOP):
+    pass
+
+
 def create_dot(a, b):
+    raise NotImplementedError
+
+
+class VdotOP(operators.VdotOP):
     pass
 
 
 def create_vdot(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_inner(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_outer(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_matmul(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_eig(a):
-    pass
+    raise NotImplementedError
 
 
 def create_eigvals(a):
-    pass
+    raise NotImplementedError
 
 
 # LOGIC OPS
 
 def create_all(a):
-    pass
+    raise NotImplementedError
 
 
 def create_any(a):
-    pass
+    raise NotImplementedError
 
 
 def create_and(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_or(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_not(a):
-    pass
+    raise NotImplementedError
 
 
 def create_xor(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_greater(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_less(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_greater_equal(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_less_equal(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_equal(a, b):
-    pass
+    raise NotImplementedError
 
 
 def create_not_equal(a, b):
-    pass
+    raise NotImplementedError
 
 
 # MATHEMATICAL OPS
 
 def create_sin(x):
-    pass
+    raise NotImplementedError
 
 
 def create_cos(x):
-    pass
+    raise NotImplementedError
 
 
 def create_tan(x):
-    pass
+    raise NotImplementedError
 
 
 def create_arcsin(x):
-    pass
+    raise NotImplementedError
 
 
 def create_arccos(x):
-    pass
+    raise NotImplementedError
 
 
 def create_arctan(x):
-    pass
+    raise NotImplementedError
 
 
 def create_sinh(x):
-    pass
+    raise NotImplementedError
 
 
 def create_cosh(x):
-    pass
+    raise NotImplementedError
 
 
 def create_tanh(x):
-    pass
+    raise NotImplementedError
 
 
 def create_arcsinh(x):
-    pass
+    raise NotImplementedError
 
 
 def create_arccosh(x):
-    pass
+    raise NotImplementedError
 
 
 def create_arctanh(x):
-    pass
+    raise NotImplementedError
 
 
 def create_round(a, decimal=None, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_floor(x, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_ceil(x, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_prod(a, axis=None, dtype=None, out=None, keepdims=None):
-    pass
+    raise NotImplementedError
 
 
 def create_sum(a, axis=None, dtype=None, out=None, keepdims=None):
-    pass
+    raise NotImplementedError
 
 
 def create_nansum(a, axis=None, dtype=None, out=None, keepdims=None):
-    pass
+    raise NotImplementedError
 
 
 def create_cumprod(a, axis=None, dtype=None, out=None, keepdims=None):
-    pass
+    raise NotImplementedError
 
 
 def create_cumsum(a, axis, dtype, out, keepdims):
-    pass
+    raise NotImplementedError
 
 
 def create_exp(x):
-    pass
+    raise NotImplementedError
 
 
 def create_exp2(x, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_log(x, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_log10(x, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_log1p(x, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_add(x1, x2, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_reciprocal(x, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_negative(x, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_multiply(x1, x2, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_divide(x1, x2, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_power(x1, x2, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_subtract(x1, x2, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_true_divide(x1, x2, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_floor_divide(x1, x2, out=None):
-    pass
+    raise NotImplementedError
 
 
 def create_mod(x1, x2, out=None):
-    pass
+    raise NotImplementedError
 
 
 # STATISTICS OPS
 
 def create_median(a, axis=None, out=None, overwrite_input=False, keepdims=None):
-    pass
+    raise NotImplementedError
 
 
 def create_average(a, axis=None, weights=None, returned=None):          # TODO sta je returned?
-    pass
+    raise NotImplementedError
 
 
 def create_mean(a, axis=None, out=None, keepdims=None):
-    pass
+    raise NotImplementedError
 
 
 def create_std(a, axis=None, out=None, ddof=None, keepdims=None):       # TODO sta je ddof?
-    pass
+    raise NotImplementedError
 
 
 def create_var(a, axis=None, out=None, ddof=None, keepdims=None):
-    pass
+    raise NotImplementedError
 
 
 def create_correlate(a, v, mode=None):
-    pass
+    raise NotImplementedError
 
 
 def create_cov(m, y, rowvar, bias, ddof, fweights):                     #TODO ima jos nepoznatih parametara
-    pass
+    raise NotImplementedError
 
 
 
@@ -348,17 +399,6 @@ def create_cov(m, y, rowvar, bias, ddof, fweights):                     #TODO im
 
 
 # TENSOR OPS ##########################################################
-
-class ReshapeOP(operators.ReshapeOP):
-    def evaluate(self, valuation):
-        """
-
-        :type valuation: PyOCLValuation
-        """
-        param = valuation.read(self.operands[0].fid)
-        valuation.add(self.fid, clarray.reshape(param, self._shape))
-        return None
-
 
 # TODO indexing in pyopencl apears primitive... maybe clarray needs to return?
 class IndexOP(operators.IndexOP):
@@ -381,11 +421,6 @@ class DimshuffleOP(operators.DimshuffleOP):
         raise NotImplementedError
 
 
-class RavelOP(operators.RavelOP):
-    def evaluate(self, valuation):
-        param = valuation.read(self.operands[0].fid)
-        valuation.add(self.fid, param.ravel())
-        return None
 
 
 class DiagonalOP(operators.DiagonalOP):

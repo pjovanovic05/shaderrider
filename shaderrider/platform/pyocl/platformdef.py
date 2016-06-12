@@ -104,14 +104,28 @@ class PyOCLFunction(Function):
 optimizers = [opt.ElementwiseOpt()]
 
 
-def _compile_expression(expr):
+def _get_platform_expression(expr):
     """
-    Creates a list of evaluators to be called in order, which represents the execution
-    of the expression.
+    Recursively replaces operators in an expr graph with platform specific
+    op implementations.
+    """
+    # TODO kako raspakovati parametre i rekurzivno njih srediti?
+    # Da li da imam u svakom factory-u 2 parametra: operandi i parametri operatora
+    # pa da se rekurzivno poziva nad operandima a parametre samo da prepise?
+    # ILI da imam "konstruktor" koji ce od podesene generalne instance operatora
+    # napraviti platformsku?
+    factories[expr.type_name]()
+
+
+def _compile_expression(expr):              # TODO da li se ovde topsortira? ne treba praviti f-je sa milion odgovornosti!!!!!!!1!!!!!
+    """
+    Creates platform specific expression graph and performs platform optimizations (optionally).
 
     :type expr: Formula
     :rtype: list of evaluators
     """
+
+    # TODO expr graph translation?
 
     # optimizations
     sexpr = expr.simplify()
@@ -286,8 +300,13 @@ factories = {
     operators.TrueDivideOP.get_type_name(): ops.create_true_divide,
     operators.FloorDivideOP.get_type_name(): ops.create_floor_divide,
     operators.ModOP.get_type_name(): ops.create_mod,
-    # TODO dovrsi ovo a onda predji na pomeranje factory metoda i dodavanje operatora izmedju njih, pogotovo ovih sto fale
-    # TODO a ondak, sredi konacno Function i function()
+    operators.MedianOP.get_type_name(): ops.create_median,
+    operators.AverageOP.get_type_name(): ops.create_average,
+    operators.MeanOP.get_type_name(): ops.create_mean,
+    operators.StdOP.get_type_name(): ops.create_std,
+    operators.VarOP.get_type_name(): ops.create_var,
+    operators.CorrelateOP.get_type_name(): ops.create_correlate,
+    operators.CovOP.get_type_name(): ops.create_cov
 }
 
 
@@ -306,7 +325,7 @@ class PyOCLFactory(PlatformFactory):
 
     def create_op(self, type_name, operands):
         return factories[type_name](*operands)
-
+                                                            # XXX mozda su i operatori i funkcije jer nekad su u izrazu a nekad se pozivaju eksterno
     # ARRAY CREATION                                        TODO da li su ovo zapravo samo operatori bez operanada?
     def empty(self, shape, dtype=None, order='C'):
         pass
