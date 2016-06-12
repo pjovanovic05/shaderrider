@@ -114,7 +114,9 @@ def _get_platform_expression(expr):
     # pa da se rekurzivno poziva nad operandima a parametre samo da prepise?
     # ILI da imam "konstruktor" koji ce od podesene generalne instance operatora
     # napraviti platformsku?
-    factories[expr.type_name]()
+    if isinstance(expr, exprgraph.Operator):
+        ops = [_get_platform_expression(op) for op in expr.operands]
+        factories[expr.type_name](ops, params)
 
 
 def _compile_expression(expr):              # TODO da li se ovde topsortira? ne treba praviti f-je sa milion odgovornosti!!!!!!!1!!!!!
