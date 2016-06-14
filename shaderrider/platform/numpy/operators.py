@@ -307,7 +307,7 @@ def create_arctan(x):
     raise NotImplementedError
 
 
-class SinhOP(operands.SinhOP):
+class SinhOP(operators.SinhOP):
     pass
 
 def create_sinh(x):
