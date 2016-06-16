@@ -422,6 +422,10 @@ def create_log1p(x, out=None):
     raise NotImplementedError
 
 
+class AddOP(operators.AddOP):
+    def evaluate(self, valuation):
+        valuation.add(self.fid, np.add(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
+
 def create_add(x1, x2, out=None):
     raise NotImplementedError
 
@@ -430,21 +434,41 @@ def create_reciprocal(x, out=None):
     raise NotImplementedError
 
 
+class NegOP(operators.NegOP):
+    def evaluate(self, valuation):
+        valuation.add(self.fid, -valuation.get(self.operands[0].fid))
+
 def create_negative(x, out=None):
     raise NotImplementedError
 
+
+class MulOP(operators.MulOP):
+    def evaluate(self, valuation):
+        valuation.add(self.fid, np.multiply(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 def create_multiply(x1, x2, out=None):
     raise NotImplementedError
 
 
+class DivOP(operators.DivOP):
+    def evaluate(self, valuation):
+        valuation.add(self.fid, np.divide(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
+
 def create_divide(x1, x2, out=None):
     raise NotImplementedError
 
 
+class PowOP(operators.PowOP):
+    def evaluate(self, valuation):
+        valuation.add(self.fid, np.power(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
+
 def create_power(x1, x2, out=None):
     raise NotImplementedError
 
+
+class SubOP(operators.SubOP):
+    def evaluate(self, valuation):
+        valuation.add(self.fid, np.subtract(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 def create_subtract(x1, x2, out=None):
     raise NotImplementedError
@@ -537,9 +561,6 @@ class AbsOP(operators.AbsOP):
             np.absolute(valuation.get(self.operands[0].fid), out=outvar)
 
 
-class NegOP(operators.NegOP):
-    def evaluate(self, valuation):
-        valuation.add(self.fid, -valuation.get(self.operands[0].fid))
 
 
 
@@ -585,30 +606,6 @@ class MinimumOP(operators.MinimumOP):
     def evaluate(self, valuation):
         valuation.add(self.fid, np.minimum(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
-
-class AddOP(operators.AddOP):
-    def evaluate(self, valuation):
-        valuation.add(self.fid, np.add(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
-
-
-class SubOP(operators.SubOP):
-    def evaluate(self, valuation):
-        valuation.add(self.fid, np.subtract(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
-
-
-class MulOP(operators.MulOP):
-    def evaluate(self, valuation):
-        valuation.add(self.fid, np.multiply(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
-
-
-class DivOP(operators.DivOP):
-    def evaluate(self, valuation):
-        valuation.add(self.fid, np.divide(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
-
-
-class PowOP(operators.PowOP):
-    def evaluate(self, valuation):
-        valuation.add(self.fid, np.power(valuation.get(self.operands[0].fid), valuation.get(self.operands[1].fid)))
 
 
 # COMPARISON OPS ######################################################
