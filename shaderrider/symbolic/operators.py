@@ -7,7 +7,6 @@ import abc
 
 import shaderrider.configuration as config
 from shaderrider.core import IncompatibleDimensionsError, NondifferentiableOpError
-from shaderrider.generator.codegen import FormulaFactory  # TODO gradient and substitutions need to use this
 from shaderrider.symbolic import exprgraph
 
 
@@ -1111,4 +1110,89 @@ class PoolOP(exprgraph.Operator):
 
 
 class DownsampleOP(exprgraph.Operator):
+    pass
+
+# MISSING OPS ############################
+
+class ConcatenateOP(exprgraph.Operator):
+    pass
+
+
+class StackOP(object):
+    pass
+
+
+class SplitOP(object):
+    pass
+
+
+class RepeatOP(object):
+    pass
+
+
+class BitwiseAndOP(object):
+    pass
+
+
+class BitwiseOrOP(object):
+    pass
+
+
+class BitwiseXorOP(object):
+    pass
+
+
+class InvertOP(object):
+    pass
+
+
+class LeftShiftOP(object):
+    pass
+
+
+class RightShiftOP(object):
+    pass
+
+
+class DotOP(object):
+    pass
+
+
+class VdotOP(object):
+    pass
+
+
+class InnerOP(object):
+    pass
+
+
+class OuterOP(object):
+    pass
+
+
+class MatmulOP(object):
+    pass
+
+
+class EigOP(object):
+    pass
+
+
+class EigvalsOP(object):
+    pass
+
+
+class AndOP(object):
+    pass
+
+
+class OrOP(object):
+    pass
+
+
+class NotOP(object):
+    pass
+
+
+class XorOP(object):
     pass

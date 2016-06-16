@@ -36,7 +36,6 @@ class ReshapeOP(operators.ReshapeOP):
         valuation.add(self.fid, clarray.reshape(param, self._shape))
         return None
 
-
 def create_reshape(a, newshape):
     raise NotImplementedError
 
@@ -47,15 +46,22 @@ class RavelOP(operators.RavelOP):
         valuation.add(self.fid, param.ravel())
         return None
 
-
 def create_ravel(a):
     raise NotImplementedError
 
 
+class TransposeOP(operators.TransposeOP):
+    def evaluate(self, valuation):
+        param = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, clarray.transpose(param, self._axes))
+        return None
+
+def create_transpose(a):
+    raise NotImplementedError
+
 class ConcatenateOP(operators.ConcatenateOP):
     # TODO
     pass
-
 
 def create_concatenate(a1, a2):
     raise NotImplementedError
@@ -408,11 +414,6 @@ class IndexOP(operators.IndexOP):
         return None
 
 
-class TransposeOP(operators.TransposeOP):
-    def evaluate(self, valuation):
-        param = valuation.read(self.operands[0].fid)
-        valuation.add(self.fid, clarray.transpose(param, self._axes))
-        return None
 
 
 class DimshuffleOP(operators.DimshuffleOP):

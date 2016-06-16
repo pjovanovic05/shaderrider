@@ -19,6 +19,8 @@ from shaderrider.symbolic import exprgraph, operators
 #  - convolution ops
 
 
+# ARRAY MANIPULATION
+
 class ReshapeOP(operators.ReshapeOP):
     def evaluate(self, valuation):
         valuation.add(self.fid, np.reshape(valuation.get(self.operands[0].fid), self._shape))
@@ -32,6 +34,14 @@ class RavelOP(operators.RavelOP):
         valuation.add(self.fid, np.ravel(valuation.get(self.operands[0].fid)))
 
 def create_ravel(a):
+    raise NotImplementedError
+
+
+class TransposeOP(operators.TransposeOP):
+    def evaluate(self, valuation):
+        valuation.add(self.fid, np.transpose(valuation.get(self.operands[0].fid), self._axes))
+
+def create_transpose(a):
     raise NotImplementedError
 
 
@@ -114,6 +124,8 @@ class IndexOP(operators.IndexOP):
     def evaluate(self, valuation):
         valuation.add(self.fid, valuation.get(self.operands[0].fid)[self._key])
 
+def create_index(a, key):
+    raise NotImplementedError
 
 # LINEAR ALGEBRA
 
@@ -525,9 +537,6 @@ def create_cov(m, y, rowvar, bias, ddof, fweights):                     #TODO im
 # TENSOR OPS ##########################################################
 
 
-class TransposeOP(operators.TransposeOP):
-    def evaluate(self, valuation):
-        valuation.add(self.fid, np.transpose(valuation.get(self.operands[0].fid), self._axes))
 
 
 class DimshuffleOP(operators.DimshuffleOP):

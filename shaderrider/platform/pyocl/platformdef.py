@@ -50,7 +50,6 @@ def platform_init():
 
 class PyOCLFunction(Function):
 
-    #           (self, expression, outvarnames, name)                                                           <- TODO
     def __init__(self, inputs=None, expressions=None, updates=None, name=None):
         super(PyOCLFunction, self).__init__(inputs, expressions, updates, name)
         self._expr_evals = []
