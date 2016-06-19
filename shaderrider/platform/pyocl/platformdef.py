@@ -89,15 +89,15 @@ class PyOCLFunction(Function):
         # TODO transfer outputs?
         return outs
 
-    def _collect_inputs(self):
-        for expr in self._expressions:
-            for a in expr.get_variables():
-                if a not in self._inputs:
-                    self._inputs.append(a)
-        for var, update in self._updates:
-            for a in update.get_variables():
-                if a not in self._inputs:
-                    self._inputs.append(a)
+    # def _collect_inputs(self):
+    #     for expr in self._expressions:
+    #         for a in expr.get_variables():
+    #             if a not in self._inputs:
+    #                 self._inputs.append(a)
+    #     for var, update in self._updates:
+    #         for a in update.get_variables():
+    #             if a not in self._inputs:
+    #                 self._inputs.append(a)
 
 
 optimizers = [opt.ElementwiseOpt()]
@@ -108,13 +108,10 @@ def _get_platform_expression(expr):
     Recursively replaces operators in an expr graph with platform specific
     op implementations.
     """
-    # TODO kako raspakovati parametre i rekurzivno njih srediti?
-    # Da li da imam u svakom factory-u 2 parametra: operandi i parametri operatora
-    # pa da se rekurzivno poziva nad operandima a parametre samo da prepise?
-    # ILI da imam "konstruktor" koji ce od podesene generalne instance operatora
-    # napraviti platformsku?
+    # TODO ipak moram da imam operatnds i params argumente zbog rekurzivnih poziva.             <<<<<<< STAO OVDE
     if isinstance(expr, exprgraph.Operator):
         ops = [_get_platform_expression(op) for op in expr.operands]
+        params = {} #TODO
         factories[expr.type_name](ops, params)
 
 
