@@ -57,11 +57,14 @@ class PyOCLFunction(Function):
 
         for expr in self._expressions:
             # TODO create platform expression from abstract expression (topsorted and everything else)
-            pass
+            self._expr_evals.append(_get_platform_expression(expr))
         for (v, e) in updates:
             # TODO create platform expr from e
             # TODO save pair (v,platform_e) in update evals or something
             pass
+
+        # TODO da li ovde idu optimizacije?
+
         # bice samo jedan expression po funkciji
         # primice apstraktni simbolicki graf
         # graf ce vec proci (opciono) kroz generalne optimizacije
@@ -112,7 +115,8 @@ def _get_platform_expression(expr):
     if isinstance(expr, exprgraph.Operator):
         ops = [_get_platform_expression(op) for op in expr.operands]
         params = {} #TODO
-        factories[expr.type_name](ops, params)
+        return factories[expr.get_type_name()](ops, params)
+    return expr         # TODO jel treba jos nesto kada je atom?
 
 
 def _compile_expression(expr):              # TODO da li se ovde topsortira? ne treba praviti f-je sa milion odgovornosti!!!!!!!1!!!!!

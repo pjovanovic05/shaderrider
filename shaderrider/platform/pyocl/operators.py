@@ -207,7 +207,6 @@ def create_matmul(operands, parameters):            # a, b):
     raise NotImplementedError
 
 
-class EigOP(operator.EigOP):
     pass
 
 def create_eig(operands, parameters):           # a):
