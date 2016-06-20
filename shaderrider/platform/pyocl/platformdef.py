@@ -65,15 +65,6 @@ class PyOCLFunction(Function):
 
         # TODO da li ovde idu optimizacije?
 
-        # bice samo jedan expression po funkciji
-        # primice apstraktni simbolicki graf
-        # graf ce vec proci (opciono) kroz generalne optimizacije
-        #   treba da prodje i kroz platformske
-        # onda se topsort_formula pozove
-        # i napravi se niz evaluatora koji ce se pozivati   (evaluator == operator za platformu)
-        # outvarnames je niz varijabli u valuaciji koje ce biti napravljene ili updateovane kao rezultati funkcije
-        # evaluacija treba da vrati samo event koji se ceka? ili da ga samo podesi u svojim rezultatima u valuaciji!
-
     def evaluate(self, valuation):
         # check inputs?
 
@@ -91,19 +82,6 @@ class PyOCLFunction(Function):
             outs.append(valuation[ex.fid])
         # TODO transfer outputs?
         return outs
-
-    # def _collect_inputs(self):
-    #     for expr in self._expressions:
-    #         for a in expr.get_variables():
-    #             if a not in self._inputs:
-    #                 self._inputs.append(a)
-    #     for var, update in self._updates:
-    #         for a in update.get_variables():
-    #             if a not in self._inputs:
-    #                 self._inputs.append(a)
-
-
-optimizers = [opt.ElementwiseOpt()]
 
 
 def _get_platform_expression(expr):
@@ -131,8 +109,8 @@ def _compile_expression(expr):              # TODO da li se ovde topsortira? ne 
 
     # optimizations
     sexpr = expr.simplify()
-    for optimizer in optimizers:
-        sexpr = optimizer.optimize(sexpr)
+    # for optimizer in optimizers:
+    #     sexpr = optimizer.optimize(sexpr)
     # more opts ...
 
     # top sort
