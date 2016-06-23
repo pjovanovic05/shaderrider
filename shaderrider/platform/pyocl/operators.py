@@ -37,7 +37,7 @@ class ReshapeOP(operators.ReshapeOP):
         return None
 
 def create_reshape(operands, parameters):              # a, newshape
-    raise NotImplementedError
+    return ReshapeOP(operands[0],parameters['shape'])   # TODO sta sa parentom?
 
 
 class RavelOP(operators.RavelOP):
@@ -46,8 +46,8 @@ class RavelOP(operators.RavelOP):
         valuation.add(self.fid, param.ravel())
         return None
 
-def create_ravel(operands, parameters):                 # a
-    raise NotImplementedError
+def create_ravel(operands, parameters=None):                 # a
+    return RavelOP(operands[0])     # TODO parent
 
 
 class TransposeOP(operators.TransposeOP):
@@ -56,16 +56,19 @@ class TransposeOP(operators.TransposeOP):
         valuation.add(self.fid, clarray.transpose(param, self._axes))
         return None
 
-def create_transpose(operands, parameters):    # a
-    raise NotImplementedError
+def create_transpose(operands, parameters=None):    # a
+    return TransposeOP(operands[0])
 
 
 class ConcatenateOP(operators.ConcatenateOP):
     # TODO
     pass
 
-def create_concatenate(operands, parameters):   # a1, a2
-    raise NotImplementedError
+def create_concatenate(operands, parameters):   # a1, a2, axis=0
+    axis = 0
+    if parameters is not None and 'axis' in parameters:
+        axis = parameters['axis']
+    return ConcatenateOP(operands[0], operands[1], axis)
 
 
 class StackOP(operators.StackOP):
@@ -79,7 +82,7 @@ class SplitOP(operators.SplitOP):
     pass
 
 def create_split(operands, parameters):         # a, indicies
-    raise NotImplementedError
+    raise NotImplementedError               #NO
 
 
 class RepeatOP(operators.RepeatOP):
@@ -94,7 +97,7 @@ class DimshuffleOP(operators.DimshuffleOP):
         pass    # TODO what does this do anyway?
 
 def create_dimshuffle(operands, parameters):
-    raise NotImplementedError
+    raise NotImplementedError                            #NO
 
 
 class DiagonalOP(operators.DiagonalOP):
@@ -102,14 +105,14 @@ class DiagonalOP(operators.DiagonalOP):
         pass
 
 def create_diagonal(operands, parameters):
-    raise NotImplementedError
+    raise NotImplementedError                                            #NO
 
 
 class TraceOP(operators.TraceOP):
     pass
 
 def create_trace(operands, parameters):
-    raise NotImplementedError
+    raise NotImplementedError                           #NO
 
 
 # BINARY OPERATIONS ###################################################
@@ -167,19 +170,19 @@ class IndexOP(operators.IndexOP):
         return None
 
 def create_index(operands, parameters):
-    raise NotImplementedError
+    return IndexOP(operands[0], parameters['key'])
 
 
 # LINEAR ALGEBRA ######################################################
 
-class DotOP(operators.DotOP):
+class DotOP(operators.DotOP):                   # TODO ima pyopencl.array.dot ali ja hocu blas implementaciju
     pass
 
 def create_dot(operands, parameters):           # a, b):
     raise NotImplementedError
 
 
-class VdotOP(operators.VdotOP):
+class VdotOP(operators.VdotOP):                 # TODO ima pyopencl.array.vdot ali ja hocu blas implementaciju
     pass
 
 def create_vdot(operands, parameters):          # a, b):

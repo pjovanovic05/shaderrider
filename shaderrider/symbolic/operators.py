@@ -1115,7 +1115,7 @@ class DownsampleOP(exprgraph.Operator):
 # MISSING OPS ############################
 
 class ConcatenateOP(exprgraph.Operator):
-    pass
+    _type_name = 'Concatenate'
 
 
 class StackOP(object):
