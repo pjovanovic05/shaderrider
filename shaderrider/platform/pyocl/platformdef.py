@@ -1,5 +1,7 @@
 """
 Defines PyOpenCL platform.
+
+WRITEME
 """
 from numbers import Number
 

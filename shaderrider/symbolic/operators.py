@@ -10,51 +10,6 @@ from shaderrider.core import IncompatibleDimensionsError, NondifferentiableOpErr
 from shaderrider.symbolic import exprgraph
 
 
-# TOC
-#  - abstract ops
-#  - tensor ops
-#  - arithmetic ops
-#  - comparison
-#  - elementwise op
-#  - scan ops
-#  - blas ops
-#  - convolution ops
-
-
-# TODO operators reorganization:
-# - Array creation ops
-#   - ones and zeroes
-#   - from existing data
-#   - numerical ranges
-# - Array manipulation ops
-#   - basic ops
-#   - changing shape
-#   - transpose-like ops
-#   - changing number of dimensions
-#   - joining arrays
-#   - splitting arrays
-#   - tiling arrays
-#   - rearranging elements ?
-# - Binary ops
-#   - elementwise bit operations
-#   - bit packing
-#   - output formatting
-# - Indexing ops
-# - Linear algebra ops (BLAS)
-#   - matrix and vector products
-#   - decompositions?
-#   - matrix eigenvalues
-#   - norms and other numbers
-#   - solving equations and inverting matrices
-# - Logic ops
-#   - truth value testing
-#   - array contents
-#   - logical operations
-#   - comparisons
-# - FFT
-# - Convolution
-# -
-
 # ABSTRACT OPS ########################################################
 
 class UnaryOP(exprgraph.Operator):
@@ -122,36 +77,28 @@ class ReshapeOP(exprgraph.Operator):
         return ff.create_reshape(self.operands[0].simplify(), self._shape)
 
 
-class IndexOP(exprgraph.Operator):
-    _type_name = 'Index'
+class RavelOP(UnaryOP):
+    _type_name = 'Ravel'
 
-    # TODO proveri kako se radi ono advanced i basic indeksiranje u Theanou i sta od toga moze u pyopenclu.
+    def __init__(self, op, parent=None):
+        super(RavelOP, self).__init__(1, [op], parent)
 
-    def __init__(self, op, key, parent=None):
-        """
-        WRITEME
+    def simplify(self):
+        # idea: if op is already a vector just omit this operator.
+        pass
 
-        :param key an integer or slice object wrapped in a exprgraph.Constant
-        """
-        super(IndexOP, self).__init__(1, [op, key], parent)
-        self._key = key
+    def gradient(self, wrt):
+        raise NondifferentiableOpError
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_index()
-
-    def simplify(self):
-        ff = config.get_formula_factory()
-        return ff.create_index(self.operands[0].simplify(), self._key, self._parent)
-
-    def gradient(self, wrt):
-        raise NondifferentiableOpError
+            return ff.create_ravel(self.operands[0].substitute(a, b))
 
     def get_shape(self):
-        pass  # TODO calculate size and shape of the result if possible?
+        return (sum(self.operands[0].get_shape()),)
 
 
 class TransposeOP(UnaryOP):
@@ -201,30 +148,6 @@ class DimshuffleOP(exprgraph.Operator):
         return self._new_dims
 
 
-class RavelOP(UnaryOP):
-    _type_name = 'Ravel'
-
-    def __init__(self, op, parent=None):
-        super(RavelOP, self).__init__(1, [op], parent)
-
-    def simplify(self):
-        # idea: if op is already a vector just omit this operator.
-        pass
-
-    def gradient(self, wrt):
-        raise NondifferentiableOpError
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_ravel(self.operands[0].substitute(a, b))
-
-    def get_shape(self):
-        return (sum(self.operands[0].get_shape()),)
-
-
 class DiagonalOP(exprgraph.Operator):
     _type_name = 'Diagonal'
 
@@ -271,6 +194,113 @@ class TraceOP(exprgraph.Operator):
         return (1,)
 
 
+class ConcatenateOP(exprgraph.Operator):
+    _type_name = 'Concatenate'
+
+
+class StackOP(exprgraph.Operator):
+    pass
+
+
+class SplitOP(exprgraph.Operator):
+    pass
+
+
+class RepeatOP(exprgraph.Operator):
+    pass
+
+# BITWISE OPS (binary operations) #####################################
+
+
+class BitwiseAndOP(exprgraph.Operator):
+    pass
+
+
+class BitwiseOrOP(exprgraph.Operator):
+    pass
+
+
+class BitwiseXorOP(exprgraph.Operator):
+    pass
+
+
+class InvertOP(exprgraph.Operator):
+    pass
+
+
+class LeftShiftOP(exprgraph.Operator):
+    pass
+
+
+class RightShiftOP(exprgraph.Operator):
+    pass
+
+
+# INDEX OPS ###########################################################
+
+
+class IndexOP(exprgraph.Operator):
+    _type_name = 'Index'
+
+    # TODO proveri kako se radi ono advanced i basic indeksiranje u Theanou i sta od toga moze u pyopenclu.
+
+    def __init__(self, op, key, parent=None):
+        """
+        WRITEME
+
+        :param key an integer or slice object wrapped in a exprgraph.Constant
+        """
+        super(IndexOP, self).__init__(1, [op, key], parent)
+        self._key = key
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_index()
+
+    def simplify(self):
+        ff = config.get_formula_factory()
+        return ff.create_index(self.operands[0].simplify(), self._key, self._parent)
+
+    def gradient(self, wrt):
+        raise NondifferentiableOpError
+
+    def get_shape(self):
+        pass  # TODO calculate size and shape of the result if possible?
+
+# LINEAR ALGEBRA ######################################################
+
+
+class DotOP(object):
+    pass
+
+
+class VdotOP(object):
+    pass
+
+
+class InnerOP(object):
+    pass
+
+
+class OuterOP(object):
+    pass
+
+
+class MatmulOP(object):
+    pass
+
+
+class EigOP(object):
+    pass
+
+
+class EigvalsOP(object):
+    pass
+
+
 class NormOP(exprgraph.Operator):
     _type_name = 'Norm'
 
@@ -293,108 +323,100 @@ class NormOP(exprgraph.Operator):
     def get_shape(self):
         pass
 
+# LOGIC OPS ###########################################################
 
-# ARITHMETIC OPS ######################################################
 
-class AbsOP(UnaryOP):
-    _type_name = 'Abs'
+class AllOP(UnaryOP):
+    _type_name = 'All'
 
     def __init__(self, op, parent=None):
-        super(AbsOP, self).__init__(1, [op], parent)
+        super(AllOP, self).__init__(1, [op], parent)
 
-    def simplify(self):
-        # if operand is also abs, colapse it
-        # if operand is a constant, colapse this into a constant
+    def gradient(self, wrt):
         pass
 
-    def gradient(self, wrt):
-        pass  # <0 : -1, 0: 0, >0: 1
+    def simplify(self):
+        pass
 
     def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_abs(self.operands[0].substitute(a, b))  # parent?
+        pass
 
 
-class NegOP(UnaryOP):
-    _type_name = "Neg"
+class AnyOP(UnaryOP):
+    _type_name = 'Any'
 
-    def __init__(self, operand, parent=None):
-        super(NegOP, self).__init__(1, [operand], parent)
-
-    def __str__(self):
-        return '-(%s)' % str(self.operands[0])
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_neg(self.operands[0].substitute(a, b))
+    def __init__(self, op, parent=None):
+        super(AnyOP, self).__init__(1, [op], parent)
 
     def gradient(self, wrt):
-        return NegOP(self.operands[0].gradient(wrt))  # FIXME use factory!!
+        pass
 
     def simplify(self):
-        simp_op = self.operands[0].simplify()
-        if type(simp_op) == type(self):
-            return simp_op.operands[0]
-        return NegOP(simp_op)  # FIXME use factory!!
-
-
-class ExpOP(UnaryOP):
-    _type_name = "Exp"
-
-    def __init__(self, operand, parent=None):
-        super(ExpOP, self).__init__(1, [operand], parent)
-
-    def __str__(self):
-        return 'exp(%s)' % str(self.operands[0])
+        pass
 
     def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_exp(self.operands[0].substitute(a, b))
-
-    def gradient(self, wrt):
-        return ExpOP(self.operands[0])
-
-    def simplify(self):
-        simp_op = self.operands[0].simplify()
-        # TODO wtf?
-        if isinstance(simp_op, ExpOP):
-            return simp_op.operands[0]
-
-        raise NotImplementedError
+        pass
 
 
-class LogOP(UnaryOP):
-    _type_name = "Log"
+class AndOP(object):
+    pass
 
-    def __init__(self, operand, parent=None):
-        super(LogOP, self).__init__(1, [operand], parent)
+
+class OrOP(object):
+    pass
+
+
+class NotOP(object):
+    pass
+
+
+class XorOP(object):
+    pass
+
+
+class GtOP(BinaryOP):
+    pass
+
+
+class LtOP(BinaryOP):
+    pass
+
+
+class GeOP(BinaryOP):
+    pass
+
+
+class LeOP(BinaryOP):
+    pass
+
+
+class EqOP(BinaryOP):
+    _type_name = 'Eq'
+    isCommutative = True
+    isAssociative = True
+
+    def __init__(self, op1, op2, parent=None):
+        super(EqOP, self).__init__(2, [op1, op2], parent)
 
     def __str__(self):
-        return 'log(%s)' % str(self.operands[0])
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_log(self.operands[0].substitute(a, b))
+        return '(%s == %s)' % (str(self.operands[0]), str(self.operands[1]))
 
     def gradient(self, wrt):
-        # TODO
-        raise NotImplementedError
+        pass
 
     def simplify(self):
-        # TODO
-        raise NotImplementedError
+        ff = config.get_formula_factory()
+        simp_op1, simp_op2 = (op.simplify() for op in self.operands)
+        return ff.create_eq(simp_op1, simp_op2)
+
+    def substitute(self, a, b):
+        pass
+
+
+class NeOP(BinaryOP):
+    pass
+
+# MATHEMATICAL OPS ######################################################
 
 
 class SinOP(UnaryOP):
@@ -447,29 +469,6 @@ class CosOP(UnaryOP):
         raise NotImplementedError
 
 
-class CoshOP(UnaryOP):
-    _type_name = 'Cosh'
-
-    def __init__(self, operand, parent=None):
-        super(CoshOP, self).__init__(1, [operand], parent)
-
-    def __str__(self):
-        return "cos(%s)" % str(self.operands[0])
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_cosh(self.operands[0].substitute(a, b))
-
-    def simplify(self):
-        pass
-
-    def gradient(self, wrt):
-        pass
-
-
 class TanOP(UnaryOP):
     _type_name = "Tan"
 
@@ -495,21 +494,99 @@ class TanOP(UnaryOP):
         raise NotImplementedError
 
 
-class SignOP(UnaryOP):
-    _type_name = 'Sign'
+class ArcsinOP(UnaryOP):
+    pass
+
+
+class ArccosOP(UnaryOP):
+    pass
+
+
+class ArctanOP(UnaryOP):
+    pass
+
+
+class SinhOP(UnaryOP):
+    pass
+
+
+class CoshOP(UnaryOP):
+    _type_name = 'Cosh'
 
     def __init__(self, operand, parent=None):
-        super(SignOP, self).__init__(1, [operand], parent)
+        super(CoshOP, self).__init__(1, [operand], parent)
 
     def __str__(self):
-        return "sign(%s)" % str(self.operands[0])
+        return "cos(%s)" % str(self.operands[0])
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_sign(self.operands[0].substitute(a, b))
+            return ff.create_cosh(self.operands[0].substitute(a, b))
+
+    def simplify(self):
+        pass
+
+    def gradient(self, wrt):
+        pass
+
+
+class TanhOP(UnaryOP):
+    pass
+
+
+class ArcsinhOP(UnaryOP):
+    pass
+
+
+class ArccoshOP(UnaryOP):
+    pass
+
+
+class ArctanhOP(UnaryOP):
+    pass
+
+
+class RoundOP(UnaryOP):
+    _type_name = 'Round'
+
+    def __init__(self, operand, parent=None):
+        super(RoundOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return 'round(%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_round(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        pass
+
+    def simplify(self):
+        pass
+
+
+class FloorOP(UnaryOP):
+    _type_name = 'Floor'
+
+    def __init__(self, operand, parent=None):
+        super(FloorOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return 'floor(%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_floor(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         pass
@@ -541,44 +618,294 @@ class CeilOP(UnaryOP):
         pass
 
 
-class FloorOP(UnaryOP):
-    _type_name = 'Floor'
+class ProdOP(exprgraph.Operator):
+    pass
+
+
+class SumOP(exprgraph.Operator):
+    pass
+
+
+class NansumOP(exprgraph.Operator):
+    pass
+
+
+class CumprodOP(exprgraph.Operator):
+    pass
+
+
+class CumsumOP(exprgraph.Operator):
+    pass
+
+
+class ExpOP(UnaryOP):
+    _type_name = "Exp"
 
     def __init__(self, operand, parent=None):
-        super(FloorOP, self).__init__(1, [operand], parent)
+        super(ExpOP, self).__init__(1, [operand], parent)
 
     def __str__(self):
-        return 'floor(%s)' % str(self.operands[0])
+        return 'exp(%s)' % str(self.operands[0])
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_floor(self.operands[0].substitute(a, b))
+            return ff.create_exp(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        return ExpOP(self.operands[0])
+
+    def simplify(self):
+        simp_op = self.operands[0].simplify()
+        # TODO wtf?
+        if isinstance(simp_op, ExpOP):
+            return simp_op.operands[0]
+
+        raise NotImplementedError
+
+
+class Exp2OP(exprgraph.Operator):
+    pass
+
+
+class LogOP(UnaryOP):
+    _type_name = "Log"
+
+    def __init__(self, operand, parent=None):
+        super(LogOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return 'log(%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_log(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        # TODO
+        raise NotImplementedError
+
+    def simplify(self):
+        # TODO
+        raise NotImplementedError
+
+
+class Log10OP(UnaryOP):
+    pass
+
+
+class Log1pOP(UnaryOP):
+    pass
+
+
+class AddOP(BinaryOP):
+    _type_name = 'Add'
+    isCommutative = True
+    isAssociative = True
+
+    def __init__(self, op1, op2, parent=None):
+        super(AddOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s + %s)' % (str(self.operands[0]), str(self.operands[1]))
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_add(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        ff = config.get_formula_factory()
+        return ff.create_add(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
+
+    def simplify(self):
+        raise NotImplementedError
+
+
+class ReciprocalOP(UnaryOP):
+    pass
+
+
+class NegOP(UnaryOP):
+    _type_name = "Neg"
+
+    def __init__(self, operand, parent=None):
+        super(NegOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return '-(%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_neg(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        return NegOP(self.operands[0].gradient(wrt))  # FIXME use factory!!
+
+    def simplify(self):
+        simp_op = self.operands[0].simplify()
+        if type(simp_op) == type(self):
+            return simp_op.operands[0]
+        return NegOP(simp_op)  # FIXME use factory!!
+
+
+class MulOP(BinaryOP):
+    _type_name = 'Mul'
+    isCommutative = True
+    isAssociative = False
+
+    def __init__(self, op1, op2, parent=None):
+        super(MulOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s * %s)' % (str(self.operands[0]), str(self.operands[1]))
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        ff = config.get_formula_factory()
+        return ff.create_add(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
+                             ff.create_mul(self.operands[0], self.operands[1].gradient(wrt)))
+
+    def simplify(self):
+        raise NotImplementedError
+
+
+class DivOP(BinaryOP):
+    _type_name = 'Div'
+    isCommutative = False
+    isAssociative = True
+
+    def __init__(self, op1, op2, parent=None):
+        super(DivOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s / %s)' % map(str, self.operands)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_div(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        ff = config.get_formula_factory()
+        return ff.create_div(ff.create_sub(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
+                                           ff.create_mul(self.operands[0], self.operands[1].gradient(wrt))),
+                             ff.create_pow(self.operands[1], exprgraph.Constant(2)))
+
+    def simplify(self):
+        raise NotImplementedError
+
+
+class PowOP(BinaryOP):
+    _type_name = 'Pow'
+    isCommutative = False
+    isAssociative = False
+
+    def __init__(self, op1, op2, parent=None):
+        super(PowOP, self).__init__(2, [op1, op2], parent)
+
+    def __str__(self):
+        return '(%s ^ %s)' % (str(self.operands[0]), str(self.operands[1]))
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_pow(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
 
     def gradient(self, wrt):
         pass
 
     def simplify(self):
-        pass
+        raise NotImplementedError
 
 
-class RoundOP(UnaryOP):
-    _type_name = 'Round'
+class SubOP(BinaryOP):
+    _type_name = 'Sub'
+    isCommutative = False
+    isAssociative = False
 
-    def __init__(self, operand, parent=None):
-        super(RoundOP, self).__init__(1, [operand], parent)
+    def __init__(self, op1, op2, parent=None):
+        super(SubOP, self).__init__(2, [op1, op2], parent)
 
     def __str__(self):
-        return 'round(%s)' % str(self.operands[0])
+        return '(%s - %s)' % (str(self.operands[0]), str(self.operands[1]))
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_round(self.operands[0].substitute(a, b))
+            return ff.create_sub(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+
+    def gradient(self, wrt):
+        ff = config.get_formula_factory()
+        return ff.create_sub(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
+
+    def simplify(self):
+        raise NotImplementedError
+
+
+class ModOP(BinaryOP):
+    pass
+
+
+class AbsOP(UnaryOP):
+    _type_name = 'Abs'
+
+    def __init__(self, op, parent=None):
+        super(AbsOP, self).__init__(1, [op], parent)
+
+    def simplify(self):
+        # if operand is also abs, colapse it
+        # if operand is a constant, colapse this into a constant
+        pass
+
+    def gradient(self, wrt):
+        pass  # <0 : -1, 0: 0, >0: 1
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_abs(self.operands[0].substitute(a, b))  # parent?
+
+
+class SignOP(UnaryOP):
+    _type_name = 'Sign'
+
+    def __init__(self, operand, parent=None):
+        super(SignOP, self).__init__(1, [operand], parent)
+
+    def __str__(self):
+        return "sign(%s)" % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            ff = config.get_formula_factory()
+            return ff.create_sign(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         pass
@@ -665,211 +992,33 @@ class MinimumOP(BinaryOP):
         pass
 
 
-class AddOP(BinaryOP):
-    _type_name = 'Add'
-    isCommutative = True
-    isAssociative = True
+# STATISTICS OPS ######################################################
 
-    def __init__(self, op1, op2, parent=None):
-        super(AddOP, self).__init__(2, [op1, op2], parent)
-
-    def __str__(self):
-        return '(%s + %s)' % (str(self.operands[0]), str(self.operands[1]))
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_add(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
-
-    def gradient(self, wrt):
-        ff = config.get_formula_factory()
-        return ff.create_add(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
-
-    def simplify(self):
-        raise NotImplementedError
-
-
-class SubOP(BinaryOP):
-    _type_name = 'Sub'
-    isCommutative = False
-    isAssociative = False
-
-    def __init__(self, op1, op2, parent=None):
-        super(SubOP, self).__init__(2, [op1, op2], parent)
-
-    def __str__(self):
-        return '(%s - %s)' % (str(self.operands[0]), str(self.operands[1]))
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_sub(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
-
-    def gradient(self, wrt):
-        ff = config.get_formula_factory()
-        return ff.create_sub(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
-
-    def simplify(self):
-        raise NotImplementedError
-
-
-class MulOP(BinaryOP):
-    _type_name = 'Mul'
-    isCommutative = True
-    isAssociative = False
-
-    def __init__(self, op1, op2, parent=None):
-        super(MulOP, self).__init__(2, [op1, op2], parent)
-
-    def __str__(self):
-        return '(%s * %s)' % (str(self.operands[0]), str(self.operands[1]))
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
-
-    def gradient(self, wrt):
-        ff = config.get_formula_factory()
-        return ff.create_add(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
-                             ff.create_mul(self.operands[0], self.operands[1].gradient(wrt)))
-
-    def simplify(self):
-        raise NotImplementedError
-
-
-class DivOP(BinaryOP):
-    _type_name = 'Div'
-    isCommutative = False
-    isAssociative = True
-
-    def __init__(self, op1, op2, parent=None):
-        super(DivOP, self).__init__(2, [op1, op2], parent)
-
-    def __str__(self):
-        return '(%s / %s)' % map(str, self.operands)
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_div(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
-
-    def gradient(self, wrt):
-        ff = config.get_formula_factory()
-        return ff.create_div(ff.create_sub(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
-                                           ff.create_mul(self.operands[0], self.operands[1].gradient(wrt))),
-                             ff.create_pow(self.operands[1], exprgraph.Constant(2)))
-
-    def simplify(self):
-        raise NotImplementedError
-
-
-class PowOP(BinaryOP):
-    _type_name = 'Pow'
-    isCommutative = False
-    isAssociative = False
-
-    def __init__(self, op1, op2, parent=None):
-        super(PowOP, self).__init__(2, [op1, op2], parent)
-
-    def __str__(self):
-        return '(%s ^ %s)' % (str(self.operands[0]), str(self.operands[1]))
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            ff = config.get_formula_factory()
-            return ff.create_pow(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
-
-    def gradient(self, wrt):
-        pass
-
-    def simplify(self):
-        raise NotImplementedError
-
-
-# COMPARISONS #########################################################
-
-class AnyOP(UnaryOP):
-    _type_name = 'Any'
-
-    def __init__(self, op, parent=None):
-        super(AnyOP, self).__init__(1, [op], parent)
-
-    def gradient(self, wrt):
-        pass
-
-    def simplify(self):
-        pass
-
-    def substitute(self, a, b):
-        pass
-
-class AllOP(UnaryOP):
-    _type_name = 'All'
-
-    def __init__(self, op, parent=None):
-        super(AllOP, self).__init__(1, [op], parent)
-
-    def gradient(self, wrt):
-        pass
-
-    def simplify(self):
-        pass
-
-    def substitute(self, a, b):
-        pass
-
-
-class EqOP(BinaryOP):
-    _type_name = 'Eq'
-    isCommutative = True
-    isAssociative = True
-
-    def __init__(self, op1, op2, parent=None):
-        super(EqOP, self).__init__(2, [op1, op2], parent)
-
-    def __str__(self):
-        return '(%s == %s)' % (str(self.operands[0]), str(self.operands[1]))
-
-    def gradient(self, wrt):
-        pass
-
-    def simplify(self):
-        ff = config.get_formula_factory()
-        simp_op1, simp_op2 = (op.simplify() for op in self.operands)
-        return ff.create_eq(simp_op1, simp_op2)
-
-    def substitute(self, a, b):
-        pass
-
-
-class GtOP(BinaryOP):
+class MedianOP(UnaryOP):
     pass
 
 
-class LtOP(BinaryOP):
+class AverageOP(UnaryOP):
     pass
 
 
-class GeOP(BinaryOP):
+class MeanOP(UnaryOP):
     pass
 
 
-class LeOP(BinaryOP):
+class StdOP(UnaryOP):
     pass
 
 
-class NeOP(BinaryOP):
+class VarOP(UnaryOP):
+    pass
+
+
+class CorrelateOP(exprgraph.Operator):
+    pass
+
+
+class CovOP(exprgraph.Operator):
     pass
 
 
@@ -1076,7 +1225,8 @@ class GerOP(exprgraph.Operator):
 class ConvOP(exprgraph.Operator):
     _type_name = 'Conv'
 
-    def __init__(self, input, filters, image_shape=None, filter_shape=None, border_mode='valid', parent=None):
+    def __init__(self, input, filters, image_shape=None, filter_shape=None,
+                 border_mode='valid', parent=None):
         super(ConvOP, self).__init__(1, [input], parent)
         self._filters = filters
         self._image_shape = image_shape
@@ -1110,89 +1260,4 @@ class PoolOP(exprgraph.Operator):
 
 
 class DownsampleOP(exprgraph.Operator):
-    pass
-
-# MISSING OPS ############################
-
-class ConcatenateOP(exprgraph.Operator):
-    _type_name = 'Concatenate'
-
-
-class StackOP(object):
-    pass
-
-
-class SplitOP(object):
-    pass
-
-
-class RepeatOP(object):
-    pass
-
-
-class BitwiseAndOP(object):
-    pass
-
-
-class BitwiseOrOP(object):
-    pass
-
-
-class BitwiseXorOP(object):
-    pass
-
-
-class InvertOP(object):
-    pass
-
-
-class LeftShiftOP(object):
-    pass
-
-
-class RightShiftOP(object):
-    pass
-
-
-class DotOP(object):
-    pass
-
-
-class VdotOP(object):
-    pass
-
-
-class InnerOP(object):
-    pass
-
-
-class OuterOP(object):
-    pass
-
-
-class MatmulOP(object):
-    pass
-
-
-class EigOP(object):
-    pass
-
-
-class EigvalsOP(object):
-    pass
-
-
-class AndOP(object):
-    pass
-
-
-class OrOP(object):
-    pass
-
-
-class NotOP(object):
-    pass
-
-
-class XorOP(object):
     pass

@@ -1,5 +1,5 @@
 """
-Operators for the PyOpenCL platform
+Operators for the PyOpenCL platform.
 
 WRITEME
 """
@@ -13,6 +13,7 @@ from pyopencl.reduction import ReductionKernel
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import operators
 from shaderrider.platform.pyocl.aux import clblaswrap
+
 
 # TOC
 #  - tensor ops
@@ -29,6 +30,7 @@ from shaderrider.platform.pyocl.aux import clblaswrap
 class ReshapeOP(operators.ReshapeOP):
     def evaluate(self, valuation):
         """
+        shouldn't be here.
 
         :type valuation: PyOCLValuation
         """
@@ -36,8 +38,9 @@ class ReshapeOP(operators.ReshapeOP):
         valuation.add(self.fid, clarray.reshape(param, self._shape))
         return None
 
-def create_reshape(operands, parameters):              # a, newshape
-    return ReshapeOP(operands[0],parameters['shape'])   # TODO sta sa parentom?
+
+def create_reshape(operands, parameters):  # a, newshape
+    return ReshapeOP(operands[0], parameters['shape'])  # TODO sta sa parentom?
 
 
 class RavelOP(operators.RavelOP):
@@ -46,8 +49,9 @@ class RavelOP(operators.RavelOP):
         valuation.add(self.fid, param.ravel())
         return None
 
-def create_ravel(operands, parameters=None):                 # a
-    return RavelOP(operands[0])     # TODO parent
+
+def create_ravel(operands, parameters=None):  # a
+    return RavelOP(operands[0])  # TODO parent
 
 
 class TransposeOP(operators.TransposeOP):
@@ -56,7 +60,8 @@ class TransposeOP(operators.TransposeOP):
         valuation.add(self.fid, clarray.transpose(param, self._axes))
         return None
 
-def create_transpose(operands, parameters=None):    # a
+
+def create_transpose(operands, parameters=None):  # a
     return TransposeOP(operands[0])
 
 
@@ -64,7 +69,8 @@ class ConcatenateOP(operators.ConcatenateOP):
     # TODO
     pass
 
-def create_concatenate(operands, parameters):   # a1, a2, axis=0
+
+def create_concatenate(operands, parameters):  # a1, a2, axis=0
     axis = 0
     if parameters is not None and 'axis' in parameters:
         axis = parameters['axis']
@@ -74,45 +80,51 @@ def create_concatenate(operands, parameters):   # a1, a2, axis=0
 class StackOP(operators.StackOP):
     pass
 
-def create_stack(operands, parameters):         # xs, axis
-    raise NotImplementedError
+
+def create_stack(operands, parameters):  # xs, axis
+    raise NotImplementedError  # NO
 
 
 class SplitOP(operators.SplitOP):
     pass
 
-def create_split(operands, parameters):         # a, indicies
-    raise NotImplementedError               #NO
+
+def create_split(operands, parameters):  # a, indicies
+    raise NotImplementedError  # NO
 
 
 class RepeatOP(operators.RepeatOP):
     pass
 
-def create_repeat(operands, parameters):        # a, repeats, axis
+
+def create_repeat(operands, parameters):  # a, repeats, axis
     raise NotImplementedError
 
 
 class DimshuffleOP(operators.DimshuffleOP):
     def evaluate(self, valuation):
-        pass    # TODO what does this do anyway?
+        pass  # TODO what does this do anyway?
+
 
 def create_dimshuffle(operands, parameters):
-    raise NotImplementedError                            #NO
+    raise NotImplementedError  # NO
 
 
 class DiagonalOP(operators.DiagonalOP):
     def evaluate(self, valuation):
         pass
 
+
 def create_diagonal(operands, parameters):
-    raise NotImplementedError                                            #NO
+    raise NotImplementedError  # NO
 
 
 class TraceOP(operators.TraceOP):
     pass
 
+
 def create_trace(operands, parameters):
-    raise NotImplementedError                           #NO
+    raise NotImplementedError  # NO
 
 
 # BINARY OPERATIONS ###################################################
@@ -121,42 +133,48 @@ class BitwiseAndOP(operators.BitwiseAndOP):
     # TODO
     pass
 
-def create_bitwise_and(operands, parameters):   # x1, x2
+
+def create_bitwise_and(operands, parameters):  # x1, x2
     raise NotImplementedError
 
 
 class BitwiseOrOP(operators.BitwiseOrOP):
     pass
 
-def create_bitwise_or(operands, parameters):            # x1, x2):
+
+def create_bitwise_or(operands, parameters):  # x1, x2):
     raise NotImplementedError
 
 
 class BitwiseXorOP(operators.BitwiseXorOP):
     pass
 
-def create_bitwise_xor(operands, parameters):           # x1, x2):
+
+def create_bitwise_xor(operands, parameters):  # x1, x2):
     raise NotImplementedError
 
 
 class InvertOP(operators.InvertOP):
     pass
 
-def create_invert(operands, parameters):            # x1, x2):
+
+def create_invert(operands, parameters):  # x1, x2):
     raise NotImplementedError
 
 
 class LeftShiftOP(operators.LeftShiftOP):
     pass
 
-def create_left_shift(operands, parameters):            # x1, x2):
+
+def create_left_shift(operands, parameters):  # x1, x2):
     raise NotImplementedError
 
 
 class RightShiftOP(operators.RightShiftOP):
     pass
 
-def create_right_shift(operands, parameters):           # x1, x2):
+
+def create_right_shift(operands, parameters):  # x1, x2):
     raise NotImplementedError
 
 
@@ -169,64 +187,73 @@ class IndexOP(operators.IndexOP):
         valuation.add(self.fid, param[self._key])
         return None
 
+
 def create_index(operands, parameters):
     return IndexOP(operands[0], parameters['key'])
 
 
 # LINEAR ALGEBRA ######################################################
 
-class DotOP(operators.DotOP):                   # TODO ima pyopencl.array.dot ali ja hocu blas implementaciju
+class DotOP(operators.DotOP):  # TODO ima pyopencl.array.dot ali ja hocu blas implementaciju
     pass
 
-def create_dot(operands, parameters):           # a, b):
+
+def create_dot(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
-class VdotOP(operators.VdotOP):                 # TODO ima pyopencl.array.vdot ali ja hocu blas implementaciju
+class VdotOP(operators.VdotOP):  # TODO ima pyopencl.array.vdot ali ja hocu blas implementaciju
     pass
 
-def create_vdot(operands, parameters):          # a, b):
+
+def create_vdot(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
 class InnerOP(operators.InnerOP):
     pass
 
-def create_inner(operands, parameters):         # a, b):
+
+def create_inner(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
 class OuterOP(operators.OuterOP):
     pass
 
-def create_outer(operands, parameters):         # a, b):
+
+def create_outer(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
 class MatmulOP(operators.MatmulOP):
     pass
 
-def create_matmul(operands, parameters):            # a, b):
+
+def create_matmul(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
 class EigOP(operators.EigOP):
     pass
 
-def create_eig(operands, parameters):           # a):
+
+def create_eig(operands, parameters):  # a):
     raise NotImplementedError
 
 
 class EigvalsOP(operators.EigvalsOP):
     pass
 
-def create_eigvals(operands, parameters):           # a):
+
+def create_eigvals(operands, parameters):  # a):
     raise NotImplementedError
 
 
 class NormOP(operators.NormOP):
     def evaluate(self, valuation):
         raise NotImplementedError
+
 
 def create_norm(operands, parameters):
     raise NotImplementedError
@@ -240,7 +267,8 @@ class AllOP(operators.AllOP):
         # TODO
         pass
 
-def create_all(operands, parameters):           # a):
+
+def create_all(operands, parameters):  # a):
     raise NotImplementedError
 
 
@@ -249,35 +277,40 @@ class AnyOP(operators.AnyOP):
         # TODO
         pass
 
-def create_any(operands, parameters):           # a):
+
+def create_any(operands, parameters):  # a):
     raise NotImplementedError
 
 
 class AndOP(operators.AndOP):
     pass
 
-def create_and(operands, parameters):           # a, b):
+
+def create_and(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
 class OrOP(operators.OrOP):
     pass
 
-def create_or(operands, parameters):            # a, b):
+
+def create_or(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
 class NotOP(operators.NotOP):
     pass
 
-def create_not(operands, parameters):           # a):
+
+def create_not(operands, parameters):  # a):
     raise NotImplementedError
 
 
 class XorOP(operators.XorOP):
     pass
 
-def create_xor(operands, parameters):           # a, b):
+
+def create_xor(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
@@ -286,7 +319,8 @@ class GtOP(operators.GtOP):
         # TODO
         pass
 
-def create_greater(operands, parameters):           # a, b):
+
+def create_greater(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
@@ -295,7 +329,8 @@ class LtOP(operators.LtOP):
         # TODO
         pass
 
-def create_less(operands, parameters):          # a, b):
+
+def create_less(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
@@ -304,7 +339,8 @@ class GeOP(operators.GeOP):
         # TODO
         pass
 
-def create_greater_equal(operands, parameters):         # a, b):
+
+def create_greater_equal(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
@@ -313,7 +349,8 @@ class LeOP(operators.LeOP):
         # TODO
         pass
 
-def create_less_equal(operands, parameters):            # a, b):
+
+def create_less_equal(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
@@ -322,7 +359,8 @@ class EqOP(operators.EqOP):
         # TODO
         pass
 
-def create_equal(operands, parameters):         # a, b):
+
+def create_equal(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
@@ -331,7 +369,8 @@ class NeOP(operators.NeOP):
         # TODO
         pass
 
-def create_not_equal(operands, parameters):         # a, b):
+
+def create_not_equal(operands, parameters):  # a, b):
     raise NotImplementedError
 
 
@@ -343,7 +382,8 @@ class SinOP(operators.SinOP):
         valuation.add(self.fid, clmath.sin(param))
         return None
 
-def create_sin(operands, parameters):           # x):
+
+def create_sin(operands, parameters):  # x):
     raise NotImplementedError
 
 
@@ -353,7 +393,8 @@ class CosOP(operators.CosOP):
         valuation.add(self.fid, clmath.cos(param))
         return None
 
-def create_cos(operands, parameters):           # x):
+
+def create_cos(operands, parameters):  # x):
     raise NotImplementedError
 
 
@@ -363,35 +404,40 @@ class TanOP(operators.TanOP):
         valuation.add(self.fid, clmath.tan(param))
         return None
 
-def create_tan(operands, parameters):           # x):
+
+def create_tan(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class ArcsinOP(operators.ArcsinOP):
     pass
 
-def create_arcsin(operands, parameters):            # x):
+
+def create_arcsin(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class ArccosOP(operators.ArccosOP):
     pass
 
-def create_arccos(operands, parameters):            # x):
+
+def create_arccos(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class ArctanOP(operators.ArctanOP):
     pass
 
-def create_arctan(operands, parameters):            # x):
+
+def create_arctan(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class SinhOP(operators.SinhOP):
     pass
 
-def create_sinh(operands, parameters):          # x):
+
+def create_sinh(operands, parameters):  # x):
     raise NotImplementedError
 
 
@@ -401,35 +447,40 @@ class CoshOP(operators.CoshOP):
         valuation.add(self.fid, clmath.cosh(param))
         return None
 
-def create_cosh(operands, parameters):          # x):
+
+def create_cosh(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class TanhOP(operators.TanhOP):
     pass
 
-def create_tanh(operands, parameters):          # x):
+
+def create_tanh(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class ArcsinhOP(operators.ArcsinhOP):
     pass
 
-def create_arcsinh(operands, parameters):           # x):
+
+def create_arcsinh(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class ArccoshOP(operators.ArccoshOP):
     pass
 
-def create_arccosh(operands, parameters):           # x):
+
+def create_arccosh(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class ArctanhOP(operators.ArctanhOP):
     pass
 
-def create_arctanh(operands, parameters):           # x):
+
+def create_arctanh(operands, parameters):  # x):
     raise NotImplementedError
 
 
@@ -439,7 +490,8 @@ class RoundOP(operators.RoundOP):
         valuation.add(self.fid, clmath.round(param))
         return None
 
-def create_round(operands, parameters):         # a, decimal=None, out=None):
+
+def create_round(operands, parameters):  # a, decimal=None, out=None):
     raise NotImplementedError
 
 
@@ -449,7 +501,8 @@ class FloorOP(operators.FloorOP):
         valuation.add(self.fid, clmath.floor(param))
         return None
 
-def create_floor(operands, parameters):         # x, out=None):
+
+def create_floor(operands, parameters):  # x, out=None):
     raise NotImplementedError
 
 
@@ -459,42 +512,48 @@ class CeilOP(operators.CeilOP):
         valuation.add(self.fid, clmath.ceil(param))
         return None
 
-def create_ceil(operands, parameters):          # x, out=None):
+
+def create_ceil(operands, parameters):  # x, out=None):
     raise NotImplementedError
 
 
 class ProdOP(operators.ProdOP):
     pass
 
-def create_prod(operands, parameters):          # a, axis=None, dtype=None, out=None, keepdims=None):
+
+def create_prod(operands, parameters):  # a, axis=None, dtype=None, out=None, keepdims=None):
     raise NotImplementedError
 
 
 class SumOP(operators.SumOP):
     pass
 
-def create_sum(operands, parameters):           # a, axis=None, dtype=None, out=None, keepdims=None):
+
+def create_sum(operands, parameters):  # a, axis=None, dtype=None, out=None, keepdims=None):
     raise NotImplementedError
 
 
 class NansumOP(operators.NansumOP):
     pass
 
-def create_nansum(operands, parameters):            # a, axis=None, dtype=None, out=None, keepdims=None):
+
+def create_nansum(operands, parameters):  # a, axis=None, dtype=None, out=None, keepdims=None):
     raise NotImplementedError
 
 
 class CumprodOP(operators.CumprodOP):
     pass
 
-def create_cumprod(operands, parameters):           # a, axis=None, dtype=None, out=None, keepdims=None):
+
+def create_cumprod(operands, parameters):  # a, axis=None, dtype=None, out=None, keepdims=None):
     raise NotImplementedError
 
 
 class CumsumOP(operators.CumsumOP):
     pass
 
-def create_cumsum(operands, parameters):            # a, axis, dtype, out, keepdims):
+
+def create_cumsum(operands, parameters):  # a, axis, dtype, out, keepdims):
     raise NotImplementedError
 
 
@@ -504,14 +563,16 @@ class ExpOP(operators.ExpOP):
         valuation.add(self.fid, clmath.exp(param))
         return None
 
-def create_exp(operands, parameters):           # x):
+
+def create_exp(operands, parameters):  # x):
     raise NotImplementedError
 
 
 class Exp2OP(operators.Exp2OP):
     pass
 
-def create_exp2(operands, parameters):          # x, out=None):
+
+def create_exp2(operands, parameters):  # x, out=None):
     raise NotImplementedError
 
 
@@ -521,21 +582,24 @@ class LogOP(operators.LogOP):
         valuation.add(self.fid, clmath.log(param))
         return None
 
-def create_log(operands, parameters):           # x, out=None):
+
+def create_log(operands, parameters):  # x, out=None):
     raise NotImplementedError
 
 
 class Log10OP(operators.Log10OP):
     pass
 
-def create_log10(operands, parameters):         # x, out=None):
+
+def create_log10(operands, parameters):  # x, out=None):
     raise NotImplementedError
 
 
 class Log1pOP(operators.Log1pOP):
     pass
 
-def create_log1p(operands, parameters):         # x, out=None):
+
+def create_log1p(operands, parameters):  # x, out=None):
     raise NotImplementedError
 
 
@@ -546,14 +610,16 @@ class AddOP(operators.AddOP):
         valuation.add(self.fid, a + b)
         return None
 
-def create_add(operands, parameters):           # x1, x2, out=None):
+
+def create_add(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
 class ReciprocalOP(operators.ReciprocalOP):
     pass
 
-def create_reciprocal(operands, parameters):            # x, out=None):
+
+def create_reciprocal(operands, parameters):  # x, out=None):
     raise NotImplementedError
 
 
@@ -563,7 +629,8 @@ class NegOP(operators.NegOP):
         valuation.add(self.fid, -param)
         return None
 
-def create_negative(operands, parameters):          # x, out=None):
+
+def create_negative(operands, parameters):  # x, out=None):
     raise NotImplementedError
 
 
@@ -574,7 +641,8 @@ class MulOP(operators.MulOP):
         valuation.add(self.fid, a * b)
         return None
 
-def create_multiply(operands, parameters):          # x1, x2, out=None):
+
+def create_multiply(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
@@ -585,7 +653,8 @@ class DivOP(operators.DivOP):
         valuation.add(self.fid, a / b)
         return None
 
-def create_divide(operands, parameters):            # x1, x2, out=None):
+
+def create_divide(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
@@ -596,7 +665,8 @@ class PowOP(operators.PowOP):
         valuation.add(self.fid, a ** b)
         return None
 
-def create_power(operands, parameters):         # x1, x2, out=None):
+
+def create_power(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
@@ -607,28 +677,32 @@ class SubOP(operators.SubOP):
         valuation.add(self.fid, a - b)
         return None
 
-def create_subtract(operands, parameters):          # x1, x2, out=None):
+
+def create_subtract(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
 class TrueDivideOP(operators.TrueDivideOP):
     pass
 
-def create_true_divide(operands, parameters):           # x1, x2, out=None):
+
+def create_true_divide(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
 class FloorDivideOP(operators.FloorDivideOP):
     pass
 
-def create_floor_divide(operands, parameters):          # x1, x2, out=None):
+
+def create_floor_divide(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
 class ModOP(operators.ModOP):
     pass
 
-def create_mod(operands, parameters):           # x1, x2, out=None):
+
+def create_mod(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
@@ -638,6 +712,7 @@ class AbsOP(operators.AbsOP):
         valuation.add(self.fid, abs(param))
         return None
 
+
 def create_absolute(operands, parameters):
     raise NotImplementedError
 
@@ -645,6 +720,7 @@ def create_absolute(operands, parameters):
 class SignOP(operators.SignOP):
     def evaluate(self, valuation):
         raise NotImplementedError
+
 
 def create_sign(operands, parameters):
     raise NotImplementedError
@@ -656,6 +732,7 @@ class SqrOP(operators.SqrOP):
         # valuation[self.fid] = TODO
         raise NotImplementedError
 
+
 def create_sqr(operands, parameters):
     raise NotImplementedError
 
@@ -666,6 +743,7 @@ class SqrtOP(operators.SqrtOP):
         valuation.add(self.fid, clmath.sqrt(param))
         return None
 
+
 def create_sqrt(operands, parameters):
     pass
 
@@ -675,8 +753,9 @@ class MaximumOP(operators.MaximumOP):
         a = valuation.read(self.operands[0].fid)
         b = valuation.read(self.operands[1].fid)
         out = valuation.read(self.fid) if self.fid in valuation else None
-        valuation.add(self.fid, clarray.maximum(a, b, out))                     # TODO maybe set?
+        valuation.add(self.fid, clarray.maximum(a, b, out))  # TODO maybe set?
         return None
+
 
 def create_maximum(operands, parameters):
     pass
@@ -687,8 +766,9 @@ class MinimumOP(operators.MinimumOP):
         a = valuation.read(self.operands[0].fid)
         b = valuation.read(self.operands[1].fid)
         out = valuation.read(self.fid) if self.fid in valuation else None
-        valuation.add(self.fid, clarray.minimum(a, b, out))                     # TODO maybe set?
+        valuation.add(self.fid, clarray.minimum(a, b, out))  # TODO maybe set?
         return None
+
 
 def create_minimum(operands, parameters):
     raise NotImplementedError
@@ -699,56 +779,64 @@ def create_minimum(operands, parameters):
 class MedianOP(operators.MedianOP):
     pass
 
-def create_median(operands, parameters):            # a, axis=None, out=None, overwrite_input=False, keepdims=None):
+
+def create_median(operands, parameters):  # a, axis=None, out=None, overwrite_input=False, keepdims=None):
     raise NotImplementedError
 
 
 class AverageOP(operators.AverageOP):
     pass
 
-def create_average(operands, parameters):           # a, axis=None, weights=None, returned=None):          # TODO sta je returned?
+
+def create_average(operands,
+                   parameters):  # a, axis=None, weights=None, returned=None):          # TODO sta je returned?
     raise NotImplementedError
 
 
 class MeanOP(operators.MeanOP):
     pass
 
-def create_mean(operands, parameters):          # a, axis=None, out=None, keepdims=None):
+
+def create_mean(operands, parameters):  # a, axis=None, out=None, keepdims=None):
     raise NotImplementedError
 
 
 class StdOP(operators.StdOP):
     pass
 
-def create_std(operands, parameters):           # a, axis=None, out=None, ddof=None, keepdims=None):       # TODO sta je ddof?
+
+def create_std(operands, parameters):  # a, axis=None, out=None, ddof=None, keepdims=None):       # TODO sta je ddof?
     raise NotImplementedError
 
 
 class VarOP(operators.VarOP):
     pass
 
-def create_var(operands, parameters):           # a, axis=None, out=None, ddof=None, keepdims=None):
+
+def create_var(operands, parameters):  # a, axis=None, out=None, ddof=None, keepdims=None):
     raise NotImplementedError
 
 
 class CorrelateOP(operators.CorrelateOP):
     pass
 
-def create_correlate(operands, parameters):         # a, v, mode=None):
+
+def create_correlate(operands, parameters):  # a, v, mode=None):
     raise NotImplementedError
 
 
 class CovOP(operators.CovOP):
     pass
 
-def create_cov(operands, parameters):           # m, y, rowvar, bias, ddof, fweights):                     #TODO ima jos nepoznatih parametara
+
+def create_cov(operands, parameters):  # TODO ima jos nepoznatih parametara
     raise NotImplementedError
 
 
 # ELEMENTWISE OP ######################################################
 
 class ElementwiseOP(operators.ElementwiseOP):
-    def __init__(self, expr, ops, ctx=None, device=0, parent=None):              # TODO ops should be expr.get_variables()?
+    def __init__(self, expr, ops, ctx=None, device=0, parent=None):  # TODO ops should be expr.get_variables()?
         super(ElementwiseOP, self).__init__(expr, ops, parent)
         self._ctx = ctx
         self._device = device
@@ -790,7 +878,7 @@ def _c_expr(formula):
     if isinstance(formula, exprgraph.Variable):
         if formula.is_array():
             return formula.name + '[i]'
-        return formula.name                                             # TODO da li .name ili .fid?
+        return formula.name  # TODO da li .name ili .fid?
     if isinstance(formula, exprgraph.Constant):
         if formula.is_array():  # TODO check this
             return formula.fid + '[i]'
@@ -841,7 +929,7 @@ class ReduceOP(operators.ReduceOP):
     def generate_eval(self):
         if self._map_expr is None:
             if len(self.operands) != 1:
-                raise ValueError            # TODO better error
+                raise ValueError  # TODO better error
 
         args = []
         for op in self.operands:
@@ -853,7 +941,7 @@ class ReduceOP(operators.ReduceOP):
 
         reduck = ReductionKernel(self._ctx, self.dtype, neutral=self._neutral,
                                  reduce_expr=self._reduce_expr, map_expr=self._map_expr,
-                                 arguments=cargs, name=self.fid+'_rknl')
+                                 arguments=cargs, name=self.fid + '_rknl')
 
         def evaluatefn(self, valuation, events=None, device=0):
             params = []
@@ -866,8 +954,9 @@ class ReduceOP(operators.ReduceOP):
                 if op.fid in events:
                     waits.append(events[op.fid])
             out, event = reduck(wait_for=waits, *params)
-            valuation[self.fid] = out                               # TODO Create an ATOM out of this.
+            valuation[self.fid] = out  # TODO Create an ATOM out of this.
             return event
+
         return evaluatefn
 
 
@@ -892,6 +981,7 @@ class ScanOP(operators.ScanOP):
                 if op.fid in events:
                     waits.append(events[op.fid])
             pass
+
         return evaluatefn
 
 
@@ -899,7 +989,7 @@ class ScanOP(operators.ScanOP):
 
 class GemmOP(operators.GemmOP):
     def evaluate(self, valuation, events=None, device=0):
-        queue = self._ctx.queue[device]         # TODO oklen kontekst? iz configa?
+        queue = self._ctx.queue[device]  # TODO oklen kontekst? iz configa?
         # A, B, C, alpha, beta, transA, transB
         A = valuation[self.operands[0].fid]
         B = valuation[self.operands[1].fid]
@@ -917,7 +1007,7 @@ class GemmOP(operators.GemmOP):
 
 class GemvOP(operators.GemvOP):
     def evaluate(self, valuation, events=None, device=0):
-        queue = None    # TODO
+        queue = None  # TODO
         # A, X, Y, alpha, beta, transA
         A = valuation[self.operands[0].fid]
         X = valuation[self.operands[1].fid]

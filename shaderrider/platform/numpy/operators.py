@@ -25,6 +25,7 @@ class ReshapeOP(operators.ReshapeOP):
     def evaluate(self, valuation):
         valuation.add(self.fid, np.reshape(valuation.get(self.operands[0].fid), self._shape))
 
+
 def create_reshape(operands, parameters):           # a, newshape):
     raise NotImplementedError
 
@@ -32,6 +33,7 @@ def create_reshape(operands, parameters):           # a, newshape):
 class RavelOP(operators.RavelOP):
     def evaluate(self, valuation):
         valuation.add(self.fid, np.ravel(valuation.get(self.operands[0].fid)))
+
 
 def create_ravel(operands, parameters):         # a):
     raise NotImplementedError
