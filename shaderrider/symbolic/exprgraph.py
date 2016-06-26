@@ -1,5 +1,6 @@
 """
-exprgraph.py: Abstract Syntax Tree
+exprgraph.py: Abstract Syntax Tree.
+
 Contains the base classes for specifying symbolic expression structure.
 """
 
@@ -14,6 +15,7 @@ class Formula(object):
     Formulas are generic interfaces for representations of symbolic expressions
     that are to be compiled for the backend (opencl, cpu).
     """
+
     __metaclass__ = ABCMeta
 
     def __init__(self, parent=None):
@@ -21,8 +23,7 @@ class Formula(object):
 
     @abstractmethod
     def get_variables(self):
-        """Gets all the variables under this formula.
-        """
+        """Get all the variables under this formula."""
         raise NotImplementedError
 
     @abstractmethod
@@ -191,7 +192,8 @@ class Variable(Atom):
     """docstring for Variable"""
     _ctr = 0
 
-    def __init__(self, name=None, dtype=None, shape=None, array=None, shared=False, parent=None):
+    def __init__(self, name=None, dtype=None, shape=None, array=None,
+                 shared=False, parent=None):
         super(Variable, self).__init__(parent)
         Variable._ctr += 1
         self._fid = ('V' + str(Variable._ctr)) if name is None else name
@@ -246,7 +248,8 @@ class Variable(Atom):
 
     def __eq__(self, other):
         return type(self) == type(other) and self.name == other.name \
-               and self._shape == other.get_shape() and self._dtype == other.dtype
+               and self._shape == other.get_shape() \
+               and self._dtype == other.dtype
 
     def __str__(self):
         return self._fid
@@ -310,7 +313,8 @@ class Operator(Formula):
         return True
 
     def __str__(self):
-        return '%s(%s)' % (self._fid, ', '.join([str(op) for op in self._operands]))
+        return '%s(%s)' % (self._fid,
+                           ', '.join([str(op) for op in self._operands]))
 
     @property
     def fid(self):
@@ -347,40 +351,3 @@ class Operator(Formula):
         """generates a zero argument function which executes the computation
         steps represented by this operator."""
         raise NotImplementedError
-
-# TODO is there any need for this?
-# class NativeOperator(Operator):
-#     __metaclass__ = ABCMeta
-#
-#     def c_headers(self):
-#         """Returns the list of headers to be included for this formula.
-#
-#         If the header name does not begin with '<' it is assumed to be
-#         locally referenced (i.e. include "header.h").
-#         """
-#         return []
-#
-#     def c_header_dirs(self):
-#         """Returns the list of include dirs where required headers are.
-#         Optional.
-#
-#         """
-#         return []
-#
-#     def c_libraries(self):
-#         return []
-#
-#     def c_lib_dirs(self):
-#         return []
-#
-#     def c_compile_args(self):
-#         return []
-#
-#     def support_code(self):
-#         pass
-#
-#     def instance_code(self):
-#         pass
-#
-#     def eval_code(self):
-#         pass
