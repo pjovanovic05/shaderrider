@@ -17,7 +17,8 @@ class UnaryOP(exprgraph.Operator):
     __metaclass__ = abc.ABCMeta
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.operands[0] == other.operands[0]
+        return type(self) == type(other) and \
+                self.operands[0] == other.operands[0]
 
     def get_shape(self):
         return self.operands[0].get_shape()
@@ -52,12 +53,13 @@ class ReshapeOP(exprgraph.Operator):
 
     def __init__(self, arr, shape, parent=None):
         super(ReshapeOP, self).__init__(2, [arr, shape], parent)
-        assert isinstance(shape, exprgraph.Constant) or isinstance(shape, tuple)
-        # assert isinstance(arr, exprgraph.Variable)  # da li???  IPAK NE
+        assert isinstance(shape, exprgraph.Constant) or \
+            isinstance(shape, tuple)
 
-        self._shape = shape if isinstance(shape, tuple) else None  # TODO extract shape
         # TODO check transformation compatibility
-        # multiply shape components and see if the lengths match current length
+        # multiply shape components and see if the lengths match
+        # current length
+        self._shape = shape if isinstance(shape, tuple) else None
 
     def gradient(self, wrt):
         raise NondifferentiableOpError
