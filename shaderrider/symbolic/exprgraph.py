@@ -20,6 +20,8 @@ class Formula(object):
 
     def __init__(self, parent=None):
         self._parent = weakref.ref(parent) if parent is not None else None
+        for p in parent:
+            self._parent.append(weakref.ref(p))
 
     @abstractmethod
     def get_variables(self):
