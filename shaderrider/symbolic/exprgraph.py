@@ -20,9 +20,7 @@ class Formula(object):
 
     def __init__(self, parents=None):
         self._parent = weakref.ref(parents) if parents is not None else None
-        self._parents = []
-        for p in parents:
-            self._parents.append(weakref.ref(p))
+        self._parents = weakref.WeakSet(parents)
 
     @abstractmethod
     def get_variables(self):
@@ -66,12 +64,8 @@ class Formula(object):
         raise NotImplementedError
 
     @property
-    def parent(self):
+    def parents(self):
         return self._parent
-
-    @parent.setter
-    def parent(self, val):
-        self._parent = val
 
     def is_array(self):
         raise NotImplementedError

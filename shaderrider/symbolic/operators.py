@@ -167,7 +167,7 @@ class DiagonalOP(exprgraph.Operator):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_diagonal(self.operands[0].substitute(a, b))  # TODO parent?
+            return ff.create_diagonal(self.operands[0].substitute(a, b))  # TODO parents?
 
     def get_shape(self):
         pass
@@ -721,7 +721,7 @@ class AddOP(BinaryOP):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_add(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+            return ff.create_add(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
         ff = config.get_formula_factory()
@@ -777,7 +777,7 @@ class MulOP(BinaryOP):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+            return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
         ff = config.get_formula_factory()
@@ -804,7 +804,7 @@ class DivOP(BinaryOP):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_div(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+            return ff.create_div(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
         ff = config.get_formula_factory()
@@ -832,7 +832,7 @@ class PowOP(BinaryOP):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_pow(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+            return ff.create_pow(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
         pass
@@ -857,7 +857,7 @@ class SubOP(BinaryOP):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_sub(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parent)
+            return ff.create_sub(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
         ff = config.get_formula_factory()
@@ -890,7 +890,7 @@ class AbsOP(UnaryOP):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_abs(self.operands[0].substitute(a, b))  # parent?
+            return ff.create_abs(self.operands[0].substitute(a, b))  # parents?
 
 
 class SignOP(UnaryOP):
@@ -930,7 +930,7 @@ class SqrOP(UnaryOP):
             return b
         else:
             ff = config.get_formula_factory()
-            return ff.create_sqr(self.operands[0].substitute(a, b), self.parent)
+            return ff.create_sqr(self.operands[0].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
         pass

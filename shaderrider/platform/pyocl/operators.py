@@ -51,7 +51,7 @@ class RavelOP(operators.RavelOP):
 
 
 def create_ravel(operands, parameters=None):  # a
-    return RavelOP(operands[0])  # TODO parent
+    return RavelOP(operands[0])  # TODO parents
 
 
 class TransposeOP(operators.TransposeOP):
