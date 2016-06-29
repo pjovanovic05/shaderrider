@@ -8,8 +8,8 @@ from shaderrider.symbolic import exprgraph
 class ElementwiseOP(exprgraph.Operator):
     _type_name = 'Elwise'
 
-    def __init__(self, expr, ops, parent=None):
-        super(ElementwiseOP, self).__init__('Elwise', ops, parent=parent)
+    def __init__(self, expr, ops, parents=None):
+        super(ElementwiseOP, self).__init__('Elwise', ops, parents=parents)
 
     def substitute(self, a, b):
         # TODO should this be supported?

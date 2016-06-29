@@ -836,8 +836,8 @@ def create_cov(operands, parameters):  # TODO ima jos nepoznatih parametara
 # ELEMENTWISE OP ######################################################
 
 class ElementwiseOP(operators.ElementwiseOP):
-    def __init__(self, expr, ops, ctx=None, device=0, parent=None):  # TODO ops should be expr.get_variables()?
-        super(ElementwiseOP, self).__init__(expr, ops, parent)
+    def __init__(self, expr, ops, ctx=None, device=0, parents=None):  # TODO ops should be expr.get_variables()?
+        super(ElementwiseOP, self).__init__(expr, ops, parents)
         self._ctx = ctx
         self._device = device
         self.evaluate = self.generate_eval()

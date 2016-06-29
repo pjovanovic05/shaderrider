@@ -18,10 +18,11 @@ class Formula(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, parent=None):
-        self._parent = weakref.ref(parent) if parent is not None else None
-        for p in parent:
-            self._parent.append(weakref.ref(p))
+    def __init__(self, parents=None):
+        self._parent = weakref.ref(parents) if parents is not None else None
+        self._parents = []
+        for p in parents:
+            self._parents.append(weakref.ref(p))
 
     @abstractmethod
     def get_variables(self):
@@ -107,8 +108,8 @@ class Literal(Atom):                                    # TODO add dtype?
     """docstring for Literal"""
     _ctr = 0
 
-    def __init__(self, value, name=None, parent=None):
-        super(Literal, self).__init__(parent)
+    def __init__(self, value, name=None, parents=None):
+        super(Literal, self).__init__(parents)
         # TODO check type to be primitive (literal) (int, float, bool)
         Literal._ctr += 1
         self._value = value
@@ -149,8 +150,8 @@ class Constant(Atom):
     """docstring for Constant"""
     _ctr = 0
 
-    def __init__(self, value, name=None, parent=None):
-        super(Constant, self).__init__(parent)
+    def __init__(self, value, name=None, parents=None):
+        super(Constant, self).__init__(parents)
         Constant._ctr += 1
         self._value = np.asarray(value)
         self._fid = 'C' + str(Constant._ctr)
@@ -195,8 +196,8 @@ class Variable(Atom):
     _ctr = 0
 
     def __init__(self, name=None, dtype=None, shape=None, array=None,
-                 shared=False, parent=None):
-        super(Variable, self).__init__(parent)
+                 shared=False, parents=None):
+        super(Variable, self).__init__(parents)
         Variable._ctr += 1
         self._fid = ('V' + str(Variable._ctr)) if name is None else name
         self._dtype = dtype
@@ -272,8 +273,8 @@ class Operator(Formula):
     _ctr = 0
     _type_name = 'Op'
 
-    def __init__(self, arity, operands, parent=None):
-        super(Operator, self).__init__(parent)
+    def __init__(self, arity, operands, parents=None):
+        super(Operator, self).__init__(parents)
         Operator._ctr += 1
         self._arity = arity
         self._operands = operands     # formulas, operands

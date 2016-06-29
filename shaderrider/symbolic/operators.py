@@ -51,8 +51,8 @@ class BinaryOP(exprgraph.Operator):
 class ReshapeOP(exprgraph.Operator):
     _type_name = 'Reshape'
 
-    def __init__(self, arr, shape, parent=None):
-        super(ReshapeOP, self).__init__(2, [arr, shape], parent)
+    def __init__(self, arr, shape, parents=None):
+        super(ReshapeOP, self).__init__(2, [arr, shape], parents)
         assert isinstance(shape, exprgraph.Constant) or \
             isinstance(shape, tuple)
 
@@ -82,8 +82,8 @@ class ReshapeOP(exprgraph.Operator):
 class RavelOP(UnaryOP):
     _type_name = 'Ravel'
 
-    def __init__(self, op, parent=None):
-        super(RavelOP, self).__init__(1, [op], parent)
+    def __init__(self, op, parents=None):
+        super(RavelOP, self).__init__(1, [op], parents)
 
     def simplify(self):
         # idea: if op is already a vector just omit this operator.
@@ -106,8 +106,8 @@ class RavelOP(UnaryOP):
 class TransposeOP(UnaryOP):
     _type_name = 'Transpose'
 
-    def __init__(self, op, axes=None, parent=None):
-        super(TransposeOP, self).__init__(1, [op], parent)
+    def __init__(self, op, axes=None, parents=None):
+        super(TransposeOP, self).__init__(1, [op], parents)
         self._axes = axes
 
     def simplify(self):
@@ -129,8 +129,8 @@ class TransposeOP(UnaryOP):
 class DimshuffleOP(exprgraph.Operator):
     _type_name = 'Dimshuffle'
 
-    def __init__(self, op, new_dims, parent=None):
-        super(DimshuffleOP, self).__init__(1, [op], parent)
+    def __init__(self, op, new_dims, parents=None):
+        super(DimshuffleOP, self).__init__(1, [op], parents)
         self._new_dims = new_dims
 
     def simplify(self):
@@ -153,8 +153,8 @@ class DimshuffleOP(exprgraph.Operator):
 class DiagonalOP(exprgraph.Operator):
     _type_name = 'Diagonal'
 
-    def __init__(self, op, parent=None):
-        super(DiagonalOP, self).__init__(1, [op], parent)
+    def __init__(self, op, parents=None):
+        super(DiagonalOP, self).__init__(1, [op], parents)
 
     def simplify(self):
         pass
@@ -176,8 +176,8 @@ class DiagonalOP(exprgraph.Operator):
 class TraceOP(exprgraph.Operator):
     _type_name = 'Trace'
 
-    def __init__(self, op, parent=None):
-        super(TraceOP, self).__init__(1, [op], parent)
+    def __init__(self, op, parents=None):
+        super(TraceOP, self).__init__(1, [op], parents)
 
     def simplify(self):
         pass
@@ -246,13 +246,13 @@ class IndexOP(exprgraph.Operator):
 
     # TODO proveri kako se radi ono advanced i basic indeksiranje u Theanou i sta od toga moze u pyopenclu.
 
-    def __init__(self, op, key, parent=None):
+    def __init__(self, op, key, parents=None):
         """
         WRITEME
 
         :param key an integer or slice object wrapped in a exprgraph.Constant
         """
-        super(IndexOP, self).__init__(1, [op, key], parent)
+        super(IndexOP, self).__init__(1, [op, key], parents)
         self._key = key
 
     def substitute(self, a, b):
@@ -306,8 +306,8 @@ class EigvalsOP(object):
 class NormOP(exprgraph.Operator):
     _type_name = 'Norm'
 
-    def __init__(self, op, norm, parent=None):
-        super(NormOP, self).__init__(2, [op, norm], parent)
+    def __init__(self, op, norm, parents=None):
+        super(NormOP, self).__init__(2, [op, norm], parents)
 
     def simplify(self):
         pass
@@ -331,8 +331,8 @@ class NormOP(exprgraph.Operator):
 class AllOP(UnaryOP):
     _type_name = 'All'
 
-    def __init__(self, op, parent=None):
-        super(AllOP, self).__init__(1, [op], parent)
+    def __init__(self, op, parents=None):
+        super(AllOP, self).__init__(1, [op], parents)
 
     def gradient(self, wrt):
         pass
@@ -347,8 +347,8 @@ class AllOP(UnaryOP):
 class AnyOP(UnaryOP):
     _type_name = 'Any'
 
-    def __init__(self, op, parent=None):
-        super(AnyOP, self).__init__(1, [op], parent)
+    def __init__(self, op, parents=None):
+        super(AnyOP, self).__init__(1, [op], parents)
 
     def gradient(self, wrt):
         pass
@@ -397,8 +397,8 @@ class EqOP(BinaryOP):
     isCommutative = True
     isAssociative = True
 
-    def __init__(self, op1, op2, parent=None):
-        super(EqOP, self).__init__(2, [op1, op2], parent)
+    def __init__(self, op1, op2, parents=None):
+        super(EqOP, self).__init__(2, [op1, op2], parents)
 
     def __str__(self):
         return '(%s == %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -424,8 +424,8 @@ class NeOP(BinaryOP):
 class SinOP(UnaryOP):
     _type_name = "Sin"
 
-    def __init__(self, operand, parent=None):
-        super(SinOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(SinOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return 'sin(%s)' % str(self.operands[0])
@@ -449,8 +449,8 @@ class SinOP(UnaryOP):
 class CosOP(UnaryOP):
     _type_name = "Cos"
 
-    def __init__(self, operand, parent=None):
-        super(CosOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(CosOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return "cos(%s)" % str(self.operands[0])
@@ -474,8 +474,8 @@ class CosOP(UnaryOP):
 class TanOP(UnaryOP):
     _type_name = "Tan"
 
-    def __init__(self, operand, parent=None):
-        super(TanOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(TanOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return "tan(%s)" % str(self.operands[0])
@@ -515,8 +515,8 @@ class SinhOP(UnaryOP):
 class CoshOP(UnaryOP):
     _type_name = 'Cosh'
 
-    def __init__(self, operand, parent=None):
-        super(CoshOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(CoshOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return "cos(%s)" % str(self.operands[0])
@@ -554,8 +554,8 @@ class ArctanhOP(UnaryOP):
 class RoundOP(UnaryOP):
     _type_name = 'Round'
 
-    def __init__(self, operand, parent=None):
-        super(RoundOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(RoundOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return 'round(%s)' % str(self.operands[0])
@@ -577,8 +577,8 @@ class RoundOP(UnaryOP):
 class FloorOP(UnaryOP):
     _type_name = 'Floor'
 
-    def __init__(self, operand, parent=None):
-        super(FloorOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(FloorOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return 'floor(%s)' % str(self.operands[0])
@@ -600,8 +600,8 @@ class FloorOP(UnaryOP):
 class CeilOP(UnaryOP):
     _type_name = 'Ceil'
 
-    def __init__(self, operand, parent=None):
-        super(CeilOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(CeilOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return 'ceil(%s)' % str(self.operands[0])
@@ -643,8 +643,8 @@ class CumsumOP(exprgraph.Operator):
 class ExpOP(UnaryOP):
     _type_name = "Exp"
 
-    def __init__(self, operand, parent=None):
-        super(ExpOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(ExpOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return 'exp(%s)' % str(self.operands[0])
@@ -675,8 +675,8 @@ class Exp2OP(exprgraph.Operator):
 class LogOP(UnaryOP):
     _type_name = "Log"
 
-    def __init__(self, operand, parent=None):
-        super(LogOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(LogOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return 'log(%s)' % str(self.operands[0])
@@ -710,8 +710,8 @@ class AddOP(BinaryOP):
     isCommutative = True
     isAssociative = True
 
-    def __init__(self, op1, op2, parent=None):
-        super(AddOP, self).__init__(2, [op1, op2], parent)
+    def __init__(self, op1, op2, parents=None):
+        super(AddOP, self).__init__(2, [op1, op2], parents)
 
     def __str__(self):
         return '(%s + %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -738,8 +738,8 @@ class ReciprocalOP(UnaryOP):
 class NegOP(UnaryOP):
     _type_name = "Neg"
 
-    def __init__(self, operand, parent=None):
-        super(NegOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(NegOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return '-(%s)' % str(self.operands[0])
@@ -766,8 +766,8 @@ class MulOP(BinaryOP):
     isCommutative = True
     isAssociative = False
 
-    def __init__(self, op1, op2, parent=None):
-        super(MulOP, self).__init__(2, [op1, op2], parent)
+    def __init__(self, op1, op2, parents=None):
+        super(MulOP, self).__init__(2, [op1, op2], parents)
 
     def __str__(self):
         return '(%s * %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -793,8 +793,8 @@ class DivOP(BinaryOP):
     isCommutative = False
     isAssociative = True
 
-    def __init__(self, op1, op2, parent=None):
-        super(DivOP, self).__init__(2, [op1, op2], parent)
+    def __init__(self, op1, op2, parents=None):
+        super(DivOP, self).__init__(2, [op1, op2], parents)
 
     def __str__(self):
         return '(%s / %s)' % map(str, self.operands)
@@ -821,8 +821,8 @@ class PowOP(BinaryOP):
     isCommutative = False
     isAssociative = False
 
-    def __init__(self, op1, op2, parent=None):
-        super(PowOP, self).__init__(2, [op1, op2], parent)
+    def __init__(self, op1, op2, parents=None):
+        super(PowOP, self).__init__(2, [op1, op2], parents)
 
     def __str__(self):
         return '(%s ^ %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -846,8 +846,8 @@ class SubOP(BinaryOP):
     isCommutative = False
     isAssociative = False
 
-    def __init__(self, op1, op2, parent=None):
-        super(SubOP, self).__init__(2, [op1, op2], parent)
+    def __init__(self, op1, op2, parents=None):
+        super(SubOP, self).__init__(2, [op1, op2], parents)
 
     def __str__(self):
         return '(%s - %s)' % (str(self.operands[0]), str(self.operands[1]))
@@ -874,8 +874,8 @@ class ModOP(BinaryOP):
 class AbsOP(UnaryOP):
     _type_name = 'Abs'
 
-    def __init__(self, op, parent=None):
-        super(AbsOP, self).__init__(1, [op], parent)
+    def __init__(self, op, parents=None):
+        super(AbsOP, self).__init__(1, [op], parents)
 
     def simplify(self):
         # if operand is also abs, colapse it
@@ -896,8 +896,8 @@ class AbsOP(UnaryOP):
 class SignOP(UnaryOP):
     _type_name = 'Sign'
 
-    def __init__(self, operand, parent=None):
-        super(SignOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(SignOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return "sign(%s)" % str(self.operands[0])
@@ -919,8 +919,8 @@ class SignOP(UnaryOP):
 class SqrOP(UnaryOP):
     _type_name = 'Sqr'
 
-    def __init__(self, op, parent=None):
-        super(SqrOP, self).__init__(1, [op], parent)
+    def __init__(self, op, parents=None):
+        super(SqrOP, self).__init__(1, [op], parents)
 
     def __str__(self):
         return '(%s ^ 2)' % str(self.operands[0])
@@ -942,8 +942,8 @@ class SqrOP(UnaryOP):
 class SqrtOP(UnaryOP):
     _type_name = 'Sqrt'
 
-    def __init__(self, operand, parent=None):
-        super(SqrtOP, self).__init__(1, [operand], parent)
+    def __init__(self, operand, parents=None):
+        super(SqrtOP, self).__init__(1, [operand], parents)
 
     def __str__(self):
         return 'sqrt(%s)' % str(self.operands[0])
@@ -965,8 +965,8 @@ class SqrtOP(UnaryOP):
 class MaximumOP(BinaryOP):
     _type_name = 'Maximum'
 
-    def __init__(self, op1, op2, parent=None):
-        super(MaximumOP, self).__init__(2, [op1, op2], parent)
+    def __init__(self, op1, op2, parents=None):
+        super(MaximumOP, self).__init__(2, [op1, op2], parents)
 
     def substitute(self, a, b):
         pass
@@ -981,8 +981,8 @@ class MaximumOP(BinaryOP):
 class MinimumOP(BinaryOP):
     _type_name = 'Minimum'
 
-    def __init__(self, op1, op2, parent=None):
-        super(MinimumOP, self).__init__(2, [op1, op2], parent)
+    def __init__(self, op1, op2, parents=None):
+        super(MinimumOP, self).__init__(2, [op1, op2], parents)
 
     def substitute(self, a, b):
         pass
@@ -1029,8 +1029,8 @@ class CovOP(exprgraph.Operator):
 class ElementwiseOP(exprgraph.Operator):
     _type_name = 'Elementwise'
 
-    def __init__(self, expr, ops, parent=None):
-        super(ElementwiseOP, self).__init__(len(ops), ops, parent=parent)
+    def __init__(self, expr, ops, parents=None):
+        super(ElementwiseOP, self).__init__(len(ops), ops, parents=parents)
         self._expr = expr
 
     def substitute(self, a, b):
@@ -1059,8 +1059,8 @@ class ElementwiseOP(exprgraph.Operator):
 class ReduceOP(exprgraph.Operator):
     _type_name = 'Reduce'
 
-    def __init__(self, operands, neutral, reduce_expr, map_expr=None, parent=None):
-        super(ReduceOP, self).__init__(len(operands), operands, parent)
+    def __init__(self, operands, neutral, reduce_expr, map_expr=None, parents=None):
+        super(ReduceOP, self).__init__(len(operands), operands, parents)
         self._neutral = neutral
         self._reduce_expr = reduce_expr
         self._map_expr = map_expr
@@ -1081,8 +1081,8 @@ class ReduceOP(exprgraph.Operator):
 class ScanOP(exprgraph.Operator):
     _type_name = 'Scan'
 
-    def __init__(self, operands, input_expr, scan_expr, output_statement=None, parent=None):
-        super(ScanOP, self).__init__(len(operands), operands, parent)
+    def __init__(self, operands, input_expr, scan_expr, output_statement=None, parents=None):
+        super(ScanOP, self).__init__(len(operands), operands, parents)
         self._input_expr = input_expr
         self._scan_expr = scan_expr
         self._output_statement = output_statement
@@ -1106,8 +1106,8 @@ class GemmOP(exprgraph.Operator):
     _type_name = "Gemm"
 
     def __init__(self, A, B, C, alpha=exprgraph.Constant(1.0), beta=exprgraph.Constant(0.0),
-                 transA=exprgraph.Constant(False), transB=exprgraph.Constant(False), parent=None):
-        super(GemmOP, self).__init__(7, [A, B, C, alpha, beta, transA, transB], parent)
+                 transA=exprgraph.Constant(False), transB=exprgraph.Constant(False), parents=None):
+        super(GemmOP, self).__init__(7, [A, B, C, alpha, beta, transA, transB], parents)
 
         if len(A.get_shape()) != 2 or len(B.get_shape()) != 2 or len(C.get_shape()) != 2:
             raise ValueError
@@ -1156,8 +1156,8 @@ class GemvOP(exprgraph.Operator):
     _type_name = "Gemv"
 
     def __init__(self, A, X, Y, alpha=exprgraph.Constant(1.0), beta=exprgraph.Constant(0.0),
-                 transA=exprgraph.Constant(False), parent=None):
-        super(GemvOP, self).__init__(6, [A, X, Y, alpha, beta, transA], parent)
+                 transA=exprgraph.Constant(False), parents=None):
+        super(GemvOP, self).__init__(6, [A, X, Y, alpha, beta, transA], parents)
         # TODO check dimensions compatibility
 
     def substitute(self, a, b):
@@ -1191,8 +1191,8 @@ class GemvOP(exprgraph.Operator):
 class GerOP(exprgraph.Operator):
     _type_name = "Ger"
 
-    def __init__(self, alpha, X, Y, A, parent=None):
-        super(GerOP, self).__init__(4, [alpha, X, Y, A], parent)
+    def __init__(self, alpha, X, Y, A, parents=None):
+        super(GerOP, self).__init__(4, [alpha, X, Y, A], parents)
         # TODO check dimensions
 
         if len(X.get_shape()) != 1 or len(Y.get_shape()) != 1 or len(A.get_shape()) != 2:
@@ -1228,8 +1228,8 @@ class ConvOP(exprgraph.Operator):
     _type_name = 'Conv'
 
     def __init__(self, input, filters, image_shape=None, filter_shape=None,
-                 border_mode='valid', parent=None):
-        super(ConvOP, self).__init__(1, [input], parent)
+                 border_mode='valid', parents=None):
+        super(ConvOP, self).__init__(1, [input], parents)
         self._filters = filters
         self._image_shape = image_shape
         self._filter_shape = filter_shape
@@ -1257,7 +1257,7 @@ class ConvOP(exprgraph.Operator):
 class PoolOP(exprgraph.Operator):
     _type_name = 'Pool'
 
-    def __init__(self, input, ds, mode, parent=None):
+    def __init__(self, input, ds, mode, parents=None):
         super(PoolOP, self).__init__()
 
 
