@@ -728,19 +728,28 @@ class AddOP(BinaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_add(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            return Add(self.operands[0].substitute(a, b),
+                       self.operands[1].substitute(a, b),
+                       self.parents)
+            # ff = config.get_formula_factory()
+            # return ff.create_add(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
-        ff = config.get_formula_factory()
-        return ff.create_add(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
+        return AddOP(self.operands[0].gradient(wrt),
+                     self.operands[1].gradient(wrt),
+                     self.parents)
+        # ff = config.get_formula_factory()
+        # return ff.create_add(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
 
     def simplify(self):
         raise NotImplementedError
 
 
 class ReciprocalOP(UnaryOP):
-    pass
+    _type_name = 'Reciprocal'
+
+    def __init__(self, op, parents):
+        pass
 
 
 class NegOP(UnaryOP):

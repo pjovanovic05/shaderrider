@@ -348,3 +348,4 @@ class Operator(Formula):
         """generates a zero argument function which executes the computation
         steps represented by this operator."""
         raise NotImplementedError
+
