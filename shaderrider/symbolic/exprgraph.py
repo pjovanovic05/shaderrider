@@ -65,7 +65,7 @@ class Formula(object):
 
     @property
     def parents(self):
-        return self._parent
+        return self._parents
 
     def is_array(self):
         raise NotImplementedError

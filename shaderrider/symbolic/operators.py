@@ -52,31 +52,40 @@ class ReshapeOP(exprgraph.Operator):
     _type_name = 'Reshape'
 
     def __init__(self, arr, shape, parents=None):
-        super(ReshapeOP, self).__init__(2, [arr, shape], parents)
+        super(ReshapeOP, self).__init__(2, [arr], parents)
+
         assert isinstance(shape, exprgraph.Constant) or \
             isinstance(shape, tuple)
 
-        # TODO check transformation compatibility
-        # multiply shape components and see if the lengths match
-        # current length
+        # check transformation compatibility
+        a1 = reduce(lambda x, y: x*y, shape, 1)
+        a2 = reduce(lambda x, y: x*y, arr.get_shape(), 1)
+        assert a1 == a2
+
         self._shape = shape if isinstance(shape, tuple) else None
 
     def gradient(self, wrt):
+        # TODO or is there a gradient for ReshapeOP?
         raise NondifferentiableOpError
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_reshape(self.operands[0].substitute(a, b), self._shape)
+            return ReshapeOP(self.operands[0].substitute(a, b), self._shape, self.parents)
 
     def get_shape(self):
         return self._shape
 
     def simplify(self):
-        ff = config.get_formula_factory()
-        return ff.create_reshape(self.operands[0].simplify(), self._shape)
+        # Ideje:
+        # ako je operand skalar ili literal, nema sta da se shapeuje
+        # ako je operand jos jedan reshape, njegova primena se moze preskociti
+        # ako je operand
+
+        # ff = config.get_formula_factory()
+        # return ff.create_reshape(self.operands[0].simplify(), self._shape)
+        raise NotImplementedError
 
 
 class RavelOP(UnaryOP):
@@ -96,11 +105,10 @@ class RavelOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_ravel(self.operands[0].substitute(a, b))
+            return RavelOP(self.operands[0].substitute(a, b), self.parents)
 
     def get_shape(self):
-        return (sum(self.operands[0].get_shape()),)
+        return (reduce(lambda x,y: x*y, self.operands[0].get_shape(), 1),)
 
 
 class TransposeOP(UnaryOP):
@@ -264,7 +272,7 @@ class IndexOP(exprgraph.Operator):
 
     def simplify(self):
         ff = config.get_formula_factory()
-        return ff.create_index(self.operands[0].simplify(), self._key, self._parent)
+        return ff.create_index(self.operands[0].simplify(), self._key, self.parents)
 
     def gradient(self, wrt):
         raise NondifferentiableOpError
@@ -1242,7 +1250,7 @@ class ConvOP(exprgraph.Operator):
             ff = config.get_formula_factory()
             return ff.create_conv(self.operands[0].substitute(a, b), self._filters,
                                   self._image_shape, self._filter_shape, self._border_mode,
-                                  self._parent)
+                                  self.parents)
 
     def get_shape(self):
         pass
