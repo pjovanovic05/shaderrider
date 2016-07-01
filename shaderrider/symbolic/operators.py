@@ -18,7 +18,7 @@ class UnaryOP(exprgraph.Operator):
 
     def __eq__(self, other):
         return type(self) == type(other) and \
-                self.operands[0] == other.operands[0]
+               self.operands[0] == other.operands[0]
 
     def get_shape(self):
         return self.operands[0].get_shape()
@@ -55,11 +55,11 @@ class ReshapeOP(exprgraph.Operator):
         super(ReshapeOP, self).__init__(2, [arr], parents)
 
         assert isinstance(shape, exprgraph.Constant) or \
-            isinstance(shape, tuple)
+               isinstance(shape, tuple)
 
         # check transformation compatibility
-        a1 = reduce(lambda x, y: x*y, shape, 1)
-        a2 = reduce(lambda x, y: x*y, arr.get_shape(), 1)
+        a1 = reduce(lambda x, y: x * y, shape, 1)
+        a2 = reduce(lambda x, y: x * y, arr.get_shape(), 1)
         assert a1 == a2
 
         self._shape = shape if isinstance(shape, tuple) else None
@@ -108,7 +108,7 @@ class RavelOP(UnaryOP):
             return RavelOP(self.operands[0].substitute(a, b), self.parents)
 
     def get_shape(self):
-        return (reduce(lambda x,y: x*y, self.operands[0].get_shape(), 1),)
+        return (reduce(lambda x, y: x * y, self.operands[0].get_shape(), 1),)
 
 
 class TransposeOP(UnaryOP):
@@ -219,6 +219,7 @@ class SplitOP(exprgraph.Operator):
 class RepeatOP(exprgraph.Operator):
     pass
 
+
 # BITWISE OPS (binary operations) #####################################
 
 
@@ -280,6 +281,7 @@ class IndexOP(exprgraph.Operator):
     def get_shape(self):
         pass  # TODO calculate size and shape of the result if possible?
 
+
 # LINEAR ALGEBRA ######################################################
 
 
@@ -332,6 +334,7 @@ class NormOP(exprgraph.Operator):
 
     def get_shape(self):
         pass
+
 
 # LOGIC OPS ###########################################################
 
@@ -425,6 +428,7 @@ class EqOP(BinaryOP):
 
 class NeOP(BinaryOP):
     pass
+
 
 # MATHEMATICAL OPS ######################################################
 
@@ -728,18 +732,14 @@ class AddOP(BinaryOP):
         if self == a:
             return b
         else:
-            return Add(self.operands[0].substitute(a, b),
-                       self.operands[1].substitute(a, b),
-                       self.parents)
-            # ff = config.get_formula_factory()
-            # return ff.create_add(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            return AddOP(self.operands[0].substitute(a, b),
+                         self.operands[1].substitute(a, b),
+                         self.parents)
 
     def gradient(self, wrt):
         return AddOP(self.operands[0].gradient(wrt),
                      self.operands[1].gradient(wrt),
                      self.parents)
-        # ff = config.get_formula_factory()
-        # return ff.create_add(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
 
     def simplify(self):
         raise NotImplementedError

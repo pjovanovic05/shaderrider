@@ -16,7 +16,7 @@ class NPValuation(Valuation):
         elif isinstance(value, Number):
             self._vars[name] = value
         elif isinstance(value, exprgraph.Atom):
-            self._vars[name] = value.value
+            self._vars[name] = value.value          # TODO check value type?
         else:
             raise TypeError        # TODO raise unsupported type or something
 
@@ -39,14 +39,13 @@ class NPValuation(Valuation):
 
 
 class NPFunction(Function):
-    def __init__(self, inputs=None, expressions=None, updates=None, name=None):
-        pass
+    def __init__(self, expressions=None, updates=None, name=None):
+        super(NPFunction, self).__init__(expressions, updates, name)
 
     def evaluate(self, valuation):
-        pass
+        raise NotImplementedError
 
 
 class NPFactory(PlatformFactory):
     def __init__(self):
         self._factories = {}
-
