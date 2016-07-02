@@ -155,9 +155,9 @@ class Constant(Atom):
     def value(self):
         return self._value
 
-    @value.setter
-    def value(self, val):
-        self._value = val
+    # @value.setter
+    # def value(self, val):
+    #     self._value = val
 
     @property
     def fid(self):
@@ -217,6 +217,10 @@ class Variable(Atom):
     @property
     def value(self):
         return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
 
     @property
     def dtype(self):

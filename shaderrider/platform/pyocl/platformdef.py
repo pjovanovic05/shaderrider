@@ -79,6 +79,11 @@ class PyOCLFunction(Function):
             valuation.events[upvar.fid] = evt
 
         # collect outputs   TODO move to host memory?
+
+
+        # TODO WAIT FOR OUTPUT EVENT TO finish calculating???
+
+
         outs = []
         for ex in self._expressions:
             outs.append(valuation[ex.fid])
@@ -305,20 +310,20 @@ class PyOCLFactory(PlatformFactory):
     def create_function(self, expressions=None, updates=None, name=None, skip_platform_opts=False):
         pass
 
-    def create_op(self, type_name, operands):
-        return factories[type_name](*operands)
+    def create_op(self, type_name, operands, params):
+        return factories[type_name](*operands)          # FIXME raspakivanje parametara ovde nece raditi
                                                             # XXX mozda su i operatori i funkcije jer nekad su u izrazu a nekad se pozivaju eksterno
     # ARRAY CREATION                                        TODO da li su ovo zapravo samo operatori bez operanada?
-    def empty(self, shape, dtype=None, order='C'):
+    def empty(self, shape, dtype=None, order='C', name=None):
         pass
 
-    def empty_like(self, a, dtype=None, order='C'):
+    def empty_like(self, a, dtype=None, order='C', name=None):
         pass
 
-    def eye(self, N, M=0, k=0, dtype=None):
+    def eye(self, N, M=0, k=0, dtype=None, const=False, name=None):
         pass
 
-    def identity(self, N, dtype=None):
+    def identity(self, N, dtype=None, const=False, name=None):
         pass
 
     def ones(self, shape, dtype=None, order='C'):

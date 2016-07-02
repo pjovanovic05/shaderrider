@@ -36,48 +36,48 @@ class PlatformFactory(object):
         raise NotImplementedError
 
     @abstractmethod
-    def create_op(self, type_name, operands):
+    def create_op(self, type_name, operands, params):
         raise NotImplementedError
 
     # ARRAY CREATION
     @abstractmethod
-    def empty(self, shape, dtype=None, order='C'):
+    def empty(self, shape, dtype=None, order='C', name=None):
         raise NotImplementedError
 
     @abstractmethod
-    def empty_like(self, a, dtype=None, order='C'):
+    def empty_like(self, a, dtype=None, order='C', name=None):
         raise NotImplementedError
 
     @abstractmethod
-    def eye(self, N, M=0, k=0, dtype=None):
+    def eye(self, N, M=0, k=0, dtype=None, const=False, name=None):
         raise NotImplementedError
 
     @abstractmethod
-    def identity(self, N, dtype=None):
+    def identity(self, N, dtype=None, const=False, name=None):                      # TODO do we need this?
         raise NotImplementedError
 
     @abstractmethod
-    def ones(self, shape, dtype=None, order='C'):
+    def ones(self, shape, dtype=None, order='C', const=False, name=None):
         raise NotImplementedError
 
     @abstractmethod
-    def ones_like(self, a, dtype=None, order='C'):
+    def ones_like(self, a, dtype=None, order='C', const=False, name=None):
         raise NotImplementedError
 
     @abstractmethod
-    def from_data(self):
+    def from_data(self):                    # TODO parameters?
         raise NotImplementedError
 
     @abstractmethod
-    def arange(self):
+    def arange(self, start, stop, step=None, dtype=None):
         raise NotImplementedError
 
     @abstractmethod
-    def linspace(self):
+    def linspace(self, start, stop, num=None, endpoint=None):
         raise NotImplementedError
 
     @abstractmethod
-    def logspace(self):
+    def logspace(self, start, stop, num, endpoint, base):
         raise NotImplementedError
 
 
@@ -142,7 +142,7 @@ class Function(object):
     def __init__(self, expressions=None, updates=None, name=None):
         self._expressions = expressions     # TODO assert types?
         self._updates = updates             # TODO same here...
-        self._name = name if name is not None else 'f'+str(Function._ctr)
+        self._name = name if name is not None else 'f' + str(Function._ctr)
         Function._ctr += 1
 
     def __call__(self, *args, **kwargs):
