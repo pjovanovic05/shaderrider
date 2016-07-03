@@ -69,15 +69,15 @@ class PlatformFactory(object):
         raise NotImplementedError
 
     @abstractmethod
-    def arange(self, start, stop, step=None, dtype=None):
+    def arange(self, start, stop, step=None, dtype=None, const=False, name=None):
         raise NotImplementedError
 
     @abstractmethod
-    def linspace(self, start, stop, num=None, endpoint=None):
+    def linspace(self, start, stop, num=None, endpoint=None, const=False, name=None):
         raise NotImplementedError
 
     @abstractmethod
-    def logspace(self, start, stop, num, endpoint, base):
+    def logspace(self, start, stop, num, endpoint, base, const=False, name=None):
         raise NotImplementedError
 
 
@@ -140,8 +140,6 @@ class Function(object):
     _ctr = 0
 
     def __init__(self, expressions=None, updates=None, name=None):
-        self._expressions = expressions     # TODO assert types?
-        self._updates = updates             # TODO same here...
         self._name = name if name is not None else 'f' + str(Function._ctr)
         Function._ctr += 1
 
@@ -183,16 +181,8 @@ def function(expressions=None, updates=None, name=None, skip_opts=False,
     # configure compilation
     platform = config.get_platform_factory()
 
-    # for each expression
-    for expr in expressions:
-        pass
+    # TODO optimizations?
 
-    # for each update
-    for update in updates:
-        # run checks, maybe opts?
-        pass
-
-    # create appropriate Function instance
     fn = platform.create_function(expressions, updates, name)
     return fn
 

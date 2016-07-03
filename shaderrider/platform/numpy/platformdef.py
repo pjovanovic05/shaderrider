@@ -6,7 +6,7 @@ from numbers import Number
 import numpy as np
 
 from shaderrider.symbolic import exprgraph, operators
-from shaderrider.generator.function import Function, Valuation, PlatformFactory
+from shaderrider.generator.function import Function, Valuation, PlatformFactory, topsort_formula
 from shaderrider.platform.numpy import operators as ops
 
 
@@ -34,34 +34,80 @@ class NPValuation(Valuation):
     # get stays the same...
     # def get(self, name):
     #     pass
-
-    def set(self, name, value):
-        pass
+    #
+    # def set(self, name, value):
+    #     pass
 
 
 class NPFunction(Function):
     def __init__(self, expressions=None, updates=None, name=None):
         super(NPFunction, self).__init__(expressions, updates, name)
-        # TODO platform optimizations?
 
-        # TODO collect inputs
-        self._inputs = []           # TODO set()?
+        self._expressions = []
+        self._epath = []
+        self._updates = []
+        self._upath = []
+        self._inputs = set()
+        self._uinputs = set()
+
         for expr in expressions:
-            vars = expr.get_variables()
-            self._inputs.extend(var.fid for var in vars)
+            # TODO platform optimizations?
+            vs = expr.get_variables()
+            self._inputs.update(v.fid for v in vs)
+            pexpr = _get_platform_expression(expr)
+            self._expressions.append(pexpr)
+            self._epath.append(topsort_formula(pexpr))          # TODO get ops only!!!
 
-        # TODO create evaluation arrays (paths)
+        for (fid, expr) in updates:
+            vs = expr.get_variables()
+            self._uinputs.update(v.fid for v in vars)
+            pexpr = _get_platform_expression(expr)
+            self._upath.append((fid, topsort_formula(pexpr)))          # TODO extract operators!!!
 
     def evaluate(self, valuation):
         """
 
         :type valuation: NPValuation
         """
-        # TODO check that inputs are in valuation
-        # TODO evaluate, iterating over evaluation paths
-        # TODO collect (rename?) output
+        # check that inputs are in valuation
+        for invar in self._inputs:
+            if invar not in valuation:
+                raise ValueError('Missing argument: ' + invar + ' not found in valuation')
 
-        raise NotImplementedError
+        # evaluate the evaluation paths
+        for ep in self._epath:
+            for expr in ep:
+                expr.evaluate(valuation)
+
+        # TODO collect (rename?) output
+        # TODO free valuation from temps that will not be reused?
+
+        # check if inputs for updates are present
+        for invar in self._uinputs:
+            if invar not in valuation:
+                raise ValueError('Missing argument: ' + invar + ' not found in valuation')
+
+        # evaluate update paths
+        for v, up in self._upath:
+            for expr in up:
+                expr.evaluate(valuation)
+            valuation.set(v, valuation.get(up[-1].fid))
+
+        # TODO return ouputs from _expressions??
+
+
+def _get_platform_expression(expr):
+    if isinstance(expr, exprgraph.Operator):
+        ops = [_get_platform_expression(op) for op in expr.operands]
+        params = expr.params
+        platform_op = factories[expr.get_type_name()](ops, params)
+        for op in ops:
+            op.parents.push(platform_op)
+        return platform_op
+    elif isinstance(expr, exprgraph.Atom):
+        return expr
+
+    raise NotImplementedError           # TODO
 
 
 factories = {
@@ -189,11 +235,17 @@ class NPFactory(PlatformFactory):
     def from_data(self):
         pass
 
-    def arange(self):
-        pass
+    def arange(self, start, stop, step=None, dtype=None, const=False, name=None):
+        ary = np.arange(start, stop, step, dtype)
+        if const:
+            return exprgraph.Constant(ary, name)
+        return exprgraph.Variable(name=name, array=ary)
 
-    def linspace(self):
-        pass
+    def linspace(self, start, stop, num=50, endpoint=True, const=False, name=None):
+        ary = np.linspace(start, stop, num, endpoint)
+        if const:
+            return exprgraph.Constant(ary, name)
+        return exprgraph.Variable(name=name, array=ary)
 
-    def logspace(self):
-        pass
+    def logspace(self, start, stop, num, endpoint, base, const=False, name=None):
+        raise NotImplementedError

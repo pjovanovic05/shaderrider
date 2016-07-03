@@ -14,7 +14,6 @@ from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import operators
 
 from shaderrider.generator.function import Function, topsort_formula, Valuation, PlatformFactory
-from shaderrider.generator import optimization as opt
 
 from shaderrider.platform.pyocl import operators as ops
 
@@ -54,6 +53,8 @@ class PyOCLFunction(Function):
 
     def __init__(self, inputs=None, expressions=None, updates=None, name=None):
         super(PyOCLFunction, self).__init__(inputs, expressions, updates, name)
+        self._expressions = expressions  # TODO assert types?
+        self._updates = updates             # TODO same here...
         self._expr_evals = []
         self._update_evals = []
 
