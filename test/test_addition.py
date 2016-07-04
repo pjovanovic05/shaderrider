@@ -1,4 +1,5 @@
 import unittest
+from shaderrider.generator import function as fn
 
 
 class FirstStep(unittest.TestCase):
@@ -6,4 +7,4 @@ class FirstStep(unittest.TestCase):
         pass
 
     def testAdd(self):
-        pass
+        self.assertEqual(1, 1)
