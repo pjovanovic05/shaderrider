@@ -5,12 +5,12 @@ from numbers import Number
 
 import numpy as np
 
-from shaderrider.symbolic import exprgraph, operators
-from shaderrider.generator.function import Function, Valuation, PlatformFactory, topsort_formula
+from shaderrider.symbolic import exprgraph
+from shaderrider.generator import function
 from shaderrider.platform.numpy import operators as ops
 
 
-class NPValuation(Valuation):
+class NPValuation(function.Valuation):
     def add(self, name, value):
         if isinstance(value, np.ndarray):
             self._vars[name] = value
@@ -39,7 +39,7 @@ class NPValuation(Valuation):
     #     pass
 
 
-class NPFunction(Function):
+class NPFunction(function.Function):
     def __init__(self, expressions=None, updates=None, name=None):
         super(NPFunction, self).__init__(expressions, updates, name)
 
@@ -56,13 +56,13 @@ class NPFunction(Function):
             self._inputs.update(v.fid for v in vs)
             pexpr = _get_platform_expression(expr)
             self._expressions.append(pexpr)
-            self._epath.append(topsort_formula(pexpr))          # TODO get ops only!!!
+            self._epath.append(function.topsort_formula(pexpr))          # TODO get ops only!!!
 
         for (fid, expr) in updates:
             vs = expr.get_variables()
             self._uinputs.update(v.fid for v in vars)
             pexpr = _get_platform_expression(expr)
-            self._upath.append((fid, topsort_formula(pexpr)))          # TODO extract operators!!!
+            self._upath.append((fid, function.topsort_formula(pexpr)))          # TODO extract operators!!!
 
     def evaluate(self, valuation):
         """
@@ -111,83 +111,83 @@ def _get_platform_expression(expr):
 
 
 factories = {
-    operators.ReshapeOP.get_type_name() : ops.create_reshape,
-    operators.RavelOP.get_type_name(): ops.create_ravel,
-    operators.ConcatenateOP.get_type_name(): ops.create_concatenate,
-    operators.StackOP.get_type_name(): ops.create_stack,
-    operators.SplitOP.get_type_name(): ops.create_split,
-    operators.RepeatOP.get_type_name(): ops.create_repeat,
-    operators.BitwiseAndOP.get_type_name(): ops.create_bitwise_and,
-    operators.BitwiseOrOP.get_type_name(): ops.create_bitwise_or,
-    operators.BitwiseXorOP.get_type_name(): ops.create_bitwise_xor,
-    operators.InvertOP.get_type_name(): ops.create_invert,
-    operators.LeftShiftOP.get_type_name(): ops.create_left_shift,
-    operators.RightShiftOP.get_type_name(): ops.create_right_shift,
-    operators.DotOP.get_type_name(): ops.create_dot,
-    operators.VdotOP.get_type_name(): ops.create_vdot,
-    operators.InnerOP.get_type_name(): ops.create_inner,
-    operators.OuterOP.get_type_name(): ops.create_outer,
-    operators.MatmulOP.get_type_name(): ops.create_matmul,
-    operators.EigOP.get_type_name(): ops.create_eig,
-    operators.EigvalsOP.get_type_name(): ops.create_eigvals,
-    operators.AllOP.get_type_name(): ops.create_all,
-    operators.AnyOP.get_type_name(): ops.create_any,
-    operators.AndOP.get_type_name(): ops.create_and,
-    operators.OrOP.get_type_name(): ops.create_or,
-    operators.NotOP.get_type_name(): ops.create_not,
-    operators.XorOP.get_type_name(): ops.create_xor,
-    operators.GtOP.get_type_name(): ops.create_greater,
-    operators.LtOP.get_type_name(): ops.create_less,
-    operators.GeOP.get_type_name(): ops.create_greater_equal,
-    operators.LeOP.get_type_name(): ops.create_less_equal,
-    operators.EqOP.get_type_name(): ops.create_equal,
-    operators.NeOP.get_type_name(): ops.create_not_equal,
-    operators.SinOP.get_type_name(): ops.create_sin,
-    operators.CosOP.get_type_name(): ops.create_cos,
-    operators.TanOP.get_type_name(): ops.create_tan,
-    operators.ArcsinOP.get_type_name(): ops.create_arcsin,
-    operators.ArccosOP.get_type_name(): ops.create_arccos,
-    operators.ArctanOP.get_type_name(): ops.create_arctan,
-    operators.SinhOP.get_type_name(): ops.create_sinh,
-    operators.CoshOP.get_type_name(): ops.create_cosh,
-    operators.TanhOP.get_type_name(): ops.create_tanh,
-    operators.ArcsinhOP.get_type_name(): ops.create_arcsinh,
-    operators.ArccoshOP.get_type_name(): ops.create_arccosh,
-    operators.ArctanhOP.get_type_name(): ops.create_arctanh,
-    operators.RoundOP.get_type_name(): ops.create_round,
-    operators.FloorOP.get_type_name(): ops.create_floor,
-    operators.CeilOP.get_type_name(): ops.create_ceil,
-    operators.ProdOP.get_type_name(): ops.create_prod,
-    operators.SumOP.get_type_name(): ops.create_sum,
-    operators.NansumOP.get_type_name(): ops.create_nansum,
-    operators.CumprodOP.get_type_name(): ops.create_cumprod,
-    operators.CumsumOP.get_type_name(): ops.create_cumsum,
-    operators.ExpOP.get_type_name(): ops.create_exp,
-    operators.Exp2OP.get_type_name(): ops.create_exp2,
-    operators.LogOP.get_type_name(): ops.create_log,
-    operators.Log10OP.get_type_name(): ops.create_log10,
-    operators.Log1pOP.get_type_naem(): ops.create_log1p,
-    operators.AddOP.get_type_name(): ops.create_add,
-    operators.ReciprocalOP.get_type_name(): ops.create_reciprocal,
-    operators.NegOP.get_type_name(): ops.create_negative,
-    operators.MulOP.get_type_name(): ops.create_multiply,
-    operators.DivOP.get_type_name(): ops.create_divide,
-    operators.PowOP.get_type_name(): ops.create_power,
-    operators.SubOP.get_type_name(): ops.create_subtract(),
-    operators.TrueDivideOP.get_type_name(): ops.create_true_divide,
-    operators.FloorDivideOP.get_type_name(): ops.create_floor_divide,
-    operators.ModOP.get_type_name(): ops.create_mod,
-    operators.MedianOP.get_type_name(): ops.create_median,
-    operators.AverageOP.get_type_name(): ops.create_average,
-    operators.MeanOP.get_type_name(): ops.create_mean,
-    operators.StdOP.get_type_name(): ops.create_std,
-    operators.VarOP.get_type_name(): ops.create_var,
-    operators.CorrelateOP.get_type_name(): ops.create_correlate,
-    operators.CovOP.get_type_name(): ops.create_cov
+    ops.ReshapeOP.get_type_name() : ops.create_reshape,
+    ops.RavelOP.get_type_name(): ops.create_ravel,
+    ops.ConcatenateOP.get_type_name(): ops.create_concatenate,
+    ops.StackOP.get_type_name(): ops.create_stack,
+    ops.SplitOP.get_type_name(): ops.create_split,
+    ops.RepeatOP.get_type_name(): ops.create_repeat,
+    ops.BitwiseAndOP.get_type_name(): ops.create_bitwise_and,
+    ops.BitwiseOrOP.get_type_name(): ops.create_bitwise_or,
+    ops.BitwiseXorOP.get_type_name(): ops.create_bitwise_xor,
+    ops.InvertOP.get_type_name(): ops.create_invert,
+    ops.LeftShiftOP.get_type_name(): ops.create_left_shift,
+    ops.RightShiftOP.get_type_name(): ops.create_right_shift,
+    ops.DotOP.get_type_name(): ops.create_dot,
+    ops.VdotOP.get_type_name(): ops.create_vdot,
+    ops.InnerOP.get_type_name(): ops.create_inner,
+    ops.OuterOP.get_type_name(): ops.create_outer,
+    ops.MatmulOP.get_type_name(): ops.create_matmul,
+    ops.EigOP.get_type_name(): ops.create_eig,
+    ops.EigvalsOP.get_type_name(): ops.create_eigvals,
+    ops.AllOP.get_type_name(): ops.create_all,
+    ops.AnyOP.get_type_name(): ops.create_any,
+    ops.AndOP.get_type_name(): ops.create_and,
+    ops.OrOP.get_type_name(): ops.create_or,
+    ops.NotOP.get_type_name(): ops.create_not,
+    ops.XorOP.get_type_name(): ops.create_xor,
+    ops.GtOP.get_type_name(): ops.create_greater,
+    ops.LtOP.get_type_name(): ops.create_less,
+    ops.GeOP.get_type_name(): ops.create_greater_equal,
+    ops.LeOP.get_type_name(): ops.create_less_equal,
+    ops.EqOP.get_type_name(): ops.create_equal,
+    ops.NeOP.get_type_name(): ops.create_not_equal,
+    ops.SinOP.get_type_name(): ops.create_sin,
+    ops.CosOP.get_type_name(): ops.create_cos,
+    ops.TanOP.get_type_name(): ops.create_tan,
+    ops.ArcsinOP.get_type_name(): ops.create_arcsin,
+    ops.ArccosOP.get_type_name(): ops.create_arccos,
+    ops.ArctanOP.get_type_name(): ops.create_arctan,
+    ops.SinhOP.get_type_name(): ops.create_sinh,
+    ops.CoshOP.get_type_name(): ops.create_cosh,
+    ops.TanhOP.get_type_name(): ops.create_tanh,
+    ops.ArcsinhOP.get_type_name(): ops.create_arcsinh,
+    ops.ArccoshOP.get_type_name(): ops.create_arccosh,
+    ops.ArctanhOP.get_type_name(): ops.create_arctanh,
+    ops.RoundOP.get_type_name(): ops.create_round,
+    ops.FloorOP.get_type_name(): ops.create_floor,
+    ops.CeilOP.get_type_name(): ops.create_ceil,
+    ops.ProdOP.get_type_name(): ops.create_prod,
+    ops.SumOP.get_type_name(): ops.create_sum,
+    ops.NansumOP.get_type_name(): ops.create_nansum,
+    ops.CumprodOP.get_type_name(): ops.create_cumprod,
+    ops.CumsumOP.get_type_name(): ops.create_cumsum,
+    ops.ExpOP.get_type_name(): ops.create_exp,
+    ops.Exp2OP.get_type_name(): ops.create_exp2,
+    ops.LogOP.get_type_name(): ops.create_log,
+    ops.Log10OP.get_type_name(): ops.create_log10,
+    ops.Log1pOP.get_type_naem(): ops.create_log1p,
+    ops.AddOP.get_type_name(): ops.create_add,
+    ops.ReciprocalOP.get_type_name(): ops.create_reciprocal,
+    ops.NegOP.get_type_name(): ops.create_negative,
+    ops.MulOP.get_type_name(): ops.create_multiply,
+    ops.DivOP.get_type_name(): ops.create_divide,
+    ops.PowOP.get_type_name(): ops.create_power,
+    ops.SubOP.get_type_name(): ops.create_subtract(),
+    ops.TrueDivideOP.get_type_name(): ops.create_true_divide,
+    ops.FloorDivideOP.get_type_name(): ops.create_floor_divide,
+    ops.ModOP.get_type_name(): ops.create_mod,
+    ops.MedianOP.get_type_name(): ops.create_median,
+    ops.AverageOP.get_type_name(): ops.create_average,
+    ops.MeanOP.get_type_name(): ops.create_mean,
+    ops.StdOP.get_type_name(): ops.create_std,
+    ops.VarOP.get_type_name(): ops.create_var,
+    ops.CorrelateOP.get_type_name(): ops.create_correlate,
+    ops.CovOP.get_type_name(): ops.create_cov
 }
 
 
-class NPFactory(PlatformFactory):
+class NPFactory(function.PlatformFactory):
     def init_platform(self):
         pass
 

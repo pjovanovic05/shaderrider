@@ -5,7 +5,7 @@ WRITEME
 """
 import abc
 
-import shaderrider.configuration as config
+from shaderrider import configuration as config
 from shaderrider.core import IncompatibleDimensionsError, NondifferentiableOpError
 from shaderrider.symbolic import exprgraph
 

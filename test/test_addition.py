@@ -1,5 +1,5 @@
 import unittest
-from shaderrider.generator import function as fn
+from shaderrider.generator import function
 
 
 class FirstStep(unittest.TestCase):

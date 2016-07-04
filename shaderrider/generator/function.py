@@ -6,7 +6,7 @@ WRITEME
 from abc import ABCMeta, abstractmethod
 from shaderrider.util import OrderedSet
 from shaderrider.symbolic import exprgraph
-from shaderrider import configuration as config
+from shaderrider import configuration
 
 
 class PlatformFactory(object):
@@ -179,7 +179,7 @@ def function(expressions=None, updates=None, name=None, skip_opts=False,
     """
 
     # configure compilation
-    platform = config.get_platform_factory()
+    platform = configuration.get_platform_factory()
 
     # TODO optimizations?
 
@@ -190,9 +190,9 @@ def function(expressions=None, updates=None, name=None, skip_opts=False,
 def valuation(shared=None, temps=None, platform=None):
     factory = None
     if platform is not None:
-        factory = config.platforms[platform]
+        factory = configuration.platforms[platform]
     else:
-        factory = config.get_factory()
+        factory = configuration.get_factory()
     return factory.create_valuation(shared, temps)
 
 
