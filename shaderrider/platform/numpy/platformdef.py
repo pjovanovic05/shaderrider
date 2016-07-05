@@ -5,12 +5,13 @@ from numbers import Number
 
 import numpy as np
 
+import shaderrider.generator.pdefs as pdefs
+from shaderrider.generator.util import topsort_formula
 from shaderrider.symbolic import exprgraph
-from shaderrider.generator import function
 from shaderrider.platform.numpy import operators as ops
 
 
-class NPValuation(function.Valuation):
+class NPValuation(pdefs.Valuation):
     def add(self, name, value):
         if isinstance(value, np.ndarray):
             self._vars[name] = value
@@ -39,7 +40,7 @@ class NPValuation(function.Valuation):
     #     pass
 
 
-class NPFunction(function.Function):
+class NPFunction(pdefs.Function):
     def __init__(self, expressions=None, updates=None, name=None):
         super(NPFunction, self).__init__(expressions, updates, name)
 
@@ -56,13 +57,13 @@ class NPFunction(function.Function):
             self._inputs.update(v.fid for v in vs)
             pexpr = _get_platform_expression(expr)
             self._expressions.append(pexpr)
-            self._epath.append(function.topsort_formula(pexpr))          # TODO get ops only!!!
+            self._epath.append(topsort_formula(pexpr))          # TODO get ops only!!!
 
         for (fid, expr) in updates:
             vs = expr.get_variables()
             self._uinputs.update(v.fid for v in vars)
             pexpr = _get_platform_expression(expr)
-            self._upath.append((fid, function.topsort_formula(pexpr)))          # TODO extract operators!!!
+            self._upath.append((fid, topsort_formula(pexpr)))          # TODO extract operators!!!
 
     def evaluate(self, valuation):
         """
@@ -187,7 +188,7 @@ factories = {
 }
 
 
-class NPFactory(function.PlatformFactory):
+class NPFactory(pdefs.PlatformFactory):
     def init_platform(self):
         pass
 

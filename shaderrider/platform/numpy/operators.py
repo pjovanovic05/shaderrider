@@ -6,7 +6,7 @@ WRITEME
 
 import numpy as np
 
-from shaderrider.symbolic import exprgraph, operators
+from shaderrider.symbolic import operators
 
 
 # TOC

@@ -5,7 +5,7 @@ WRITEME
 """
 import abc
 
-from shaderrider import configuration as config
+# from shaderrider import configuration as config
 from shaderrider.core import IncompatibleDimensionsError, NondifferentiableOpError
 from shaderrider.symbolic import exprgraph
 
@@ -130,8 +130,9 @@ class TransposeOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_transpose(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_transpose(self.operands[0].substitute(a, b))
 
 
 class DimshuffleOP(exprgraph.Operator):
@@ -151,8 +152,9 @@ class DimshuffleOP(exprgraph.Operator):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_dimshuffle(self.operands[0].substitute(a, b), self._new_dims)
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_dimshuffle(self.operands[0].substitute(a, b), self._new_dims)
 
     def get_shape(self):
         return self._new_dims
@@ -174,8 +176,9 @@ class DiagonalOP(exprgraph.Operator):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_diagonal(self.operands[0].substitute(a, b))  # TODO parents?
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_diagonal(self.operands[0].substitute(a, b))  # TODO parents?
 
     def get_shape(self):
         pass
@@ -197,8 +200,9 @@ class TraceOP(exprgraph.Operator):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_trace(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_trace(self.operands[0].substitute(a, b))
 
     def get_shape(self):
         return (1,)
@@ -268,12 +272,14 @@ class IndexOP(exprgraph.Operator):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_index()
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_index()
 
     def simplify(self):
-        ff = config.get_formula_factory()
-        return ff.create_index(self.operands[0].simplify(), self._key, self.parents)
+        pass    # TODO
+        # ff = config.get_formula_factory()
+        # return ff.create_index(self.operands[0].simplify(), self._key, self.parents)
 
     def gradient(self, wrt):
         raise NondifferentiableOpError
@@ -329,8 +335,9 @@ class NormOP(exprgraph.Operator):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_norm(self.operands[0].substitute(a, b), self.operands[1])
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_norm(self.operands[0].substitute(a, b), self.operands[1])
 
     def get_shape(self):
         pass
@@ -418,9 +425,10 @@ class EqOP(BinaryOP):
         pass
 
     def simplify(self):
-        ff = config.get_formula_factory()
-        simp_op1, simp_op2 = (op.simplify() for op in self.operands)
-        return ff.create_eq(simp_op1, simp_op2)
+        pass    # TODO
+        # ff = config.get_formula_factory()
+        # simp_op1, simp_op2 = (op.simplify() for op in self.operands)
+        # return ff.create_eq(simp_op1, simp_op2)
 
     def substitute(self, a, b):
         pass
@@ -446,8 +454,9 @@ class SinOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_sin(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_sin(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -471,8 +480,9 @@ class CosOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_cos(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_cos(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -496,8 +506,9 @@ class TanOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_tan(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_tan(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -537,8 +548,9 @@ class CoshOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_cosh(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_cosh(self.operands[0].substitute(a, b))
 
     def simplify(self):
         pass
@@ -576,8 +588,9 @@ class RoundOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_round(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_round(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         pass
@@ -599,8 +612,9 @@ class FloorOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_floor(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_floor(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         pass
@@ -622,8 +636,9 @@ class CeilOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_ceil(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_ceil(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         pass  # Nondifferentiable?
@@ -665,8 +680,9 @@ class ExpOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_exp(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_exp(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         return ExpOP(self.operands[0])
@@ -697,8 +713,9 @@ class LogOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_log(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_log(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -765,8 +782,9 @@ class NegOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_neg(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_neg(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         return NegOP(self.operands[0].gradient(wrt))  # FIXME use factory!!
@@ -793,13 +811,15 @@ class MulOP(BinaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
-        ff = config.get_formula_factory()
-        return ff.create_add(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
-                             ff.create_mul(self.operands[0], self.operands[1].gradient(wrt)))
+        pass    # TODO
+        # ff = config.get_formula_factory()
+        # return ff.create_add(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
+        #                      ff.create_mul(self.operands[0], self.operands[1].gradient(wrt)))
 
     def simplify(self):
         raise NotImplementedError
@@ -820,14 +840,16 @@ class DivOP(BinaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_div(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_div(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
-        ff = config.get_formula_factory()
-        return ff.create_div(ff.create_sub(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
-                                           ff.create_mul(self.operands[0], self.operands[1].gradient(wrt))),
-                             ff.create_pow(self.operands[1], exprgraph.Constant(2)))
+        pass    # TODO
+        # ff = config.get_formula_factory()
+        # return ff.create_div(ff.create_sub(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
+        #                                    ff.create_mul(self.operands[0], self.operands[1].gradient(wrt))),
+        #                      ff.create_pow(self.operands[1], exprgraph.Constant(2)))
 
     def simplify(self):
         raise NotImplementedError
@@ -848,8 +870,9 @@ class PowOP(BinaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_pow(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_pow(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
         pass
@@ -873,12 +896,14 @@ class SubOP(BinaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_sub(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_sub(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
-        ff = config.get_formula_factory()
-        return ff.create_sub(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
+        pass    # TODO
+        # ff = config.get_formula_factory()
+        # return ff.create_sub(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
 
     def simplify(self):
         raise NotImplementedError
@@ -906,8 +931,9 @@ class AbsOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_abs(self.operands[0].substitute(a, b))  # parents?
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_abs(self.operands[0].substitute(a, b))  # parents?
 
 
 class SignOP(UnaryOP):
@@ -923,8 +949,9 @@ class SignOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_sign(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_sign(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         pass
@@ -946,8 +973,9 @@ class SqrOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_sqr(self.operands[0].substitute(a, b), self.parents)
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_sqr(self.operands[0].substitute(a, b), self.parents)
 
     def gradient(self, wrt):
         pass
@@ -969,8 +997,9 @@ class SqrtOP(UnaryOP):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_sqrt(self.operands[0].substitute(a, b))
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_sqrt(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         pass
@@ -1256,10 +1285,11 @@ class ConvOP(exprgraph.Operator):
         if self == a:
             return b
         else:
-            ff = config.get_formula_factory()
-            return ff.create_conv(self.operands[0].substitute(a, b), self._filters,
-                                  self._image_shape, self._filter_shape, self._border_mode,
-                                  self.parents)
+            pass    # TODO
+            # ff = config.get_formula_factory()
+            # return ff.create_conv(self.operands[0].substitute(a, b), self._filters,
+            #                       self._image_shape, self._filter_shape, self._border_mode,
+            #                       self.parents)
 
     def get_shape(self):
         pass
