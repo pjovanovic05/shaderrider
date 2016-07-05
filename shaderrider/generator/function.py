@@ -4,7 +4,6 @@ WRITEME
 """
 
 from abc import ABCMeta, abstractmethod
-from shaderrider.util import OrderedSet
 from shaderrider.symbolic import exprgraph
 from shaderrider import configuration
 
@@ -221,21 +220,3 @@ def topsort_formula(formula):
                 del node._visited   # TODO hackish...
             outlist.append(node)
     return outlist
-
-
-def _validate_formula(formula):
-    # TODO arity checks, type checks, shape checks, dtype checks?
-    pass
-
-
-def _collect_inputs(expressions=None, updates=None):        # TODO gde ide collect outputs?
-    inputs = OrderedSet()
-    for expr in expressions:
-        for a in expr.get_variables():
-            if a not in inputs:     # is this necessary?
-                inputs.add(a)
-    for var, update in updates:
-        for a in update.get_variables():
-            if a not in inputs:
-                inputs.add(a)
-    return list(inputs)
