@@ -731,3 +731,81 @@ class PoolOP(operators.PoolOP):
 class DownsampleOP(operators.DownsampleOP):
     def generate_eval(self):
         pass
+
+
+# Missing OPs
+
+class ProdOP(operators.ProdOP):
+    pass
+
+
+class SumOP(operators.SumOP):
+    pass
+
+
+class NansumOP(operators.NansumOP):
+    pass
+
+
+class CumprodOP(operators.CumprodOP):
+    pass
+
+
+class CumsumOP(operators.CumsumOP):
+    pass
+
+
+class Exp2OP(operators.Exp2OP):
+    pass
+
+
+class Log10OP(operators.Log10OP):
+    pass
+
+
+class Log1pOP(operators.Log1pOP):
+    pass
+
+
+class ReciprocalOP(operators.ReciprocalOP):
+    pass
+
+
+# class TrueDivideOP(operators.True):
+#     pass
+#
+#
+# class FloorDivideOP(object):
+#     pass
+
+
+class ModOP(operators.ModOP):
+    pass
+
+
+class MedianOP(operators.MedianOP):
+    pass
+
+
+class AverageOP(operators.AverageOP):
+    pass
+
+
+class MeanOP(operators.MeanOP):
+    pass
+
+
+class StdOP(operators.StdOP):
+    pass
+
+
+class VarOP(operators.VarOP):
+    pass
+
+
+class CorrelateOP(operators.CorrelateOP):
+    pass
+
+
+class CovOP(operators.CovOP):
+    pass

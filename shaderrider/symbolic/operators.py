@@ -291,31 +291,31 @@ class IndexOP(exprgraph.Operator):
 # LINEAR ALGEBRA ######################################################
 
 
-class DotOP(object):
+class DotOP(exprgraph.Operator):
     pass
 
 
-class VdotOP(object):
+class VdotOP(exprgraph.Operator):
     pass
 
 
-class InnerOP(object):
+class InnerOP(exprgraph.Operator):
     pass
 
 
-class OuterOP(object):
+class OuterOP(exprgraph.Operator):
     pass
 
 
-class MatmulOP(object):
+class MatmulOP(exprgraph.Operator):
     pass
 
 
-class EigOP(object):
+class EigOP(exprgraph.Operator):
     pass
 
 
-class EigvalsOP(object):
+class EigvalsOP(exprgraph.Operator):
     pass
 
 
@@ -378,19 +378,19 @@ class AnyOP(UnaryOP):
         pass
 
 
-class AndOP(object):
+class AndOP(BinaryOP):
     pass
 
 
-class OrOP(object):
+class OrOP(BinaryOP):
     pass
 
 
-class NotOP(object):
+class NotOP(UnaryOP):
     pass
 
 
-class XorOP(object):
+class XorOP(BinaryOP):
     pass
 
 
