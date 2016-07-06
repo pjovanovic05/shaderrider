@@ -12,7 +12,7 @@ from pyopencl.reduction import ReductionKernel
 
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import operators
-from shaderrider.platform.pyocl.aux import clblaswrap
+# from shaderrider.platform.pyocl.aux import clblaswrap
 
 
 # TOC
@@ -682,20 +682,20 @@ def create_subtract(operands, parameters):  # x1, x2, out=None):
     raise NotImplementedError
 
 
-class TrueDivideOP(operators.TrueDivideOP):
-    pass
-
-
-def create_true_divide(operands, parameters):  # x1, x2, out=None):
-    raise NotImplementedError
-
-
-class FloorDivideOP(operators.FloorDivideOP):
-    pass
-
-
-def create_floor_divide(operands, parameters):  # x1, x2, out=None):
-    raise NotImplementedError
+# class TrueDivideOP(operators.TrueDivideOP):
+#     pass
+#
+#
+# def create_true_divide(operands, parameters):  # x1, x2, out=None):
+#     raise NotImplementedError
+#
+#
+# class FloorDivideOP(operators.FloorDivideOP):
+#     pass
+#
+#
+# def create_floor_divide(operands, parameters):  # x1, x2, out=None):
+#     raise NotImplementedError
 
 
 class ModOP(operators.ModOP):
@@ -1002,7 +1002,7 @@ class GemmOP(operators.GemmOP):
         waits = [events[op.fid] for op in operators if op.fid in events]
 
         # TODO blas setup and teardown in global context!!!
-        return clblaswrap.gemm(queue, A, B, C, transA, transB, alpha, beta, wait_for=waits)
+        # return clblaswrap.gemm(queue, A, B, C, transA, transB, alpha, beta, wait_for=waits)
 
 
 class GemvOP(operators.GemvOP):

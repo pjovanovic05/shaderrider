@@ -40,5 +40,5 @@ def valuation(shared=None, temps=None, platform=None):
     if platform is not None:
         factory = configuration.platforms[platform]
     else:
-        factory = configuration.get_factory()
-    return factory.create_valuation(shared, temps)
+        factory = configuration.get_platform_factory()
+    return factory.create_valuation()

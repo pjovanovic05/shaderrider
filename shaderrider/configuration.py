@@ -18,5 +18,7 @@ def get_formula_factory():
     pass
 
 
+npFactory = NPFactory()
+
 def get_platform_factory():
-    pass
+    return npFactory

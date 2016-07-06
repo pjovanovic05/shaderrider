@@ -278,6 +278,7 @@ class Operator(Formula):
         self._operands = operands     # formulas, operands
         self._fid = self._type_name + str(Operator._ctr)
         self._fn = None     # TODO generate_evaluator maybe?
+        self._params = {}
 
     def complexity(self):
         c = 1
@@ -324,6 +325,10 @@ class Operator(Formula):
     @property
     def operands(self):
         return self._operands
+
+    @property
+    def params(self):
+        return self._params
 
     @property
     def arity(self):

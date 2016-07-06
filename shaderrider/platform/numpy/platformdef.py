@@ -51,13 +51,18 @@ class NPFunction(pdefs.Function):
         self._inputs = set()
         self._uinputs = set()
 
+        if expressions is None:
+            expressions = []
+        if updates is None:
+            updates = []
+
         for expr in expressions:
             # TODO platform optimizations?
             vs = expr.get_variables()
             self._inputs.update(v.fid for v in vs)
             pexpr = _get_platform_expression(expr)
             self._expressions.append(pexpr)
-            self._epath.append(topsort_formula(pexpr))          # TODO get ops only!!!
+            self._epath.append(filter(lambda x: isinstance(x, exprgraph.Operator), topsort_formula(pexpr)))
 
         for (fid, expr) in updates:
             vs = expr.get_variables()
@@ -103,7 +108,7 @@ def _get_platform_expression(expr):
         params = expr.params
         platform_op = factories[expr.get_type_name()](ops, params)
         for op in ops:
-            op.parents.push(platform_op)
+            op.parents.add(platform_op)
         return platform_op
     elif isinstance(expr, exprgraph.Atom):
         return expr
@@ -199,7 +204,7 @@ class NPFactory(pdefs.PlatformFactory):
         return NPValuation()
 
     def create_function(self, expressions=None, updates=None, name=None, skip_platform_opts=False):
-        pass
+        return NPFunction(expressions=expressions, updates=updates, name=name)
 
     def create_op(self, type_name, operands, params):
         return factories[type_name](operands, params)
