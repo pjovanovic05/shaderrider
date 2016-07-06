@@ -2,7 +2,7 @@
 Holds platform loading and configuration logic
 """
 
-# from shaderrider.platform.pyocl.platformdef import PyOCLFactory
+from shaderrider.platform.pyocl.platformdef import PyOCLFactory
 from shaderrider.platform.numpy.platformdef import NPFactory
 
 

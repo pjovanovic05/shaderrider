@@ -42,6 +42,3 @@ def valuation(shared=None, temps=None, platform=None):
     else:
         factory = configuration.get_factory()
     return factory.create_valuation(shared, temps)
-
-
-

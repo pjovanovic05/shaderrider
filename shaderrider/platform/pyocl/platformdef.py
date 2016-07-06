@@ -13,7 +13,8 @@ import pyopencl.array as clarray
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import operators
 
-from shaderrider.generator.function import Function, topsort_formula, Valuation, PlatformFactory
+from shaderrider.generator.pdefs import Function, Valuation, PlatformFactory
+from shaderrider.generator.util import topsort_formula
 
 from shaderrider.platform.pyocl import operators as ops
 
