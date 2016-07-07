@@ -36,9 +36,5 @@ def function(expressions=None, updates=None, name=None, platform=None, skip_opts
 
 
 def valuation(shared=None, temps=None, platform=None):
-    factory = None
-    if platform is not None:
-        factory = configuration.platforms[platform]
-    else:
-        factory = configuration.get_platform_factory()
+    factory = configuration.get_platform_factory(platform)
     return factory.create_valuation()

@@ -82,27 +82,23 @@ class PyOCLFunction(Function):
 
     def evaluate(self, valuation):
         # check inputs?
+        for invar in self._inputs:
+            if invar not in valuation:
+                raise ValueError('Missing argument: ' + invar + ' not found in valuation')
 
         for ee in self._epath:
-            evt = ee.evaluate(valuation, valuation.events)
-            valuation.events[ee.fid] = evt
+            for expr in ee:         # TODO evaluation should set their own events in valuation.events dict
+                expr.evaluate(valuation)
+
+        for invar in self._uinputs:
+            if invar not in valuation:
+                raise ValueError('Missing argument: ' + invar + ' not found in valuation')
 
         for (upvar, upexpr) in self._upath:
-            evt = upexpr.evaluate(valuation, valuation.events)
-            valuation.events[upvar.fid] = evt
+            for expr in upexpr:     # TODO evaluation should set their own events in valuation.events dict
+                expr.evaluate(valuation)
 
         # collect outputs   TODO move to host memory?
-
-
-        # TODO WAIT FOR OUTPUT EVENT TO finish calculating???
-
-
-        outs = []
-        for ex in self._expressions:
-            outs.append(valuation[ex.fid])
-        # TODO transfer outputs?
-        return outs
-
 
 def _get_platform_expression(expr):
     """
@@ -318,7 +314,7 @@ class PyOCLFactory(PlatformFactory):
         pass
 
     def create_valuation(self):
-        pass
+        return PyOCLValuation()
 
     def create_function(self, expressions=None, updates=None, name=None, skip_platform_opts=False):
         return PyOCLFunction(expressions=expressions, updates=updates, name=name)
