@@ -10,15 +10,10 @@ class Configuration(object):
     pass
 
 
-def get_platform():
-    raise NotImplementedError
+_platforms = {
+    'numpy': NPFactory(),
+    'pyopencl': PyOCLFactory()
+}
 
-
-def get_formula_factory():
-    pass
-
-
-npFactory = NPFactory()
-
-def get_platform_factory():
-    return npFactory
+def get_platform_factory(platform='numpy'):
+    return _platforms[platform]

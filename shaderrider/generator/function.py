@@ -6,7 +6,7 @@ WRITEME
 from shaderrider import configuration
 
 
-def function(expressions=None, updates=None, name=None, skip_opts=False,
+def function(expressions=None, updates=None, name=None, platform=None, skip_opts=False,
              skip_symbolic_opts=False, skip_platform_opts=False):
     """
     TODO Creates callable object that performs calculation described by the
@@ -27,7 +27,7 @@ def function(expressions=None, updates=None, name=None, skip_opts=False,
     """
 
     # configure compilation
-    platform = configuration.get_platform_factory()
+    platform = configuration.get_platform_factory(platform)
 
     # TODO optimizations?
 

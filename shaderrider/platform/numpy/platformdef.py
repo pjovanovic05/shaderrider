@@ -68,7 +68,7 @@ class NPFunction(pdefs.Function):
             vs = expr.get_variables()
             self._uinputs.update(v.fid for v in vars)
             pexpr = _get_platform_expression(expr)
-            self._upath.append((fid, topsort_formula(pexpr)))          # TODO extract operators!!!
+            self._upath.append((fid, filter(lambda x: isinstance(x, exprgraph.Operator), topsort_formula(pexpr))))
 
     def evaluate(self, valuation):
         """

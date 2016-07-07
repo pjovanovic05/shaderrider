@@ -53,30 +53,41 @@ def platform_init():
 class PyOCLFunction(Function):
 
     def __init__(self, inputs=None, expressions=None, updates=None, name=None):
-        super(PyOCLFunction, self).__init__(inputs, expressions, updates, name)
-        self._expressions = expressions  # TODO assert types?
-        self._updates = updates             # TODO same here...
-        self._expr_evals = []
-        self._update_evals = []
+        super(PyOCLFunction, self).__init__(expressions, updates, name)
+        self._expressions = []
+        self._updates = []
+        self._epath = []
+        self._upath = []
+        self._inputs = set()
+        self._uinputs = set()
 
-        for expr in self._expressions:
-            # TODO create platform expression from abstract expression (topsorted and everything else)
-            self._expr_evals.append(_get_platform_expression(expr))
-        for (v, e) in updates:
-            # TODO create platform expr from e
-            # TODO save pair (v,platform_e) in update evals or something
-            pass
+        if expressions is None:
+            expressions = []
+        if updates is None:
+            updates = []
 
-        # TODO da li ovde idu optimizacije?
+        for expr in expressions:
+            vs = expr.get_variables()
+            self._inputs.update(v.fid for v in vs)
+            pexpr = _get_platform_expression(expr)
+            self._expressions.append(pexpr)
+            self._epath.append(filter(lambda x: isinstance(x, exprgraph.Operator), topsort_formula(pexpr)))
+
+        for (fid, expr) in updates:
+            vs = expr.get_variables()
+            self._uinputs.update(v.fid for v in vs)
+            pexpr = _get_platform_expression(expr)
+            self._updates.append((fid, pexpr))
+            self._updates.append((fid, filter(lambda x: isinstance(x, exprgraph.Operator), topsort_formula(pexpr))))
 
     def evaluate(self, valuation):
         # check inputs?
 
-        for ee in self._expr_evals:
+        for ee in self._epath:
             evt = ee.evaluate(valuation, valuation.events)
             valuation.events[ee.fid] = evt
 
-        for (upvar, upexpr) in self._update_evals:
+        for (upvar, upexpr) in self._upath:
             evt = upexpr.evaluate(valuation, valuation.events)
             valuation.events[upvar.fid] = evt
 
@@ -101,7 +112,7 @@ def _get_platform_expression(expr):
     # TODO ipak moram da imam operatnds i params argumente zbog rekurzivnih poziva.             <<<<<<< STAO OVDE
     if isinstance(expr, exprgraph.Operator):
         ops = [_get_platform_expression(op) for op in expr.operands]
-        params = {} #TODO
+        params = {} # TODO
         return factories[expr.get_type_name()](ops, params)
     return expr         # TODO jel treba jos nesto kada je atom?
 
@@ -310,7 +321,7 @@ class PyOCLFactory(PlatformFactory):
         pass
 
     def create_function(self, expressions=None, updates=None, name=None, skip_platform_opts=False):
-        pass
+        return PyOCLFunction(expressions=expressions, updates=updates, name=name)
 
     def create_op(self, type_name, operands, params):
         return factories[type_name](*operands)          # FIXME raspakivanje parametara ovde nece raditi

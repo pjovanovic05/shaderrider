@@ -612,7 +612,7 @@ class AddOP(operators.AddOP):
 
 
 def create_add(operands, parameters):  # x1, x2, out=None):
-    raise NotImplementedError
+    return AddOP(operands[0], operands[1])
 
 
 class ReciprocalOP(operators.ReciprocalOP):
