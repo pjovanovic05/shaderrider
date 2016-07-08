@@ -197,6 +197,7 @@ class Variable(Atom):
         self._dtype = dtype
         self._shape = shape if shape is not None else ()
         self._shared = shared
+        self._value = None
         if array is not None:
             self._dtype = array.dtype
             self._shape = array.shape
