@@ -24,7 +24,7 @@ class GemmOP(blas.GemmOP):
             if op.fid in events:
                 waits.append(events[op.fid])
 
-        return clblas.gemm(platformdef.queues[device], A, B, C, transA, transB, alpha, beta, wait_for=waits)
+        # return clblas.gemm(platformdef.queues[device], A, B, C, transA, transB, alpha, beta, wait_for=waits)
 
 
 class GemvOP(blas.GemvOP):
@@ -41,7 +41,7 @@ class GemvOP(blas.GemvOP):
             if op.fid in events:
                 waits.append(events[op.fid])
 
-        return clblas.gemv(platformdef.queues[device], A, x, y, transA, alpha, beta, wait_for=waits)
+        # return clblas.gemv(platformdef.queues[device], A, x, y, transA, alpha, beta, wait_for=waits)
 
 
 class GerOP(blas.GerOP):
@@ -56,4 +56,4 @@ class GerOP(blas.GerOP):
             if op.fid in events:
                 waits.append(events[op.fid])
 
-        return clblas.ger(platformdef.queues[device], A, x, y, alpha, wait_for=waits)
+        # return clblas.ger(platformdef.queues[device], A, x, y, alpha, wait_for=waits)

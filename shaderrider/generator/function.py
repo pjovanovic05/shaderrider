@@ -27,11 +27,13 @@ def function(expressions=None, updates=None, name=None, platform=None, skip_opts
     """
 
     # configure compilation
-    platform = configuration.get_platform_factory(platform)
+    _platform = configuration.get_platform_factory(platform)
+    if platform == 'pyopencl':
+        _platform.init_platform(1)
 
     # TODO optimizations?
 
-    fn = platform.create_function(expressions, updates, name)
+    fn = _platform.create_function(expressions, updates, name)
     return fn
 
 

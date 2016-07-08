@@ -42,12 +42,8 @@ def setup_context(ngpus=0):
     return ctx, qs
 
 
-default_ctx, queues = setup_context(1)
-default_queue = queues[0]
-
-
-def platform_init():
-    pass                    # TODO
+# default_ctx, queues = setup_context(1)
+# default_queue = queues[0]
 
 
 class PyOCLFunction(Function):
@@ -137,6 +133,10 @@ def _compile_expression(expr):              # TODO da li se ovde topsortira? ne 
 
 
 class PyOCLValuation(Valuation):
+    def __init__(self, queue=None):
+        super(PyOCLValuation, self).__init__()
+        self._queue = queue
+
     def add(self, name, value, const=False, async=False):
         if name in self._shared:
             raise KeyError('Shared variable "' + name + '" already present in valuation.')
@@ -145,14 +145,14 @@ class PyOCLValuation(Valuation):
 
         if isinstance(value, np.ndarray):
             val = exprgraph.Variable(name, array=value) if not const else exprgraph.Constant(value)
-            val._gpu_array = clarray.to_device(default_queue, val.value, async=async)
+            val._gpu_array = clarray.to_device(self._queue, val.value, async=async)
             self._vars[name] = val
         elif isinstance(value, Number):
             val = exprgraph.Literal(value)
             self._vars[name] = val
         elif isinstance(value, (exprgraph.Variable, exprgraph.Constant)):
             # ovde pomeram value iz variablinog ndarray-a u cl_array!!
-            value._gpu_array = clarray.to_device(default_queue, value.value, async=async)
+            value._gpu_array = clarray.to_device(self._queue, value.value, async=async)
             self._vars[name] = value
         elif isinstance(value, clarray.Array):
             val = exprgraph.Variable(name=name)
@@ -169,10 +169,10 @@ class PyOCLValuation(Valuation):
 
         if isinstance(value, np.ndarray):
             val = exprgraph.Variable(name=name, array=value)
-            val._gpu_array = clarray.to_device(default_queue, value, async=async)
+            val._gpu_array = clarray.to_device(self._queue, value, async=async)
             self._shared[name] = val
         elif isinstance(value, (exprgraph.Variable, exprgraph.Constant)):
-            value._gpu_array = clarray.to_device(default_queue, value.value)
+            value._gpu_array = clarray.to_device(self._queue, value.value)
             self._shared[name] = value
         elif isinstance(value, clarray.Array):
             val = exprgraph.Variable(name=name)
@@ -307,20 +307,35 @@ factories = {
 
 
 class PyOCLFactory(PlatformFactory):
-    def init_platform(self):
-        pass
+    def __init__(self):
+        self._context = None
+        self._queues = []
+        self._default_queue = -1
+
+    @property
+    def default_queue(self):
+        return self._queues[self._default_queue]
+
+    @default_queue.setter
+    def default_queue(self, value):
+        self._default_queue = value
+
+    def init_platform(self, ngpus=0):
+        self._context, self._queues = setup_context(ngpus)
+        self._default_queue = 0
 
     def finalize_platform(self):
         pass
 
-    def create_valuation(self):
-        return PyOCLValuation()
+    def create_valuation(self, device=None):
+        q = self._queues[device] if device is not None else self.default_queue
+        return PyOCLValuation(queue=q)
 
     def create_function(self, expressions=None, updates=None, name=None, skip_platform_opts=False):
         return PyOCLFunction(expressions=expressions, updates=updates, name=name)
 
     def create_op(self, type_name, operands, params):
-        return factories[type_name](*operands)          # FIXME raspakivanje parametara ovde nece raditi
+        return factories[type_name](operands, params)
                                                             # XXX mozda su i operatori i funkcije jer nekad su u izrazu a nekad se pozivaju eksterno
     # ARRAY CREATION                                        TODO da li su ovo zapravo samo operatori bez operanada?
     def empty(self, shape, dtype=None, order='C', name=None):

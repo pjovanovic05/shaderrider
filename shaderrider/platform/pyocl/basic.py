@@ -16,7 +16,7 @@ class NegOP(basic.NegOP):
 
     def __init__(self, operand, ctx=None, device=0):
         super(NegOP, self).__init__(operand)
-        self._ctx = platform.default_ctx if ctx is None else ctx
+        # self._ctx = platform.default_ctx if ctx is None else ctx
         self._fn = self.generate_eval()
 
     def evaluate(self, valuation=None, events=None):
@@ -39,23 +39,23 @@ class NegOP(basic.NegOP):
                         out[idx] = -in[idx];
             }''' % locals()).build()
 
-        def evaluator(valuation, events=None, device=0):
-            param = valuation[self.operands[0].fid]
-            out = valuation[self.fid]
-            waits = [events[ev.fid] for ev in self.operands] if events is not None else None
+        # def evaluator(valuation, events=None, device=0):
+        #     param = valuation[self.operands[0].fid]
+        #     out = valuation[self.fid]
+        #     waits = [events[ev.fid] for ev in self.operands] if events is not None else None
+        #
+        #     if out is None or out.shape != param.shape:
+        #         out = cl.array.empty(platform.queues[device], param.shape, param.dtype)   #TODO
+        #     evt = prog.k_neg(platform.queues[device], param.shape, None, param.data, out.data, wait_for=waits)
+        #     return evt
 
-            if out is None or out.shape != param.shape:
-                out = cl.array.empty(platform.queues[device], param.shape, param.dtype)   #TODO
-            evt = prog.k_neg(platform.queues[device], param.shape, None, param.data, out.data, wait_for=waits)
-            return evt
-
-        return evaluator
+        # return evaluator
 
 
 class ExpOP(basic.ExpOP):
     def __init__(self, operand, ctx=None, device=0):
         super(ExpOP, self).__init__(operand)
-        self._ctx = platform.default_ctx if ctx is None else ctx
+        # self._ctx = platform.default_ctx if ctx is None else ctx
 
     def evaluate(self, valuation=None, events=None):
         pass
