@@ -19,7 +19,7 @@ class FirstStep(unittest.TestCase):
         v.add('a', a)
         v.add('b', b)
         f1(valuation=v)
-        ret = v.get('Add2')
+        ret = v.get(expr.fid)
         self.assertEqual(ret[0,0], 2)
         self.assertEqual(ret[0,1], 1)
         self.assertEqual(ret[1,1], 2)
@@ -34,7 +34,13 @@ class FirstStep(unittest.TestCase):
         v.add('a', a)
         v.add('b', b)
         f1(valuation=v)
-        ret = v.get('Add4')
+        ret = v.get(expr.fid)
         self.assertEqual(ret.value[0, 0], 2)
         self.assertEqual(ret.value[0, 1], 1)
         self.assertEqual(ret.value[1, 1], 2)
+
+    def test_complexity(self):
+        a = exprgraph.Variable(name='a', array=np.eye(3, 3, dtype=np.float32))
+        b = exprgraph.Variable(name='b', array=np.ones((3, 3), np.float32))
+        expr = AddOP(a, b)
+        self.assertEqual(expr.complexity(), 1)

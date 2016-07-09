@@ -42,10 +42,6 @@ def setup_context(ngpus=0):
     return ctx, qs
 
 
-# default_ctx, queues = setup_context(1)
-# default_queue = queues[0]
-
-
 class PyOCLFunction(Function):
 
     def __init__(self, inputs=None, expressions=None, updates=None, name=None):
@@ -101,35 +97,11 @@ def _get_platform_expression(expr):
     Recursively replaces operators in an expr graph with platform specific
     op implementations.
     """
-    # TODO ipak moram da imam operatnds i params argumente zbog rekurzivnih poziva.             <<<<<<< STAO OVDE
     if isinstance(expr, exprgraph.Operator):
         ops = [_get_platform_expression(op) for op in expr.operands]
         params = {} # TODO
         return factories[expr.get_type_name()](ops, params)
     return expr         # TODO jel treba jos nesto kada je atom?
-
-
-def _compile_expression(expr):              # TODO da li se ovde topsortira? ne treba praviti f-je sa milion odgovornosti!!!!!!!1!!!!!
-    """
-    Creates platform specific expression graph and performs platform optimizations (optionally).
-
-    :type expr: Formula
-    :rtype: list of evaluators
-    """
-
-    # TODO expr graph translation?
-
-    # optimizations
-    sexpr = expr.simplify()
-    # for optimizer in optimizers:
-    #     sexpr = optimizer.optimize(sexpr)
-    # more opts ...
-
-    # top sort
-    ts = topsort_formula(sexpr)
-    ops = [op for op in ts if isinstance(op, exprgraph.Operator)]
-
-    return ops
 
 
 class PyOCLValuation(Valuation):
@@ -223,8 +195,6 @@ class PyOCLValuation(Valuation):
         # for var in self._vars:
         #     var._gpu_array.data.release();        # risky!! what if a var is used as a function output?
         self._vars.clear()
-
-
 
 
 #######################################################################

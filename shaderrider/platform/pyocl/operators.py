@@ -607,7 +607,7 @@ class AddOP(operators.AddOP):
     def evaluate(self, valuation):
         a = valuation.read(self.operands[0].fid)
         b = valuation.read(self.operands[1].fid)
-        valuation.add(self.fid, a + b)                              # FIXME <<< ovde nesto puca!!!
+        valuation.add(self.fid, a + b)
         return None
 
 

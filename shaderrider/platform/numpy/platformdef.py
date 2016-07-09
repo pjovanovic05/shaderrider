@@ -103,6 +103,7 @@ class NPFunction(pdefs.Function):
 
 
 def _get_platform_expression(expr):
+    # TODO preserve fids!!!
     if isinstance(expr, exprgraph.Operator):
         ops = [_get_platform_expression(op) for op in expr.operands]
         params = expr.params
