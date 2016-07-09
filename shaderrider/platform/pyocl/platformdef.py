@@ -10,6 +10,7 @@ import numpy as np
 import pyopencl as cl
 import pyopencl.array as clarray
 
+from shaderrider.core import PlatformNotInitializedError
 from shaderrider.symbolic import exprgraph
 from shaderrider.symbolic import operators
 
@@ -91,6 +92,7 @@ class PyOCLFunction(Function):
                 expr.evaluate(valuation)
 
         # collect outputs   TODO move to host memory?
+
 
 def _get_platform_expression(expr):
     """
@@ -283,6 +285,7 @@ class PyOCLFactory(PlatformFactory):
         self._context = None
         self._queues = []
         self._default_queue = -1
+        self._initialized = False
 
     @property
     def default_queue(self):
@@ -295,15 +298,20 @@ class PyOCLFactory(PlatformFactory):
     def init_platform(self, ngpus=0):
         self._context, self._queues = setup_context(ngpus)
         self._default_queue = 0
+        self._initialized = True
 
     def finalize_platform(self):
-        pass
+        self._initialized = False
 
     def create_valuation(self, device=None):
+        if not self._initialized:
+            raise PlatformNotInitializedError
         q = self._queues[device] if device is not None else self.default_queue
         return PyOCLValuation(queue=q)
 
     def create_function(self, expressions=None, updates=None, name=None, skip_platform_opts=False):
+        if not self._initialized:
+            raise PlatformNotInitializedError
         return PyOCLFunction(expressions=expressions, updates=updates, name=name)
 
     def create_op(self, type_name, operands, params):

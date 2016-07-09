@@ -21,6 +21,7 @@ class Formula(object):
     def __init__(self, parents=None):
         self._parent = weakref.ref(parents) if parents is not None else None
         self._parents = weakref.WeakSet(parents)
+        self._fid = None
 
     @abstractmethod
     def get_variables(self):
@@ -61,11 +62,11 @@ class Formula(object):
 
     @property
     def fid(self):
-        raise NotImplementedError
+        return self._fid
 
     @fid.setter
     def fid(self, value):
-        raise NotImplementedError
+        self._fid = value
 
     @property
     def parents(self):
@@ -115,14 +116,6 @@ class Literal(Atom):                                    # TODO add dtype?
         self._name = name if name is not None else self._fid
 
     @property
-    def fid(self):
-        return self._fid
-
-    @fid.setter
-    def fid(self, value):
-        self._fid = value
-
-    @property
     def value(self):
         return self._value
 
@@ -167,14 +160,6 @@ class Constant(Atom):
     # def value(self, val):
     #     self._value = val
 
-    @property
-    def fid(self):
-        return self._fid
-
-    @fid.setter
-    def fid(self, value):
-        self._fid = value
-
     def gradient(self, wrt):
         return Constant(0)
 
@@ -214,14 +199,6 @@ class Variable(Atom):
             self._dtype = array.dtype
             self._shape = array.shape
             self._value = array
-
-    @property
-    def fid(self):
-        return self._fid
-
-    @fid.setter
-    def fid(self, value):
-        self._fid = value
 
     @property
     def name(self):
@@ -334,14 +311,6 @@ class Operator(Formula):
     def __str__(self):
         return '%s(%s)' % (self._fid,
                            ', '.join([str(op) for op in self._operands]))
-
-    @property
-    def fid(self):
-        return self._fid
-
-    @fid.setter
-    def fid(self, value):
-        self._fid = value
 
     @property
     def operands(self):

@@ -8,3 +8,7 @@ class NondifferentiableOpError(Exception):
 
 class GraphValidationError(Exception):
     pass
+
+
+class PlatformNotInitializedError(Exception):
+    pass

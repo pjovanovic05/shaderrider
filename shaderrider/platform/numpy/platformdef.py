@@ -32,13 +32,6 @@ class NPValuation(pdefs.Valuation):
         else:
             raise TypeError  # TODO raise unsupported type or something
 
-    # get stays the same...
-    # def get(self, name):
-    #     pass
-    #
-    # def set(self, name, value):
-    #     pass
-
 
 class NPFunction(pdefs.Function):
     def __init__(self, expressions=None, updates=None, name=None):

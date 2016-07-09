@@ -52,7 +52,7 @@ class ReshapeOP(exprgraph.Operator):
     _type_name = 'Reshape'
 
     def __init__(self, arr, shape, parents=None):
-        super(ReshapeOP, self).__init__(2, [arr], parents)
+        super(ReshapeOP, self).__init__(1, [arr], parents)
 
         assert isinstance(shape, exprgraph.Constant) or \
                isinstance(shape, tuple)
@@ -65,7 +65,7 @@ class ReshapeOP(exprgraph.Operator):
         self._shape = shape if isinstance(shape, tuple) else None
 
     def gradient(self, wrt):
-        # TODO or is there a gradient for ReshapeOP?
+        # TODO or is there a gradient for ReshapeOP? maybe just neutral?
         raise NondifferentiableOpError
 
     def substitute(self, a, b):

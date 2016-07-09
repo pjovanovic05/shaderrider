@@ -28,8 +28,8 @@ def function(expressions=None, updates=None, name=None, platform=None, skip_opts
 
     # configure compilation
     _platform = configuration.get_platform_factory(platform)
-    if platform == 'pyopencl':
-        _platform.init_platform(1)
+    # if platform == 'pyopencl':
+    #     _platform.init_platform(1)
 
     # TODO optimizations?
 
