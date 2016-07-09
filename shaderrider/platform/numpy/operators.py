@@ -23,7 +23,7 @@ from shaderrider.symbolic import operators
 
 class ReshapeOP(operators.ReshapeOP):
     def evaluate(self, valuation):
-        valuation.add(self.fid, np.reshape(valuation.get(self.operands[0].fid), self._shape))
+        valuation.add(self.fid, np.reshape(valuation.get(self.operands[0].fid), self._params['shape']))
 
 
 def create_reshape(operands, parameters):  # a, newshape):
@@ -41,7 +41,7 @@ def create_ravel(operands, parameters):  # a):
 
 class TransposeOP(operators.TransposeOP):
     def evaluate(self, valuation):
-        valuation.add(self.fid, np.transpose(valuation.get(self.operands[0].fid), self._axes))
+        valuation.add(self.fid, np.transpose(valuation.get(self.operands[0].fid), self._params['axes']))
 
 
 def create_transpose(operands, parameters):  # a):

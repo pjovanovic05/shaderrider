@@ -62,7 +62,8 @@ class ReshapeOP(exprgraph.Operator):
         a2 = reduce(lambda x, y: x * y, arr.get_shape(), 1)
         assert a1 == a2
 
-        self._shape = shape if isinstance(shape, tuple) else None
+        # self._shape = shape if isinstance(shape, tuple) else None
+        self._params['shape'] = shape if isinstance(shape, tuple) else None
 
     def gradient(self, wrt):
         # TODO or is there a gradient for ReshapeOP? maybe just neutral?
@@ -72,10 +73,10 @@ class ReshapeOP(exprgraph.Operator):
         if self == a:
             return b
         else:
-            return ReshapeOP(self.operands[0].substitute(a, b), self._shape, self.parents)
+            return ReshapeOP(self.operands[0].substitute(a, b), self._params['shape'], self.parents)
 
     def get_shape(self):
-        return self._shape
+        return self._params['shape']
 
     def simplify(self):
         # Ideje:
@@ -116,7 +117,8 @@ class TransposeOP(UnaryOP):
 
     def __init__(self, op, axes=None, parents=None):
         super(TransposeOP, self).__init__(1, [op], parents)
-        self._axes = axes
+        # self._axes = axes
+        self._params['axes'] = axes
 
     def simplify(self):
         # some ideas:

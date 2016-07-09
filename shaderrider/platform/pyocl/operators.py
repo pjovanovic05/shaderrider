@@ -35,7 +35,7 @@ class ReshapeOP(operators.ReshapeOP):
         :type valuation: PyOCLValuation
         """
         param = valuation.read(self.operands[0].fid)
-        valuation.add(self.fid, clarray.reshape(param, self._shape))
+        valuation.add(self.fid, clarray.reshape(param, self._params['shape']))
         return None
 
 
@@ -57,7 +57,7 @@ def create_ravel(operands, parameters=None):  # a
 class TransposeOP(operators.TransposeOP):
     def evaluate(self, valuation):
         param = valuation.read(self.operands[0].fid)
-        valuation.add(self.fid, clarray.transpose(param, self._axes))
+        valuation.add(self.fid, clarray.transpose(param, self._params['axes']))
         return None
 
 
