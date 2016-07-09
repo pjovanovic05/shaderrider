@@ -63,6 +63,10 @@ class Formula(object):
     def fid(self):
         raise NotImplementedError
 
+    @fid.setter
+    def fid(self, value):
+        raise NotImplementedError
+
     @property
     def parents(self):
         return self._parents
@@ -114,6 +118,10 @@ class Literal(Atom):                                    # TODO add dtype?
     def fid(self):
         return self._fid
 
+    @fid.setter
+    def fid(self, value):
+        self._fid = value
+
     @property
     def value(self):
         return self._value
@@ -163,6 +171,10 @@ class Constant(Atom):
     def fid(self):
         return self._fid
 
+    @fid.setter
+    def fid(self, value):
+        self._fid = value
+
     def gradient(self, wrt):
         return Constant(0)
 
@@ -206,6 +218,10 @@ class Variable(Atom):
     @property
     def fid(self):
         return self._fid
+
+    @fid.setter
+    def fid(self, value):
+        self._fid = value
 
     @property
     def name(self):
@@ -322,6 +338,10 @@ class Operator(Formula):
     @property
     def fid(self):
         return self._fid
+
+    @fid.setter
+    def fid(self, value):
+        self._fid = value
 
     @property
     def operands(self):

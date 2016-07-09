@@ -100,7 +100,9 @@ def _get_platform_expression(expr):
     if isinstance(expr, exprgraph.Operator):
         ops = [_get_platform_expression(op) for op in expr.operands]
         params = {} # TODO
-        return factories[expr.get_type_name()](ops, params)
+        platform_op = factories[expr.get_type_name()](ops, params)
+        platform_op.fid = expr.fid
+        return platform_op
     return expr         # TODO jel treba jos nesto kada je atom?
 
 

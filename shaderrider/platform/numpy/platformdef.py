@@ -108,6 +108,7 @@ def _get_platform_expression(expr):
         ops = [_get_platform_expression(op) for op in expr.operands]
         params = expr.params
         platform_op = factories[expr.get_type_name()](ops, params)
+        platform_op.fid = expr.fid
         for op in ops:
             op.parents.add(platform_op)
         return platform_op
