@@ -269,7 +269,9 @@ class Operator(Formula):
         super(Operator, self).__init__(parents)
         Operator._ctr += 1
         self._arity = arity
-        self._operands = operands     # formulas, operands
+        self._operands = operands
+        for op in self._operands:
+            op.parents.add(self)
         self._fid = self._type_name + str(Operator._ctr)
         self._fn = None     # TODO generate_evaluator maybe?
         self._params = {}

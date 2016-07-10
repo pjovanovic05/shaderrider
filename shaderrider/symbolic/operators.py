@@ -5,7 +5,7 @@ WRITEME
 """
 import abc
 
-# from shaderrider import configuration as config
+
 from shaderrider.core import IncompatibleDimensionsError, NondifferentiableOpError
 from shaderrider.symbolic import exprgraph
 
@@ -62,7 +62,6 @@ class ReshapeOP(exprgraph.Operator):
         a2 = reduce(lambda x, y: x * y, arr.get_shape(), 1)
         assert a1 == a2
 
-        # self._shape = shape if isinstance(shape, tuple) else None
         self._params['shape'] = shape if isinstance(shape, tuple) else None
 
     def gradient(self, wrt):
@@ -137,12 +136,12 @@ class TransposeOP(UnaryOP):
             # return ff.create_transpose(self.operands[0].substitute(a, b))
 
 
-class DimshuffleOP(exprgraph.Operator):
+class DimshuffleOP(UnaryOP):
     _type_name = 'Dimshuffle'
 
     def __init__(self, op, new_dims, parents=None):
         super(DimshuffleOP, self).__init__(1, [op], parents)
-        self._new_dims = new_dims
+        self._params['new_dims'] = new_dims
 
     def simplify(self):
         pass
@@ -159,10 +158,10 @@ class DimshuffleOP(exprgraph.Operator):
             # return ff.create_dimshuffle(self.operands[0].substitute(a, b), self._new_dims)
 
     def get_shape(self):
-        return self._new_dims
+        return self._params['new_dims']
 
 
-class DiagonalOP(exprgraph.Operator):
+class DiagonalOP(UnaryOP):
     _type_name = 'Diagonal'
 
     def __init__(self, op, parents=None):
@@ -186,7 +185,7 @@ class DiagonalOP(exprgraph.Operator):
         pass
 
 
-class TraceOP(exprgraph.Operator):
+class TraceOP(UnaryOP):
     _type_name = 'Trace'
 
     def __init__(self, op, parents=None):
@@ -267,8 +266,8 @@ class IndexOP(exprgraph.Operator):
 
         :param key an integer or slice object wrapped in a exprgraph.Constant
         """
-        super(IndexOP, self).__init__(1, [op, key], parents)
-        self._key = key
+        super(IndexOP, self).__init__(1, [op], parents)
+        self._params['key'] = key
 
     def substitute(self, a, b):
         if self == a:
@@ -325,7 +324,8 @@ class NormOP(exprgraph.Operator):
     _type_name = 'Norm'
 
     def __init__(self, op, norm, parents=None):
-        super(NormOP, self).__init__(2, [op, norm], parents)
+        super(NormOP, self).__init__(1, [op], parents)
+        self._params['norm'] = norm
 
     def simplify(self):
         pass
@@ -456,13 +456,10 @@ class SinOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_sin(self.operands[0].substitute(a, b))
+            return SinOP(self.operands[0].substitute(a,b))
 
     def gradient(self, wrt):
-        # TODO
-        raise NotImplementedError
+        return MulOP(CosOP(self.operands[0]), self.operands[0].gradient(wrt))
 
     def simplify(self):
         # TODO

@@ -183,8 +183,8 @@ def create_right_shift(operands, parameters):  # x1, x2):
 
 class IndexOP(operators.IndexOP):
     def evaluate(self, valuation):
-        param = valuation.read(self.operands[0].fid)
-        valuation.add(self.fid, param[self._key])
+        operand = valuation.read(self.operands[0].fid)
+        valuation.add(self.fid, operand[self._params['key']])
         return None
 
 
