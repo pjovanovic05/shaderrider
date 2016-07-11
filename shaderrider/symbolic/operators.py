@@ -485,7 +485,7 @@ class CosOP(UnaryOP):
 
     def gradient(self, wrt):
         # TODO
-        raise NotImplementedError
+        return MulOP(SinOP(self.operands[0]), self.operands[0].gradient(wrt))
 
     def simplify(self):
         # TODO
@@ -510,7 +510,7 @@ class TanOP(UnaryOP):
             # return ff.create_tan(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
-        # TODO
+        # TODO 1/(cos(x)^2)  or 1+tan(x)^2 or sec(x)^2
         raise NotImplementedError
 
     def simplify(self):
@@ -519,7 +519,10 @@ class TanOP(UnaryOP):
 
 
 class ArcsinOP(UnaryOP):
-    pass
+    _type_name = 'Arcsin'
+
+    def gradient(self, wrt):
+        return
 
 
 class ArccosOP(UnaryOP):
