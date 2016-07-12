@@ -484,8 +484,8 @@ class CosOP(UnaryOP):
             # return ff.create_cos(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
-        # TODO
-        return MulOP(SinOP(self.operands[0]), self.operands[0].gradient(wrt))
+        # -sin(x)*dx
+        return MulOP(NegOP(SinOP(self.operands[0])), self.operands[0].gradient(wrt))
 
     def simplify(self):
         # TODO
@@ -518,23 +518,39 @@ class TanOP(UnaryOP):
         raise NotImplementedError
 
 
-class ArcsinOP(UnaryOP):
+class ArcsinOP(UnaryOP):                                                        # TODO do i need this now?
     _type_name = 'Arcsin'
 
     def gradient(self, wrt):
-        return
+        # 1/sqrt(1-x^2)*dx          -1 < x < 1
+        return MulOP(ReciprocalOP(SqrtOP(SubOP(exprgraph.Constant(1), SqrOP(self.operands[0])))),
+                     self.operands[0].gradient(wrt))
 
 
-class ArccosOP(UnaryOP):
-    pass
+class ArccosOP(UnaryOP):                                                        # TODO do i need this now?
+    _type_name = 'ArccosOP'
+
+    def gradient(self, wrt):
+        # -1/sqrt(1-x^2)*dx          -1 < x < 1
+        return NegOP(MulOP(ReciprocalOP(SqrtOP(SubOP(exprgraph.Constant(1), SqrOP(self.operands[0])))),
+                           self.operands[0].gradient(wrt)))
 
 
-class ArctanOP(UnaryOP):
-    pass
+class ArctanOP(UnaryOP):                                                        # TODO do i need this now?
+    _type_name = 'Arctan'
+
+    def gradient(self, wrt):
+        # 1/(1 + x^2)*dx
+        return MulOP(ReciprocalOP(AddOP(exprgraph.Constant(1), SqrOP(self.operands[0]))),
+                     self.operands[0].gradient(wrt))
 
 
 class SinhOP(UnaryOP):
-    pass
+    _type_name = 'Sinh'
+
+    def gradient(self, wrt):
+        # https://en.wikipedia.org/wiki/Hyperbolic_function
+        return MulOP(CoshOP(self.operands[0]), self.operands[0].gradient(wrt))
 
 
 class CoshOP(UnaryOP):
@@ -550,23 +566,28 @@ class CoshOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_cosh(self.operands[0].substitute(a, b))
+            return CoshOP(self.operands[0].substitute(a, b))
 
     def simplify(self):
         pass
 
     def gradient(self, wrt):
-        pass
+        return MulOP(SinhOP(self.operands[0]), self.operands[0].gradient(wrt))
 
 
 class TanhOP(UnaryOP):
-    pass
+    _type_name = 'Tanh'
+
+    def gradient(self, wrt):
+        return MulOP(SubOP(exprgraph.Constant(1), SqrOP(TanhOP(self.operands[0]))),
+                     self.operands[0].gradient(wrt))
 
 
 class ArcsinhOP(UnaryOP):
-    pass
+    _type_name = 'Arcsinh'
+
+    def gradient(self, wrt):
+        pass
 
 
 class ArccoshOP(UnaryOP):
