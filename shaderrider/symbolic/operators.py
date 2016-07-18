@@ -459,6 +459,8 @@ class SinOP(UnaryOP):
             return SinOP(self.operands[0].substitute(a,b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1)
         return MulOP(CosOP(self.operands[0]), self.operands[0].gradient(wrt))
 
     def simplify(self):
@@ -484,7 +486,7 @@ class CosOP(UnaryOP):
             # return ff.create_cos(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
-        # -sin(x)*dx
+        # -sin(x)*dx`~~~~~~~~~~~~~~
         return MulOP(NegOP(SinOP(self.operands[0])), self.operands[0].gradient(wrt))
 
     def simplify(self):
