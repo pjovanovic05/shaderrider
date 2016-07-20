@@ -456,7 +456,7 @@ class SinOP(UnaryOP):
         if self == a:
             return b
         else:
-            return SinOP(self.operands[0].substitute(a,b))
+            return SinOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -569,9 +569,6 @@ class CoshOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(CoshOP, self).__init__(1, [operand], parents)
 
-    def __str__(self):
-        return "cos(%s)" % str(self.operands[0])
-
     def substitute(self, a, b):
         if self == a:
             return b
@@ -600,8 +597,14 @@ class TanhOP(UnaryOP):
 class ArcsinhOP(UnaryOP):
     _type_name = 'Arcsinh'
 
+    def __init__(self, operand, parents=None):
+        super(ArcsinhOP, self).__init__(1, [operand], parents)
+
     def gradient(self, wrt):
-        pass
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        return MulOP(ReciprocalOP(SqrtOP(AddOP(exprgraph.Constant(1), SqrOP(self.operands[0])))),
+                     self.operands[0].gradient(wrt))
 
 
 class ArccoshOP(UnaryOP):
@@ -618,9 +621,6 @@ class RoundOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(RoundOP, self).__init__(1, [operand], parents)
 
-    def __str__(self):
-        return 'round(%s)' % str(self.operands[0])
-
     def substitute(self, a, b):
         if self == a:
             return b
@@ -630,7 +630,9 @@ class RoundOP(UnaryOP):
             # return ff.create_round(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
-        pass
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        # TODO raise NotDifferentiable????
 
     def simplify(self):
         pass
@@ -641,9 +643,6 @@ class FloorOP(UnaryOP):
 
     def __init__(self, operand, parents=None):
         super(FloorOP, self).__init__(1, [operand], parents)
-
-    def __str__(self):
-        return 'floor(%s)' % str(self.operands[0])
 
     def substitute(self, a, b):
         if self == a:
@@ -665,9 +664,6 @@ class CeilOP(UnaryOP):
 
     def __init__(self, operand, parents=None):
         super(CeilOP, self).__init__(1, [operand], parents)
-
-    def __str__(self):
-        return 'ceil(%s)' % str(self.operands[0])
 
     def substitute(self, a, b):
         if self == a:
@@ -710,9 +706,6 @@ class ExpOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(ExpOP, self).__init__(1, [operand], parents)
 
-    def __str__(self):
-        return 'exp(%s)' % str(self.operands[0])
-
     def substitute(self, a, b):
         if self == a:
             return b
@@ -742,9 +735,6 @@ class LogOP(UnaryOP):
 
     def __init__(self, operand, parents=None):
         super(LogOP, self).__init__(1, [operand], parents)
-
-    def __str__(self):
-        return 'log(%s)' % str(self.operands[0])
 
     def substitute(self, a, b):
         if self == a:
@@ -827,7 +817,7 @@ class NegOP(UnaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        return NegOP(self.operands[0].gradient(wrt))  # FIXME use factory!!
+        return NegOP(self.operands[0].gradient(wrt))
 
     def simplify(self):
         simp_op = self.operands[0].simplify()
