@@ -481,12 +481,12 @@ class CosOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_cos(self.operands[0].substitute(a, b))
+            return CosOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
-        # -sin(x)*dx`~~~~~~~~~~~~~~
+        # -sin(x)*dx
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         return MulOP(NegOP(SinOP(self.operands[0])), self.operands[0].gradient(wrt))
 
     def simplify(self):
@@ -507,12 +507,12 @@ class TanOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_tan(self.operands[0].substitute(a, b))
+            return TanOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO 1/(cos(x)^2)  or 1+tan(x)^2 or sec(x)^2
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         raise NotImplementedError
 
     def simplify(self):
@@ -524,6 +524,8 @@ class ArcsinOP(UnaryOP):                                                        
     _type_name = 'Arcsin'
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         # 1/sqrt(1-x^2)*dx          -1 < x < 1
         return MulOP(ReciprocalOP(SqrtOP(SubOP(exprgraph.Constant(1), SqrOP(self.operands[0])))),
                      self.operands[0].gradient(wrt))
@@ -533,6 +535,8 @@ class ArccosOP(UnaryOP):                                                        
     _type_name = 'ArccosOP'
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         # -1/sqrt(1-x^2)*dx          -1 < x < 1
         return NegOP(MulOP(ReciprocalOP(SqrtOP(SubOP(exprgraph.Constant(1), SqrOP(self.operands[0])))),
                            self.operands[0].gradient(wrt)))
@@ -542,6 +546,8 @@ class ArctanOP(UnaryOP):                                                        
     _type_name = 'Arctan'
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         # 1/(1 + x^2)*dx
         return MulOP(ReciprocalOP(AddOP(exprgraph.Constant(1), SqrOP(self.operands[0]))),
                      self.operands[0].gradient(wrt))
@@ -551,6 +557,8 @@ class SinhOP(UnaryOP):
     _type_name = 'Sinh'
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         # https://en.wikipedia.org/wiki/Hyperbolic_function
         return MulOP(CoshOP(self.operands[0]), self.operands[0].gradient(wrt))
 
@@ -574,6 +582,8 @@ class CoshOP(UnaryOP):
         pass
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         return MulOP(SinhOP(self.operands[0]), self.operands[0].gradient(wrt))
 
 
@@ -581,6 +591,8 @@ class TanhOP(UnaryOP):
     _type_name = 'Tanh'
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         return MulOP(SubOP(exprgraph.Constant(1), SqrOP(TanhOP(self.operands[0]))),
                      self.operands[0].gradient(wrt))
 
@@ -705,11 +717,11 @@ class ExpOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_exp(self.operands[0].substitute(a, b))
+            return ExpOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         return ExpOP(self.operands[0])
 
     def simplify(self):
@@ -738,11 +750,11 @@ class LogOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_log(self.operands[0].substitute(a, b))
+            return LogOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         # TODO
         raise NotImplementedError
 
@@ -779,6 +791,8 @@ class AddOP(BinaryOP):
                          self.parents)
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         return AddOP(self.operands[0].gradient(wrt),
                      self.operands[1].gradient(wrt),
                      self.parents)
@@ -791,6 +805,7 @@ class ReciprocalOP(UnaryOP):
     _type_name = 'Reciprocal'
 
     def __init__(self, op, parents):
+        # TODO
         pass
 
 
@@ -807,18 +822,18 @@ class NegOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_neg(self.operands[0].substitute(a, b))
+            return NegOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         return NegOP(self.operands[0].gradient(wrt))  # FIXME use factory!!
 
     def simplify(self):
         simp_op = self.operands[0].simplify()
         if type(simp_op) == type(self):
             return simp_op.operands[0]
-        return NegOP(simp_op)  # FIXME use factory!!
+        return NegOP(simp_op)
 
 
 class MulOP(BinaryOP):
@@ -836,15 +851,13 @@ class MulOP(BinaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_mul(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            return MulOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
-        pass    # TODO
-        # ff = config.get_formula_factory()
-        # return ff.create_add(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
-        #                      ff.create_mul(self.operands[0], self.operands[1].gradient(wrt)))
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        return AddOP(MulOP(self.operands[0].gradient(wrt), self.operands[1]),
+                     MulOP(self.operands[0], self.operands[1].gradient(wrt)))
 
     def simplify(self):
         raise NotImplementedError
@@ -865,16 +878,14 @@ class DivOP(BinaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_div(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            return DivOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
-        pass    # TODO
-        # ff = config.get_formula_factory()
-        # return ff.create_div(ff.create_sub(ff.create_mul(self.operands[0].gradient(wrt), self.operands[1]),
-        #                                    ff.create_mul(self.operands[0], self.operands[1].gradient(wrt))),
-        #                      ff.create_pow(self.operands[1], exprgraph.Constant(2)))
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        return DivOP(SubOP(MulOP(self.operands[0].gradient(wrt), self.operands[1]),
+                           MulOP(self.operands[0], self.operands[1].gradient(wrt))),
+                     SqrOP(self.operands[1]))
 
     def simplify(self):
         raise NotImplementedError
@@ -895,11 +906,12 @@ class PowOP(BinaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_pow(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            return PowOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        # TODO finish this
         pass
 
     def simplify(self):
@@ -921,11 +933,11 @@ class SubOP(BinaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_sub(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b), self.parents)
+            return SubOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         pass    # TODO
         # ff = config.get_formula_factory()
         # return ff.create_sub(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
@@ -950,15 +962,15 @@ class AbsOP(UnaryOP):
         pass
 
     def gradient(self, wrt):
-        pass  # <0 : -1, 0: 0, >0: 1
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        pass  # TODO <0 : -1, 0: 0, >0: 1
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_abs(self.operands[0].substitute(a, b))  # parents?
+            return AbsOP(self.operands[0].substitute(a, b))
 
 
 class SignOP(UnaryOP):
@@ -974,11 +986,11 @@ class SignOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_sign(self.operands[0].substitute(a, b))
+            return SignOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         pass
 
     def simplify(self):
@@ -998,11 +1010,11 @@ class SqrOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_sqr(self.operands[0].substitute(a, b), self.parents)
+            return SqrOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         pass
 
     def simplify(self):
@@ -1022,11 +1034,11 @@ class SqrtOP(UnaryOP):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_sqrt(self.operands[0].substitute(a, b))
+            return SqrtOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         pass
 
     def simplify(self):
@@ -1043,6 +1055,8 @@ class MaximumOP(BinaryOP):
         pass
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         pass
 
     def simplify(self):
@@ -1059,6 +1073,8 @@ class MinimumOP(BinaryOP):
         pass
 
     def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
         pass
 
     def simplify(self):
