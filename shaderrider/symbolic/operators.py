@@ -726,8 +726,25 @@ class ExpOP(UnaryOP):
         raise NotImplementedError
 
 
-class Exp2OP(exprgraph.Operator):
-    pass
+class Exp2OP(UnaryOP):
+    _type_name = 'Exp2'
+
+    def __init__(self, operand, parents=None):
+        super(Exp2OP, self).__init__(1, [operand], parents)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return Exp2OP(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        raise NotImplementedError
+
+    def simplify(self):
+        raise NotImplementedError
 
 
 class LogOP(UnaryOP):
@@ -754,11 +771,45 @@ class LogOP(UnaryOP):
 
 
 class Log10OP(UnaryOP):
-    pass
+    _type_name = 'Log10'
+
+    def __init__(self, operand, parents=None):
+        super(Log10OP, self).__init__(1, [operand], parents)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return Log10OP(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        raise NotImplementedError   # TODO
+
+    def simplify(self):
+        raise NotImplementedError   # TODO
 
 
 class Log1pOP(UnaryOP):
-    pass
+    _type_name = 'Log1p'
+
+    def __init__(self, operand, parents=None):
+        super(Log1pOP, self).__init__(1, [operand], parents)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return Log1pOP(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        raise NotImplementedError   # TODO
+
+    def simplify(self):
+        raise NotImplementedError   # TODO
 
 
 class AddOP(BinaryOP):
@@ -901,11 +952,10 @@ class PowOP(BinaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        # TODO finish this
-        pass
+        raise NotImplementedError   # TODO finish this
 
     def simplify(self):
-        raise NotImplementedError
+        raise NotImplementedError   # TODO
 
 
 class SubOP(BinaryOP):
@@ -928,16 +978,34 @@ class SubOP(BinaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        pass    # TODO
-        # ff = config.get_formula_factory()
-        # return ff.create_sub(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
+        return SubOP(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
 
     def simplify(self):
-        raise NotImplementedError
+        raise NotImplementedError   # TODO
 
 
 class ModOP(BinaryOP):
-    pass
+    _type_name = 'Mod'
+
+    def __init__(self, op1, op2, parents=None):
+        super(ModOP, self).__init__(2, [op1, op2], parents)
+
+    def __str__(self):
+        return '(%s %% %s)' % (str(self.operands[0]), str(self.operands[1]))
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return ModOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+
+    def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        raise NotImplementedError   # TODO
+
+    def simplify(self):
+        raise NotImplementedError   # TODO
 
 
 class AbsOP(UnaryOP):
@@ -981,7 +1049,7 @@ class SignOP(UnaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        pass
+        raise NotImplementedError   # TODO
 
     def simplify(self):
         pass
@@ -1005,7 +1073,7 @@ class SqrOP(UnaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        pass
+        return MulOP(MulOP(exprgraph.Constant(2.0), self.operands[0]), self.operands[0].gradient(wrt))
 
     def simplify(self):
         raise NotImplementedError
@@ -1047,7 +1115,7 @@ class MaximumOP(BinaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        pass
+        raise NondifferentiableOpError
 
     def simplify(self):
         pass
@@ -1065,7 +1133,7 @@ class MinimumOP(BinaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        pass
+        raise NondifferentiableOpError
 
     def simplify(self):
         pass
@@ -1074,7 +1142,8 @@ class MinimumOP(BinaryOP):
 # STATISTICS OPS ######################################################
 
 class MedianOP(UnaryOP):
-    pass
+    def gradient(self, wrt):
+        raise NondifferentiableOpError
 
 
 class AverageOP(UnaryOP):
