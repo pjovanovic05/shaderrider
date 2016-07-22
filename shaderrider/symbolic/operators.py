@@ -1128,7 +1128,10 @@ class MinimumOP(BinaryOP):
         super(MinimumOP, self).__init__(2, [op1, op2], parents)
 
     def substitute(self, a, b):
-        pass
+        if self == a:
+            return b
+        else:
+            return MinimumOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -1142,32 +1145,112 @@ class MinimumOP(BinaryOP):
 # STATISTICS OPS ######################################################
 
 class MedianOP(UnaryOP):
+    _type_name = 'Median'
+
+    def __init__(self, operand, parents=None):
+        super(MedianOP, self).__init__(1, [operand], parents)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return MedianOP(self.operands[0].substitute(a, b))
+
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
+    def simplify(self):
+        pass
+
 
 class AverageOP(UnaryOP):
-    pass
+    _type_name = 'Avg'
+
+    def __init__(self, operand, parents=None):
+        super(AverageOP, self).__init__(1, [operand], parents)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return AverageOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+
+    def gradient(self, wrt):
+        raise NondifferentiableOpError
+
+    def simplify(self):
+        pass
 
 
 class MeanOP(UnaryOP):
-    pass
+    _type_name = 'Mean'
+
+    def __init__(self, operand, parents=None):
+        super(MeanOP, self).__init__(1, [operand], parents)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return MeanOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+
+    def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        raise NondifferentiableOpError
+
+    def simplify(self):
+        pass
 
 
 class StdOP(UnaryOP):
-    pass
+    _type_name = 'STD'
+
+    def __init__(self, operand, parents=None):
+        super(StdOP, self).__init__(1, [operand], parents)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return StdOP(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        raise NondifferentiableOpError
+
+    def simplify(self):
+        pass
 
 
 class VarOP(UnaryOP):
-    pass
+    _type_name = 'Var'
+
+    def __init__(self, operand, parents=None):
+        super(VarOP, self).__init__(1, [operand], parents)
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return VarOP(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        raise NondifferentiableOpError
+
+    def simplify(self):
+        pass
 
 
 class CorrelateOP(exprgraph.Operator):
-    pass
+    _type_name = 'Corr'
+    pass    # TODO this shoud probably be a binary op
 
 
 class CovOP(exprgraph.Operator):
-    pass
+    _type_name = 'Cov'
+    pass    # TODO binary op probably
 
 
 # ELEMENTWISE OP ######################################################
