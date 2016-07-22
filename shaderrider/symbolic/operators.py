@@ -119,21 +119,21 @@ class TransposeOP(UnaryOP):
         # self._axes = axes
         self._params['axes'] = axes
 
-    def simplify(self):
-        # some ideas:
-        # if op is also a transpose on the same axes, cancel out
-        pass
-
-    def gradient(self, wrt):
-        raise NondifferentiableOpError
-
     def substitute(self, a, b):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_transpose(self.operands[0].substitute(a, b))
+            return TransposeOP(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        return TransposeOP(self.operands[0].gradient(wrt))
+
+    def simplify(self):
+        # some ideas:
+        # if op is also a transpose on the same axes, cancel out
+        pass
 
 
 class DimshuffleOP(UnaryOP):
@@ -171,6 +171,7 @@ class DiagonalOP(UnaryOP):
         pass
 
     def gradient(self, wrt):
+        # TODO ipak jeste
         raise NondifferentiableOpError
 
     def substitute(self, a, b):
@@ -195,15 +196,15 @@ class TraceOP(UnaryOP):
         pass
 
     def gradient(self, wrt):
-        raise NondifferentiableOpError
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        return TraceOP(self.operands[0].gradient(wrt))
 
     def substitute(self, a, b):
         if self == a:
             return b
         else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_trace(self.operands[0].substitute(a, b))
+            return TraceOP(self.operands[0].substitute(a, b))
 
     def get_shape(self):
         return (1,)
@@ -214,7 +215,8 @@ class ConcatenateOP(exprgraph.Operator):
 
 
 class StackOP(exprgraph.Operator):
-    pass
+    _type_name = 'Stack'
+    # TODO what arity?
 
 
 class SplitOP(exprgraph.Operator):
@@ -228,20 +230,20 @@ class RepeatOP(exprgraph.Operator):
 # BITWISE OPS (binary operations) #####################################
 
 
-class BitwiseAndOP(exprgraph.Operator):
-    pass
+class BitwiseAndOP(BinaryOP):
+    _type_name = 'bAnd'
 
 
-class BitwiseOrOP(exprgraph.Operator):
-    pass
+class BitwiseOrOP(BinaryOP):
+    _type_name = 'bOr'
 
 
 class BitwiseXorOP(exprgraph.Operator):
-    pass
+    _type_name = 'bXor'
 
 
-class InvertOP(exprgraph.Operator):
-    pass
+class InvertOP(UnaryOP):
+    _type_name = 'Invert'
 
 
 class LeftShiftOP(exprgraph.Operator):
@@ -293,30 +295,37 @@ class IndexOP(exprgraph.Operator):
 
 
 class DotOP(exprgraph.Operator):
+    _type_name = 'Dot'
     pass
 
 
 class VdotOP(exprgraph.Operator):
+    _type_name = 'Vdot'
     pass
 
 
 class InnerOP(exprgraph.Operator):
+    _type_name = 'Inner'
     pass
 
 
 class OuterOP(exprgraph.Operator):
+    _type_name = 'Outer'
     pass
 
 
 class MatmulOP(exprgraph.Operator):
+    _type_name = 'Matmul'
     pass
 
 
 class EigOP(exprgraph.Operator):
+    _type_name = 'Eig'
     pass
 
 
 class EigvalsOP(exprgraph.Operator):
+    _type_name = 'Eigvals'
     pass
 
 
