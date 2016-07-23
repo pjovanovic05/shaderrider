@@ -771,12 +771,10 @@ class LogOP(UnaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        # TODO
-        raise NotImplementedError
+        return MulOP(ReciprocalOP(self.operands[0]), self.operands[0].gradient(wrt))
 
     def simplify(self):
-        # TODO
-        raise NotImplementedError
+        raise NotImplementedError   # TODO
 
 
 class Log10OP(UnaryOP):
@@ -848,15 +846,31 @@ class AddOP(BinaryOP):
                      self.parents)
 
     def simplify(self):
-        raise NotImplementedError
+        raise NotImplementedError   # TODO
 
 
 class ReciprocalOP(UnaryOP):
     _type_name = 'Reciprocal'
 
-    def __init__(self, op, parents):
-        # TODO
-        pass
+    def __init__(self, op, parents=None):
+        super(ReciprocalOP, self).__init__(1, [op], parents)
+
+    def __str__(self):
+        return '1 / (%s)' % str(self.operands[0])
+
+    def substitute(self, a, b):
+        if self == a:
+            return b
+        else:
+            return ReciprocalOP(self.operands[0].substitute(a, b))
+
+    def gradient(self, wrt):
+        if self == wrt:
+            return exprgraph.Constant(1.0)
+        return MulOP(DivOP(exprgraph.Constant(-1), SqrOP(self.operands[0])), self.operands[0].gradient(wrt))
+
+    def simplify(self):
+        raise NotImplementedError    # TODO
 
 
 class NegOP(UnaryOP):
