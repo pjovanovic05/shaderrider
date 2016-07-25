@@ -45,6 +45,10 @@ class Formula(object):
         raise NotImplementedError
 
     @abstractmethod
+    def rgrad(self, dout):
+        raise NotImplementedError
+
+    @abstractmethod
     def simplify(self):
         raise NotImplementedError
 
