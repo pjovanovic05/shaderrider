@@ -48,6 +48,9 @@ class Formula(object):
     def rgrad(self, dout):
         raise NotImplementedError
 
+    # TODO na operatorima rgrad vraca po gradijent za svaki input
+    # TODO na atomima (varijablama) ima grad flag koji kaze da li nas zanima gradijent po ovom atomu
+
     @abstractmethod
     def simplify(self):
         raise NotImplementedError
@@ -141,6 +144,9 @@ class Literal(Atom):                                    # TODO add dtype?
     def gradient(self, wrt):
         pass    # TODO
 
+    def rgrad(self, dout):
+        return [0];
+
     def get_shape(self):
         return (1,)
 
@@ -167,6 +173,9 @@ class Constant(Atom):
     def gradient(self, wrt):
         return Constant(0)
 
+    def rgrad(self, dout):
+        return [0];
+
     def get_variables(self):
         return []
 
@@ -190,7 +199,7 @@ class Variable(Atom):
     """docstring for Variable"""
     _ctr = 0
 
-    def __init__(self, name=None, dtype=None, shape=None, array=None,
+    def __init__(self, name=None, dtype=None, shape=None, array=None, grad_flag=False,
                  shared=False, parents=None):
         super(Variable, self).__init__(parents)
         Variable._ctr += 1
@@ -241,6 +250,11 @@ class Variable(Atom):
             return Constant(1)
         else:
             return Constant(0)  # TODO is it?
+
+    def rgrad(self, dout):
+        if self.grad_flag:
+            return [1]
+        return [0]
 
     def get_variables(self):
         return [self]
