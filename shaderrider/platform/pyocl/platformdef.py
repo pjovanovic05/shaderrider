@@ -124,7 +124,7 @@ class PyOCLValuation(Valuation):
             val._gpu_array = clarray.to_device(self._queue, val.value, async=async)
             self._vars[name] = val
         elif isinstance(value, Number):
-            val = exprgraph.Literal(value)
+            val = exprgraph.Constant(value)
             self._vars[name] = val
         elif isinstance(value, (exprgraph.Variable, exprgraph.Constant)):
             # ovde pomeram value iz variablinog ndarray-a u cl_array!!

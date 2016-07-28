@@ -40,19 +40,31 @@ class Formula(object):
     def substitute(self, a, b):
         raise NotImplementedError
 
+    def evaluate(self, valuation):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _evaluate(self, valuation, cache):
+        raise NotImplementedError
+
     @abstractmethod
     def gradient(self, wrt):
         raise NotImplementedError
 
-    @abstractmethod
-    def rgrad(self, dout):
+    def forward_grad(self, wrt, valuation):
+        # TODO
+        cache = {}
+        # self.eval(valuation, cache)...
+        return self._forward_grad(wrt, valuation, cache)
+
+    def _forward_grad(self, wrt, valuation, cache):
+        pass
+
+    def reverse_grad(self, adjoint, grad, cache):           # TODO da li mi ovde treba i valuation?
         raise NotImplementedError
 
-    # TODO na operatorima rgrad vraca po gradijent za svaki input
-    # TODO na atomima (varijablama) ima grad flag koji kaze da li nas zanima gradijent po ovom atomu
-
     @abstractmethod
-    def simplify(self):
+    def _reverse_grad(self, valuation, adjoint, grad, cache):
         raise NotImplementedError
 
     @abstractmethod
@@ -79,12 +91,6 @@ class Formula(object):
     def parents(self):
         return self._parents
 
-    def is_array(self):
-        raise NotImplementedError
-
-    def is_scalar(self):
-        raise NotImplementedError
-
 
 class Atom(Formula):
     """docstring for Atom"""
@@ -106,50 +112,6 @@ class Atom(Formula):
         else:
             return self
 
-    def simplify(self):
-        return self
-
-
-class Literal(Atom):                                    # TODO add dtype?
-    """docstring for Literal"""
-    _ctr = 0
-
-    def __init__(self, value, name=None, parents=None):
-        super(Literal, self).__init__(parents)
-        # TODO check type to be primitive (literal) (int, float, bool)
-        Literal._ctr += 1
-        self._value = value
-        self._fid = 'L' + str(Literal._ctr)
-        self._name = name if name is not None else self._fid
-
-    @property
-    def value(self):
-        return self._value
-
-    def is_scalar(self):
-        return True
-
-    def __eq__(self, other):
-        return type(self) == type(other) and self._value == other.value
-
-    def __str__(self):
-        return str(self._value)
-
-    def get_variables(self):
-        return []       # TODO da li ovde treba da bude [self]? da li uopste trebaju atomi ili varijable?
-
-    def is_array(self):
-        return False
-
-    def gradient(self, wrt):
-        pass    # TODO
-
-    def rgrad(self, dout):
-        return [0];
-
-    def get_shape(self):
-        return (1,)
-
 
 class Constant(Atom):
     """docstring for Constant"""
@@ -170,11 +132,18 @@ class Constant(Atom):
     # def value(self, val):
     #     self._value = val
 
+    def _evaluate(self, valuation, cache):
+        cache[id(self)] = self._value
+        return self._value
+
     def gradient(self, wrt):
         return Constant(0)
 
-    def rgrad(self, dout):
-        return [0];
+    def _forward_grad(self, wrt, valuation, cache):
+        return 0
+
+    def _reverse_grad(self, valuation, adjoint, grad, cache):
+        pass
 
     def get_variables(self):
         return []
@@ -187,12 +156,6 @@ class Constant(Atom):
 
     def get_shape(self):
         return self._value.shape
-
-    def is_array(self):
-        return self._value.ndim != 0
-
-    def is_scalar(self):
-        return self._value.ndim == 0
 
 
 class Variable(Atom):
@@ -251,10 +214,8 @@ class Variable(Atom):
         else:
             return Constant(0)  # TODO is it?
 
-    def rgrad(self, dout):
-        if self.grad_flag:
-            return [1]
-        return [0]
+    def _reverse_grad(self, valuation, adjoint, grad, cache):
+        grad[self.name] += adjoint
 
     def get_variables(self):
         return [self]
@@ -269,12 +230,6 @@ class Variable(Atom):
 
     def get_shape(self):
         return self._shape
-
-    def is_array(self):
-        return len(self._shape) != 0
-
-    def is_scalar(self):
-        return len(self._shape) == 0
 
 
 class Operator(Formula):
@@ -343,16 +298,6 @@ class Operator(Formula):
     @property
     def arity(self):
         return self._arity
-
-    @classmethod
-    def is_broadcastable(cls):
-        return False
-
-    def is_array(self):
-        return True
-
-    def is_scalar(self):
-        return False
 
     @classmethod
     def get_type_name(cls):

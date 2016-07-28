@@ -68,6 +68,15 @@ class ReshapeOP(exprgraph.Operator):
         # TODO or is there a gradient for ReshapeOP? maybe just neutral?
         raise NondifferentiableOpError
 
+    def _evaluate(self, valuation, cache):
+        raise NotImplementedError
+
+    def _forward_grad(self, wrt, valuation, cache):
+        raise NotImplementedError
+
+    def _reverse_grad(self, valuation, adjoint, grad, cache):
+        raise NotImplementedError
+
     def substitute(self, a, b):
         if self == a:
             return b
@@ -77,26 +86,12 @@ class ReshapeOP(exprgraph.Operator):
     def get_shape(self):
         return self._params['shape']
 
-    def simplify(self):
-        # Ideje:
-        # ako je operand skalar ili literal, nema sta da se shapeuje
-        # ako je operand jos jedan reshape, njegova primena se moze preskociti
-        # ako je operand
-
-        # ff = config.get_formula_factory()
-        # return ff.create_reshape(self.operands[0].simplify(), self._shape)
-        raise NotImplementedError
-
 
 class RavelOP(UnaryOP):
     _type_name = 'Ravel'
 
     def __init__(self, op, parents=None):
         super(RavelOP, self).__init__(1, [op], parents)
-
-    def simplify(self):
-        # idea: if op is already a vector just omit this operator.
-        pass
 
     def gradient(self, wrt):
         raise NondifferentiableOpError
@@ -130,11 +125,6 @@ class TransposeOP(UnaryOP):
             return exprgraph.Constant(1.0)
         return TransposeOP(self.operands[0].gradient(wrt))
 
-    def simplify(self):
-        # some ideas:
-        # if op is also a transpose on the same axes, cancel out
-        pass
-
 
 class DimshuffleOP(UnaryOP):
     _type_name = 'Dimshuffle'
@@ -142,9 +132,6 @@ class DimshuffleOP(UnaryOP):
     def __init__(self, op, new_dims, parents=None):
         super(DimshuffleOP, self).__init__(1, [op], parents)
         self._params['new_dims'] = new_dims
-
-    def simplify(self):
-        pass
 
     def gradient(self, wrt):
         raise NondifferentiableOpError
@@ -167,9 +154,6 @@ class DiagonalOP(UnaryOP):
     def __init__(self, op, parents=None):
         super(DiagonalOP, self).__init__(1, [op], parents)
 
-    def simplify(self):
-        pass
-
     def gradient(self, wrt):
         # TODO ipak jeste
         raise NondifferentiableOpError
@@ -191,9 +175,6 @@ class TraceOP(UnaryOP):
 
     def __init__(self, op, parents=None):
         super(TraceOP, self).__init__(1, [op], parents)
-
-    def simplify(self):
-        pass
 
     def gradient(self, wrt):
         if self == wrt:
@@ -279,11 +260,6 @@ class IndexOP(exprgraph.Operator):
             # ff = config.get_formula_factory()
             # return ff.create_index()
 
-    def simplify(self):
-        pass    # TODO
-        # ff = config.get_formula_factory()
-        # return ff.create_index(self.operands[0].simplify(), self._key, self.parents)
-
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
@@ -336,9 +312,6 @@ class NormOP(exprgraph.Operator):
         super(NormOP, self).__init__(1, [op], parents)
         self._params['norm'] = norm
 
-    def simplify(self):
-        pass
-
     def gradient(self, wrt):
         pass
 
@@ -366,9 +339,6 @@ class AllOP(UnaryOP):
     def gradient(self, wrt):
         pass
 
-    def simplify(self):
-        pass
-
     def substitute(self, a, b):
         pass
 
@@ -380,9 +350,6 @@ class AnyOP(UnaryOP):
         super(AnyOP, self).__init__(1, [op], parents)
 
     def gradient(self, wrt):
-        pass
-
-    def simplify(self):
         pass
 
     def substitute(self, a, b):
@@ -435,12 +402,6 @@ class EqOP(BinaryOP):
     def gradient(self, wrt):
         pass
 
-    def simplify(self):
-        pass    # TODO
-        # ff = config.get_formula_factory()
-        # simp_op1, simp_op2 = (op.simplify() for op in self.operands)
-        # return ff.create_eq(simp_op1, simp_op2)
-
     def substitute(self, a, b):
         pass
 
@@ -472,10 +433,6 @@ class SinOP(UnaryOP):
             return exprgraph.Constant(1)
         return MulOP(CosOP(self.operands[0]), self.operands[0].gradient(wrt))
 
-    def simplify(self):
-        # TODO
-        raise NotImplementedError
-
 
 class CosOP(UnaryOP):
     _type_name = "Cos"
@@ -498,10 +455,6 @@ class CosOP(UnaryOP):
             return exprgraph.Constant(1.0)
         return MulOP(NegOP(SinOP(self.operands[0])), self.operands[0].gradient(wrt))
 
-    def simplify(self):
-        # TODO
-        raise NotImplementedError
-
 
 class TanOP(UnaryOP):
     _type_name = "Tan"
@@ -522,10 +475,6 @@ class TanOP(UnaryOP):
         # TODO 1/(cos(x)^2)  or 1+tan(x)^2 or sec(x)^2
         if self == wrt:
             return exprgraph.Constant(1.0)
-        raise NotImplementedError
-
-    def simplify(self):
-        # TODO
         raise NotImplementedError
 
 
@@ -584,9 +533,6 @@ class CoshOP(UnaryOP):
         else:
             return CoshOP(self.operands[0].substitute(a, b))
 
-    def simplify(self):
-        pass
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -643,9 +589,6 @@ class RoundOP(UnaryOP):
             return exprgraph.Constant(1.0)
         # TODO raise NotDifferentiable????
 
-    def simplify(self):
-        pass
-
 
 class FloorOP(UnaryOP):
     _type_name = 'Floor'
@@ -662,9 +605,6 @@ class FloorOP(UnaryOP):
             # return ff.create_floor(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
-        pass
-
-    def simplify(self):
         pass
 
 
@@ -684,9 +624,6 @@ class CeilOP(UnaryOP):
 
     def gradient(self, wrt):
         pass  # Nondifferentiable?
-
-    def simplify(self):
-        pass
 
 
 class ProdOP(exprgraph.Operator):
@@ -726,14 +663,6 @@ class ExpOP(UnaryOP):
             return exprgraph.Constant(1.0)
         return ExpOP(self.operands[0])
 
-    def simplify(self):
-        simp_op = self.operands[0].simplify()
-        # TODO wtf?
-        if isinstance(simp_op, ExpOP):
-            return simp_op.operands[0]
-
-        raise NotImplementedError
-
 
 class Exp2OP(UnaryOP):
     _type_name = 'Exp2'
@@ -750,9 +679,6 @@ class Exp2OP(UnaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        raise NotImplementedError
-
-    def simplify(self):
         raise NotImplementedError
 
 
@@ -773,9 +699,6 @@ class LogOP(UnaryOP):
             return exprgraph.Constant(1.0)
         return MulOP(ReciprocalOP(self.operands[0]), self.operands[0].gradient(wrt))
 
-    def simplify(self):
-        raise NotImplementedError   # TODO
-
 
 class Log10OP(UnaryOP):
     _type_name = 'Log10'
@@ -794,9 +717,6 @@ class Log10OP(UnaryOP):
             return exprgraph.Constant(1.0)
         raise NotImplementedError   # TODO
 
-    def simplify(self):
-        raise NotImplementedError   # TODO
-
 
 class Log1pOP(UnaryOP):
     _type_name = 'Log1p'
@@ -813,9 +733,6 @@ class Log1pOP(UnaryOP):
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
-        raise NotImplementedError   # TODO
-
-    def simplify(self):
         raise NotImplementedError   # TODO
 
 
@@ -845,9 +762,6 @@ class AddOP(BinaryOP):
                      self.operands[1].gradient(wrt),
                      self.parents)
 
-    def simplify(self):
-        raise NotImplementedError   # TODO
-
 
 class ReciprocalOP(UnaryOP):
     _type_name = 'Reciprocal'
@@ -869,9 +783,6 @@ class ReciprocalOP(UnaryOP):
             return exprgraph.Constant(1.0)
         return MulOP(DivOP(exprgraph.Constant(-1), SqrOP(self.operands[0])), self.operands[0].gradient(wrt))
 
-    def simplify(self):
-        raise NotImplementedError    # TODO
-
 
 class NegOP(UnaryOP):
     _type_name = "Neg"
@@ -892,12 +803,6 @@ class NegOP(UnaryOP):
         if self == wrt:
             return exprgraph.Constant(1.0)
         return NegOP(self.operands[0].gradient(wrt))
-
-    def simplify(self):
-        simp_op = self.operands[0].simplify()
-        if type(simp_op) == type(self):
-            return simp_op.operands[0]
-        return NegOP(simp_op)
 
 
 class MulOP(BinaryOP):
@@ -922,9 +827,6 @@ class MulOP(BinaryOP):
             return exprgraph.Constant(1.0)
         return AddOP(MulOP(self.operands[0].gradient(wrt), self.operands[1]),
                      MulOP(self.operands[0], self.operands[1].gradient(wrt)))
-
-    def simplify(self):
-        raise NotImplementedError
 
 
 class DivOP(BinaryOP):
@@ -951,9 +853,6 @@ class DivOP(BinaryOP):
                            MulOP(self.operands[0], self.operands[1].gradient(wrt))),
                      SqrOP(self.operands[1]))
 
-    def simplify(self):
-        raise NotImplementedError
-
 
 class PowOP(BinaryOP):
     _type_name = 'Pow'
@@ -976,9 +875,6 @@ class PowOP(BinaryOP):
         if self == wrt:
             return exprgraph.Constant(1.0)
         raise NotImplementedError   # TODO finish this
-
-    def simplify(self):
-        raise NotImplementedError   # TODO
 
 
 class SubOP(BinaryOP):
@@ -1003,9 +899,6 @@ class SubOP(BinaryOP):
             return exprgraph.Constant(1.0)
         return SubOP(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
 
-    def simplify(self):
-        raise NotImplementedError   # TODO
-
 
 class ModOP(BinaryOP):
     _type_name = 'Mod'
@@ -1027,20 +920,12 @@ class ModOP(BinaryOP):
             return exprgraph.Constant(1.0)
         raise NotImplementedError   # TODO
 
-    def simplify(self):
-        raise NotImplementedError   # TODO
-
 
 class AbsOP(UnaryOP):
     _type_name = 'Abs'
 
     def __init__(self, op, parents=None):
         super(AbsOP, self).__init__(1, [op], parents)
-
-    def simplify(self):
-        # if operand is also abs, colapse it
-        # if operand is a constant, colapse this into a constant
-        pass
 
     def gradient(self, wrt):
         if self == wrt:
@@ -1074,9 +959,6 @@ class SignOP(UnaryOP):
             return exprgraph.Constant(1.0)
         raise NotImplementedError   # TODO
 
-    def simplify(self):
-        pass
-
 
 class SqrOP(UnaryOP):
     _type_name = 'Sqr'
@@ -1097,9 +979,6 @@ class SqrOP(UnaryOP):
         if self == wrt:
             return exprgraph.Constant(1.0)
         return MulOP(MulOP(exprgraph.Constant(2.0), self.operands[0]), self.operands[0].gradient(wrt))
-
-    def simplify(self):
-        raise NotImplementedError
 
 
 class SqrtOP(UnaryOP):
@@ -1122,9 +1001,6 @@ class SqrtOP(UnaryOP):
             return exprgraph.Constant(1.0)
         pass
 
-    def simplify(self):
-        pass
-
 
 class MaximumOP(BinaryOP):
     _type_name = 'Maximum'
@@ -1139,9 +1015,6 @@ class MaximumOP(BinaryOP):
         if self == wrt:
             return exprgraph.Constant(1.0)
         raise NondifferentiableOpError
-
-    def simplify(self):
-        pass
 
 
 class MinimumOP(BinaryOP):
@@ -1161,9 +1034,6 @@ class MinimumOP(BinaryOP):
             return exprgraph.Constant(1.0)
         raise NondifferentiableOpError
 
-    def simplify(self):
-        pass
-
 
 # STATISTICS OPS ######################################################
 
@@ -1182,9 +1052,6 @@ class MedianOP(UnaryOP):
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
-    def simplify(self):
-        pass
-
 
 class AverageOP(UnaryOP):
     _type_name = 'Avg'
@@ -1200,9 +1067,6 @@ class AverageOP(UnaryOP):
 
     def gradient(self, wrt):
         raise NondifferentiableOpError
-
-    def simplify(self):
-        pass
 
 
 class MeanOP(UnaryOP):
@@ -1222,9 +1086,6 @@ class MeanOP(UnaryOP):
             return exprgraph.Constant(1.0)
         raise NondifferentiableOpError
 
-    def simplify(self):
-        pass
-
 
 class StdOP(UnaryOP):
     _type_name = 'STD'
@@ -1240,9 +1101,6 @@ class StdOP(UnaryOP):
 
     def gradient(self, wrt):
         raise NondifferentiableOpError
-
-    def simplify(self):
-        pass
 
 
 class VarOP(UnaryOP):
@@ -1261,9 +1119,6 @@ class VarOP(UnaryOP):
         if self == wrt:
             return exprgraph.Constant(1.0)
         raise NondifferentiableOpError
-
-    def simplify(self):
-        pass
 
 
 class CorrelateOP(exprgraph.Operator):
@@ -1295,10 +1150,6 @@ class ElementwiseOP(exprgraph.Operator):
     def gradient(self, wrt):
         pass
 
-    def simplify(self):
-        pass  # isn't it an error to call this for elementwise?
-
-
 # SCAN OPS ############################################################
 
 # sum, max, min, mean, std
@@ -1326,9 +1177,6 @@ class ReduceOP(exprgraph.Operator):
     def gradient(self, wrt):
         pass
 
-    def simplify(self):
-        pass
-
 
 class ScanOP(exprgraph.Operator):
     _type_name = 'Scan'
@@ -1346,9 +1194,6 @@ class ScanOP(exprgraph.Operator):
         pass
 
     def gradient(self, wrt):
-        pass
-
-    def simplify(self):
         pass
 
 
@@ -1394,15 +1239,6 @@ class GemmOP(exprgraph.Operator):
     def gradient(self, wrt):
         raise NotImplementedError
 
-    def simplify(self):
-        return GemmOP(self.operands[0].simplify(),
-                      self.operands[1].simplify(),
-                      self.operands[2].simplify(),
-                      self.operands[3].simplify(),
-                      self.operands[4].simplify(),
-                      self.operands[5].simplify(),
-                      self.operands[6].simplify())
-
 
 class GemvOP(exprgraph.Operator):
     _type_name = "Gemv"
@@ -1436,9 +1272,6 @@ class GemvOP(exprgraph.Operator):
     def get_shape(self):
         pass
 
-    def simplify(self):
-        pass
-
 
 class GerOP(exprgraph.Operator):
     _type_name = "Ger"
@@ -1470,9 +1303,6 @@ class GerOP(exprgraph.Operator):
     def gradient(self, wrt):
         raise NotImplementedError
 
-    def simplify(self):
-        pass
-
 
 # CONVOLUTION OPS #####################################################
 
@@ -1501,9 +1331,6 @@ class ConvOP(exprgraph.Operator):
         pass
 
     def gradient(self, wrt):
-        pass
-
-    def simplify(self):
         pass
 
 
