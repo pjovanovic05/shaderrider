@@ -30,10 +30,10 @@ class NegOP(UnaryOP):
     def __str__(self):
         return '-(%s)' % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return NegOP(self.operands[0].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return NegOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         return NegOP(self.operands[0].gradient(wrt))
@@ -54,10 +54,10 @@ class ExpOP(UnaryOP):
     def __str__(self):
         return 'exp(%s)' % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return ExpOP(self.operands[0].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return ExpOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         return ExpOP(self.operands[0])
@@ -81,10 +81,10 @@ class LogOP(UnaryOP):
     def __str__(self):
         return 'log(%s)' % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return LogOP(self.operands[0].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return LogOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -104,10 +104,10 @@ class SinOP(UnaryOP):
     def __str__(self):
         return 'sin(%s)' % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return SinOP(self.operands[0].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return SinOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -127,10 +127,10 @@ class CosOP(UnaryOP):
     def __str__(self):
         return "cos(%s)" % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return CosOP(self.operands[0].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return CosOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -150,10 +150,10 @@ class TanOP(UnaryOP):
     def __str__(self):
         return "tan(%s)" % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return TanOP(self.operands[0].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return TanOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -199,10 +199,10 @@ class AddOP(BinaryOP):
     def __str__(self):
         return '(%s + %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return AddOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return AddOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         return AddOP(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
@@ -223,10 +223,10 @@ class SubOP(BinaryOP):
     def __str__(self):
         return '(%s - %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return SubOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return SubOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         return SubOP(self.operands[0].gradient(wrt), self.operands[1].gradient(wrt))
@@ -247,10 +247,10 @@ class MulOP(BinaryOP):
     def __str__(self):
         return '(%s * %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return MulOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return MulOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         return AddOP(MulOP(self.operands[0].gradient(wrt), self.operands[1]),
@@ -272,10 +272,10 @@ class DivOP(BinaryOP):
     def __str__(self):
         return '(%s / %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return DivOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return DivOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         return DivOP(SubOP(MulOP(self.operands[0].gradient(wrt), self.operands[1]),
@@ -298,10 +298,10 @@ class PowOP(BinaryOP):
     def __str__(self):
         return '(%s ^ %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return PowOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return PowOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO treba ln za generalnu verziju...
@@ -325,10 +325,10 @@ class EqOP(BinaryOP):
     def __str__(self):
         return '(%s == %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return EqOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return EqOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -350,10 +350,10 @@ class GtOP(BinaryOP):
     def __str__(self):
         return '(%s > %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return GtOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return GtOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -375,10 +375,10 @@ class LtOP(BinaryOP):
     def __str__(self):
         return '(%s < %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return LtOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return LtOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -400,10 +400,10 @@ class GeOP(BinaryOP):
     def __str__(self):
         return '(%s >= %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return GeOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return GeOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -425,10 +425,10 @@ class LeOP(BinaryOP):
     def __str__(self):
         return '(%s <= %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return LeOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return LeOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO
@@ -450,10 +450,10 @@ class NeOP(BinaryOP):
     def __str__(self):
         return '(%s != %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return NeOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return NeOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO

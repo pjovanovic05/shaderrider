@@ -39,7 +39,7 @@ class ElementwiseOpt(Optimizer):
             curatoms = self._foldSubGraph(f)
             if len(curatoms) > 0:
                 new_op = ew.ElementwiseOP(f, curatoms)
-                optf.substitute(f, new_op)
+                # optf.substitute(f, new_op)
                 front.extend([ca for ca in curatoms if not isinstance(ca, exprgraph.Atom)])
         return optf
 

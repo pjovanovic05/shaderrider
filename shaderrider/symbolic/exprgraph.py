@@ -36,12 +36,8 @@ class Formula(object):
     def complexity(self):
         raise NotImplementedError
 
-    @abstractmethod
-    def substitute(self, a, b):
-        raise NotImplementedError
-
     def evaluate(self, valuation):
-        raise NotImplementedError
+        return self._evaluate(valuation, {})
 
     @abstractmethod
     def _evaluate(self, valuation, cache):
@@ -96,21 +92,11 @@ class Atom(Formula):
     """docstring for Atom"""
     __metaclass__ = ABCMeta
 
-    @abstractproperty
-    def value(self):
-        pass
-
     def get_atoms(self):
         return [self]
 
     def complexity(self):
         return 0
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return self
 
 
 class Constant(Atom):
@@ -128,9 +114,9 @@ class Constant(Atom):
     def value(self):
         return self._value
 
-    # @value.setter
-    # def value(self, val):
-    #     self._value = val
+    @value.setter
+    def value(self, val):
+        self._value = val
 
     def _evaluate(self, valuation, cache):
         cache[id(self)] = self._value
@@ -170,11 +156,11 @@ class Variable(Atom):
         self._dtype = dtype
         self._shape = shape if shape is not None else ()
         self._shared = shared
-        self._value = None
+        # self._value = None
         if array is not None:
             self._dtype = array.dtype
             self._shape = array.shape
-            self._value = array
+            # self._value = array
 
     @property
     def name(self):
@@ -183,14 +169,6 @@ class Variable(Atom):
     @name.setter
     def name(self, value):
         self._fid = value
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        self._value = value
 
     @property
     def dtype(self):
@@ -255,9 +233,6 @@ class Operator(Formula):
             c += op.complexity()
         return c
 
-    def substitute(self, a, b):
-        raise NotImplementedError
-
     def get_variables(self):
         atoms = []
         for op in self._operands:
@@ -312,4 +287,3 @@ class Operator(Formula):
         """generates a zero argument function which executes the computation
         steps represented by this operator."""
         raise NotImplementedError
-

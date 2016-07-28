@@ -17,27 +17,27 @@ class GemmOP(ast.Operator):
             raise ValueError
             # TODO
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return GemmOP(self.operands[0].substitute(a, b),
-                      self.operands[1].substitute(a, b),
-                      self.operands[2].substitute(a, b),
-                      self.operands[3],
-                      self.operands[4],
-                      self.operands[5],
-                      self.operands[6])
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return GemmOP(self.operands[0].substitute(a, b),
+    #                   self.operands[1].substitute(a, b),
+    #                   self.operands[2].substitute(a, b),
+    #                   self.operands[3],
+    #                   self.operands[4],
+    #                   self.operands[5],
+    #                   self.operands[6])
 
-    def __str__(self):
-        fstr = 'GEMM(%f * %s'
-        if self.operands[5].value:  # transA
-            fstr += "'"
-        fstr += " * %s"
-        if self.operands[6].value:  # transB
-            fstr += "'"
-        fstr += " + %f * %s)"
-        return fstr % map(str, (self.operands[3].value, self.operands[0].name,
-                                self.operands[1].name, self.operands[4].value, self.operands[2].name))
+    # def __str__(self):
+    #     fstr = 'GEMM(%f * %s'
+    #     if self.operands[5].value:  # transA
+    #         fstr += "'"
+    #     fstr += " * %s"
+    #     if self.operands[6].value:  # transB
+    #         fstr += "'"
+    #     fstr += " + %f * %s)"
+    #     return fstr % map(str, (self.operands[3].value, self.operands[0].name,
+    #                             self.operands[1].name, self.operands[4].value, self.operands[2].name))
 
     def get_shape(self):
         # TODO
@@ -63,23 +63,23 @@ class GemvOP(ast.Operator):
         super(GemvOP, self).__init__(6, [A, X, Y, alpha, beta, transA], parents)
         # TODO check dimensions compatibility
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return GemvOP(self.operands[0].substitute(a, b),
-                      self.operands[1].substitute(a, b),
-                      self.operands[2].substitute(a, b),
-                      self.operands[3],
-                      self.operands[4],
-                      self.operands[5])
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return GemvOP(self.operands[0].substitute(a, b),
+    #                   self.operands[1].substitute(a, b),
+    #                   self.operands[2].substitute(a, b),
+    #                   self.operands[3],
+    #                   self.operands[4],
+    #                   self.operands[5])
 
-    def __str__(self):
-        fstr = 'GEMV(%f * %s'
-        if self.operands[5].value:
-            fstr += "'"
-        fstr += ' * %s + %f * %s)'
-        return fstr % map(str, (self.operands[3], self.operands[0], self.operands[1],
-                                self.operands[4], self.operands[2]))
+    # def __str__(self):
+    #     fstr = 'GEMV(%f * %s'
+    #     if self.operands[5].value:
+    #         fstr += "'"
+    #     fstr += ' * %s + %f * %s)'
+    #     return fstr % map(str, (self.operands[3], self.operands[0], self.operands[1],
+    #                             self.operands[4], self.operands[2]))
 
     def gradient(self, wrt):
         pass
@@ -104,13 +104,13 @@ class GerOP(ast.Operator):
         if (m, n) != A.get_shape():
             raise IncompatibleDimensionsError
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return GerOP(self.operands[0],
-                     self.operands[1].substitute(a, b),
-                     self.operands[2].substitute(a, b),
-                     self.operands[3].substitute(a, b))
+    # def substitute(self, a, b):
+    #     if self == a:
+    #         return b
+    #     return GerOP(self.operands[0],
+    #                  self.operands[1].substitute(a, b),
+    #                  self.operands[2].substitute(a, b),
+    #                  self.operands[3].substitute(a, b))
 
     def __str__(self):
         return "GER(%f * %s * %s' + %s)" % map(str, self.operands)

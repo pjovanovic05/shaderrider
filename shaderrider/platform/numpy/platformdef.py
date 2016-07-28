@@ -12,25 +12,26 @@ from shaderrider.platform.numpy import operators as ops
 
 
 class NPValuation(pdefs.Valuation):
-    def add(self, name, value):
-        if isinstance(value, np.ndarray):
-            self._vars[name] = value
-        elif isinstance(value, Number):
-            self._vars[name] = value
-        elif isinstance(value, exprgraph.Atom):
-            self._vars[name] = value.value          # TODO check value type?
-        else:
-            raise TypeError        # TODO raise unsupported type or something
-
-    def add_shared(self, name, value):
-        if isinstance(value, np.ndarray):
-            self._shared[name] = value
-        elif isinstance(value, Number):
-            self._shared[name] = value
-        elif isinstance(value, exprgraph.Atom):
-            self._shared[name] = value.value
-        else:
-            raise TypeError  # TODO raise unsupported type or something
+    pass
+    # def add(self, name, value):
+    #     if isinstance(value, np.ndarray):
+    #         self._vars[name] = value
+    #     elif isinstance(value, Number):
+    #         self._vars[name] = value
+    #     elif isinstance(value, exprgraph.Atom):
+    #         self._vars[name] = value.value          # TODO check value type?
+    #     else:
+    #         raise TypeError        # TODO raise unsupported type or something
+    #
+    # def add_shared(self, name, value):
+    #     if isinstance(value, np.ndarray):
+    #         self._shared[name] = value
+    #     elif isinstance(value, Number):
+    #         self._shared[name] = value
+    #     elif isinstance(value, exprgraph.Atom):
+    #         self._shared[name] = value.value
+    #     else:
+    #         raise TypeError  # TODO raise unsupported type or something
 
 
 class NPFunction(pdefs.Function):

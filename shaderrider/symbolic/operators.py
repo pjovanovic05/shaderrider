@@ -77,12 +77,6 @@ class ReshapeOP(exprgraph.Operator):
     def _reverse_grad(self, valuation, adjoint, grad, cache):
         raise NotImplementedError
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return ReshapeOP(self.operands[0].substitute(a, b), self._params['shape'], self.parents)
-
     def get_shape(self):
         return self._params['shape']
 
@@ -96,12 +90,6 @@ class RavelOP(UnaryOP):
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return RavelOP(self.operands[0].substitute(a, b), self.parents)
-
     def get_shape(self):
         return (reduce(lambda x, y: x * y, self.operands[0].get_shape(), 1),)
 
@@ -113,12 +101,6 @@ class TransposeOP(UnaryOP):
         super(TransposeOP, self).__init__(1, [op], parents)
         # self._axes = axes
         self._params['axes'] = axes
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return TransposeOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -136,14 +118,6 @@ class DimshuffleOP(UnaryOP):
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_dimshuffle(self.operands[0].substitute(a, b), self._new_dims)
-
     def get_shape(self):
         return self._params['new_dims']
 
@@ -157,14 +131,6 @@ class DiagonalOP(UnaryOP):
     def gradient(self, wrt):
         # TODO ipak jeste
         raise NondifferentiableOpError
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_diagonal(self.operands[0].substitute(a, b))  # TODO parents?
 
     def get_shape(self):
         pass
@@ -180,12 +146,6 @@ class TraceOP(UnaryOP):
         if self == wrt:
             return exprgraph.Constant(1.0)
         return TraceOP(self.operands[0].gradient(wrt))
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return TraceOP(self.operands[0].substitute(a, b))
 
     def get_shape(self):
         return (1,)
@@ -252,14 +212,6 @@ class IndexOP(exprgraph.Operator):
         super(IndexOP, self).__init__(1, [op], parents)
         self._params['key'] = key
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_index()
-
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
@@ -315,14 +267,6 @@ class NormOP(exprgraph.Operator):
     def gradient(self, wrt):
         pass
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_norm(self.operands[0].substitute(a, b), self.operands[1])
-
     def get_shape(self):
         pass
 
@@ -339,9 +283,6 @@ class AllOP(UnaryOP):
     def gradient(self, wrt):
         pass
 
-    def substitute(self, a, b):
-        pass
-
 
 class AnyOP(UnaryOP):
     _type_name = 'Any'
@@ -350,9 +291,6 @@ class AnyOP(UnaryOP):
         super(AnyOP, self).__init__(1, [op], parents)
 
     def gradient(self, wrt):
-        pass
-
-    def substitute(self, a, b):
         pass
 
 
@@ -402,9 +340,6 @@ class EqOP(BinaryOP):
     def gradient(self, wrt):
         pass
 
-    def substitute(self, a, b):
-        pass
-
 
 class NeOP(BinaryOP):
     pass
@@ -422,12 +357,6 @@ class SinOP(UnaryOP):
     def __str__(self):
         return 'sin(%s)' % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return SinOP(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1)
@@ -442,12 +371,6 @@ class CosOP(UnaryOP):
 
     def __str__(self):
         return "cos(%s)" % str(self.operands[0])
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return CosOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # -sin(x)*dx
@@ -464,12 +387,6 @@ class TanOP(UnaryOP):
 
     def __str__(self):
         return "tan(%s)" % str(self.operands[0])
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return TanOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         # TODO 1/(cos(x)^2)  or 1+tan(x)^2 or sec(x)^2
@@ -527,12 +444,6 @@ class CoshOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(CoshOP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return CoshOP(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -576,14 +487,6 @@ class RoundOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(RoundOP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_round(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -596,14 +499,6 @@ class FloorOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(FloorOP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_floor(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         pass
 
@@ -613,14 +508,6 @@ class CeilOP(UnaryOP):
 
     def __init__(self, operand, parents=None):
         super(CeilOP, self).__init__(1, [operand], parents)
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_ceil(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         pass  # Nondifferentiable?
@@ -652,11 +539,6 @@ class ExpOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(ExpOP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return ExpOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -670,12 +552,6 @@ class Exp2OP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(Exp2OP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return Exp2OP(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -687,12 +563,6 @@ class LogOP(UnaryOP):
 
     def __init__(self, operand, parents=None):
         super(LogOP, self).__init__(1, [operand], parents)
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return LogOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -706,12 +576,6 @@ class Log10OP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(Log10OP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return Log10OP(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -723,12 +587,6 @@ class Log1pOP(UnaryOP):
 
     def __init__(self, operand, parents=None):
         super(Log1pOP, self).__init__(1, [operand], parents)
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return Log1pOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -747,20 +605,18 @@ class AddOP(BinaryOP):
     def __str__(self):
         return '(%s + %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return AddOP(self.operands[0].substitute(a, b),
-                         self.operands[1].substitute(a, b),
-                         self.parents)
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
         return AddOP(self.operands[0].gradient(wrt),
                      self.operands[1].gradient(wrt),
                      self.parents)
+
+    def _forward_grad(self, wrt, valuation, cache):
+        raise NotImplementedError   # TODO
+
+    def _reverse_grad(self, valuation, adjoint, grad, cache):
+        raise NotImplementedError   # TODO
 
 
 class ReciprocalOP(UnaryOP):
@@ -771,12 +627,6 @@ class ReciprocalOP(UnaryOP):
 
     def __str__(self):
         return '1 / (%s)' % str(self.operands[0])
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return ReciprocalOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -792,12 +642,6 @@ class NegOP(UnaryOP):
 
     def __str__(self):
         return '-(%s)' % str(self.operands[0])
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return NegOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -816,12 +660,6 @@ class MulOP(BinaryOP):
     def __str__(self):
         return '(%s * %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return MulOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -839,12 +677,6 @@ class DivOP(BinaryOP):
 
     def __str__(self):
         return '(%s / %s)' % map(str, self.operands)
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return DivOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -865,12 +697,6 @@ class PowOP(BinaryOP):
     def __str__(self):
         return '(%s ^ %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return PowOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -888,12 +714,6 @@ class SubOP(BinaryOP):
     def __str__(self):
         return '(%s - %s)' % (str(self.operands[0]), str(self.operands[1]))
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return SubOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -908,12 +728,6 @@ class ModOP(BinaryOP):
 
     def __str__(self):
         return '(%s %% %s)' % (str(self.operands[0]), str(self.operands[1]))
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return ModOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -932,12 +746,6 @@ class AbsOP(UnaryOP):
             return exprgraph.Constant(1.0)
         pass  # TODO <0 : -1, 0: 0, >0: 1
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return AbsOP(self.operands[0].substitute(a, b))
-
 
 class SignOP(UnaryOP):
     _type_name = 'Sign'
@@ -947,12 +755,6 @@ class SignOP(UnaryOP):
 
     def __str__(self):
         return "sign(%s)" % str(self.operands[0])
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return SignOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -969,12 +771,6 @@ class SqrOP(UnaryOP):
     def __str__(self):
         return '(%s ^ 2)' % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return SqrOP(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -990,12 +786,6 @@ class SqrtOP(UnaryOP):
     def __str__(self):
         return 'sqrt(%s)' % str(self.operands[0])
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return SqrtOP(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -1008,9 +798,6 @@ class MaximumOP(BinaryOP):
     def __init__(self, op1, op2, parents=None):
         super(MaximumOP, self).__init__(2, [op1, op2], parents)
 
-    def substitute(self, a, b):
-        pass
-
     def gradient(self, wrt):
         if self == wrt:
             return exprgraph.Constant(1.0)
@@ -1022,12 +809,6 @@ class MinimumOP(BinaryOP):
 
     def __init__(self, op1, op2, parents=None):
         super(MinimumOP, self).__init__(2, [op1, op2], parents)
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return MinimumOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -1043,12 +824,6 @@ class MedianOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(MedianOP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return MedianOP(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
@@ -1059,12 +834,6 @@ class AverageOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(AverageOP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return AverageOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
-
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
@@ -1074,12 +843,6 @@ class MeanOP(UnaryOP):
 
     def __init__(self, operand, parents=None):
         super(MeanOP, self).__init__(1, [operand], parents)
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return MeanOP(self.operands[0].substitute(a, b), self.operands[1].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -1093,12 +856,6 @@ class StdOP(UnaryOP):
     def __init__(self, operand, parents=None):
         super(StdOP, self).__init__(1, [operand], parents)
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return StdOP(self.operands[0].substitute(a, b))
-
     def gradient(self, wrt):
         raise NondifferentiableOpError
 
@@ -1108,12 +865,6 @@ class VarOP(UnaryOP):
 
     def __init__(self, operand, parents=None):
         super(VarOP, self).__init__(1, [operand], parents)
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            return VarOP(self.operands[0].substitute(a, b))
 
     def gradient(self, wrt):
         if self == wrt:
@@ -1139,10 +890,6 @@ class ElementwiseOP(exprgraph.Operator):
     def __init__(self, expr, ops, parents=None):
         super(ElementwiseOP, self).__init__(len(ops), ops, parents=parents)
         self._expr = expr
-
-    def substitute(self, a, b):
-        # TODO should this be supported?
-        pass
 
     def get_shape(self):
         return self.operands[0].get_shape()  # does output have to have this dimension?
@@ -1171,9 +918,6 @@ class ReduceOP(exprgraph.Operator):
     def get_shape(self):
         pass
 
-    def substitute(self, a, b):
-        pass
-
     def gradient(self, wrt):
         pass
 
@@ -1188,9 +932,6 @@ class ScanOP(exprgraph.Operator):
         self._output_statement = output_statement
 
     def get_shape(self):
-        pass
-
-    def substitute(self, a, b):
         pass
 
     def gradient(self, wrt):
@@ -1210,27 +951,16 @@ class GemmOP(exprgraph.Operator):
             raise ValueError
             # TODO
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return GemmOP(self.operands[0].substitute(a, b),
-                      self.operands[1].substitute(a, b),
-                      self.operands[2].substitute(a, b),
-                      self.operands[3],
-                      self.operands[4],
-                      self.operands[5],
-                      self.operands[6])
-
-    def __str__(self):
-        fstr = 'GEMM(%f * %s'
-        if self.operands[5].value:  # transA
-            fstr += "'"
-        fstr += " * %s"
-        if self.operands[6].value:  # transB
-            fstr += "'"
-        fstr += " + %f * %s)"
-        return fstr % map(str, (self.operands[3].value, self.operands[0].name,
-                                self.operands[1].name, self.operands[4].value, self.operands[2].name))
+    # def __str__(self):
+    #     fstr = 'GEMM(%f * %s'
+    #     if self.operands[5].value:  # transA
+    #         fstr += "'"
+    #     fstr += " * %s"
+    #     if self.operands[6].value:  # transB
+    #         fstr += "'"
+    #     fstr += " + %f * %s)"
+    #     return fstr % map(str, (self.operands[3].value, self.operands[0].name,
+    #                             self.operands[1].name, self.operands[4].value, self.operands[2].name))
 
     def get_shape(self):
         # TODO
@@ -1248,23 +978,13 @@ class GemvOP(exprgraph.Operator):
         super(GemvOP, self).__init__(6, [A, X, Y, alpha, beta, transA], parents)
         # TODO check dimensions compatibility
 
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return GemvOP(self.operands[0].substitute(a, b),
-                      self.operands[1].substitute(a, b),
-                      self.operands[2].substitute(a, b),
-                      self.operands[3],
-                      self.operands[4],
-                      self.operands[5])
-
-    def __str__(self):
-        fstr = 'GEMV(%f * %s'
-        if self.operands[5].value:
-            fstr += "'"
-        fstr += ' * %s + %f * %s)'
-        return fstr % map(str, (self.operands[3], self.operands[0], self.operands[1],
-                                self.operands[4], self.operands[2]))
+    # def __str__(self):
+    #     fstr = 'GEMV(%f * %s'
+    #     if self.operands[5].value:
+    #         fstr += "'"
+    #     fstr += ' * %s + %f * %s)'
+    #     return fstr % map(str, (self.operands[3], self.operands[0], self.operands[1],
+    #                             self.operands[4], self.operands[2]))
 
     def gradient(self, wrt):
         pass
@@ -1285,14 +1005,6 @@ class GerOP(exprgraph.Operator):
         m, n = X.get_shape()[0], Y.get_shape()[0]
         if (m, n) != A.get_shape():
             raise IncompatibleDimensionsError
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        return GerOP(self.operands[0],
-                     self.operands[1].substitute(a, b),
-                     self.operands[2].substitute(a, b),
-                     self.operands[3].substitute(a, b))
 
     def __str__(self):
         return "GER(%f * %s * %s' + %s)" % map(str, self.operands)
@@ -1316,16 +1028,6 @@ class ConvOP(exprgraph.Operator):
         self._image_shape = image_shape
         self._filter_shape = filter_shape
         self._border_mode = border_mode
-
-    def substitute(self, a, b):
-        if self == a:
-            return b
-        else:
-            pass    # TODO
-            # ff = config.get_formula_factory()
-            # return ff.create_conv(self.operands[0].substitute(a, b), self._filters,
-            #                       self._image_shape, self._filter_shape, self._border_mode,
-            #                       self.parents)
 
     def get_shape(self):
         pass

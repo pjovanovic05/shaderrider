@@ -157,23 +157,23 @@ class PyOCLValuation(Valuation):
         else:
             raise ValueError        # TODO raise better exception
 
-    def get(self, name, async=False):
-        if name in self._vars:
-            # do the movement with clarray.get()
-            val = self._vars[name]
-            if val.value is None:
-                val.value = val._gpu_array.get(async=async) # TODO can this be async at all???????????????????????
-            else:
-                val._gpu_array.get(ary=val.value, async=async)
-            return val
-        elif name in self._shared:
-            val = self._shared[name]
-            if val.value is None:
-                val.value = val._gpu_array.get(async=async)
-            else:
-                val._gpu_array.get(ary=val.value, async=async)  # TODO check if asynchronicity returns events
-        else:
-            raise KeyError('Variable "' + name + '" not found in valuation.')
+    # def get(self, name, async=False):
+    #     if name in self._vars:
+    #         # do the movement with clarray.get()
+    #         val = self._vars[name]
+    #         if val.value is None:
+    #             val.value = val._gpu_array.get(async=async) # TODO can this be async at all???????????????????????
+    #         else:
+    #             val._gpu_array.get(ary=val.value, async=async)
+    #         return val
+    #     elif name in self._shared:
+    #         val = self._shared[name]
+    #         if val.value is None:
+    #             val.value = val._gpu_array.get(async=async)
+    #         else:
+    #             val._gpu_array.get(ary=val.value, async=async)  # TODO check if asynchronicity returns events
+    #     else:
+    #         raise KeyError('Variable "' + name + '" not found in valuation.')
 
     def read(self, name):
         if name in self._vars:
