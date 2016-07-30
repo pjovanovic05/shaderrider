@@ -61,7 +61,7 @@ class Sub(exprgraph.Formula):
 class Mul(exprgraph.Formula):
     def __init__(self, op1, op2, parents=None):
         super(Mul, self).__init__(parents)
-        self.ops = [op1. op2]
+        self.ops = [op1, op2]
 
     def _evaluate(self, valuation, cache):
         # if they are clarrays
