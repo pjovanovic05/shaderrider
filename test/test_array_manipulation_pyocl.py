@@ -1,6 +1,7 @@
 import unittest
 
 
+@unittest.skip('deprecated')
 class ArrayManipulation(unittest.TestCase):
 
     def setUp(self):

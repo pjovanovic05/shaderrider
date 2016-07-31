@@ -27,7 +27,7 @@ class Expression(object):
     def rev_grad(self, valuation):
         cache = {}
         self._evaluate(valuation, cache)
-        grad = {key:0 for key in valuation}    # TODO ovo se mora prilagoditi!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        grad = {key:0 for key in valuation}
         self._rev_grad(valuation, 1, grad, cache)
         return grad
 
