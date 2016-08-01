@@ -203,3 +203,40 @@ class Neg(expr.Expression):
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
         self.ops[0]._rev_grad(valuation, -adjoint, gradient, cache)
+
+
+class Max(expr.Expression):
+    def __init__(self, op1, op2, parents=None):
+        super(Max, self).__init__(parents)
+        self.ops = [op1, op2]
+
+    def _evaluate(self, valuation, cache):
+        pass
+
+    def _fwd_grad(self, wrt, valuation, cache):
+        pass
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        pass
+
+
+class Dot(expr.Expression):
+    def __init__(self, op1, op2, parents=None):
+        super(Dot, self).__init__(parents)
+        self.ops = [op1, op2]
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            # TODO check op shapes
+            # TODO chose best MM algo...
+            pass
+        pass
+
+    def _fwd_grad(self, wrt, valuation, cache):
+        # kao za mnozenje, samo sto se koristi dot operator umesto *
+        pass
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        # kao za mnozenje, samo sto se koristi dot operator umesto *
+        # i ima eventualnih transponovanja!
+        pass

@@ -70,17 +70,12 @@ class SimpleTest(unittest.TestCase):
         e1 = sigm1.evaluate(valuation)
         e2 = sigm2.evaluate(valuation)
 
-        print >> sys.stderr, '\nE1:', e1.get()
-        print >> sys.stderr, '\nE2:', e2.get()
-
         rg1 = sigm1.rev_grad(valuation)
         rg2 = sigm2.rev_grad(valuation)
 
         xg1 = rg1['x'].get()
         xg2 = rg2['x'].get()
-        print >> sys.stderr, '\nxg1: ', xg1
-        print >> sys.stderr, 'xg2: ', xg2
-        self.assertTrue(np.all(xg1 == xg2))
+        self.assertTrue(np.all((xg1 - xg2) < 0.001))
 
         # TODO osim sto ne radi ovo, po defaultu ti se koriste double-ovi... treba bolje integrisati dtype
         # TODO mozda kao u onoj nekoj biblioteci gde se globalno koristi samo jedan dtip?
