@@ -58,6 +58,7 @@ class Constant(Expression):
         self.value = value
 
     def _evaluate(self, valuation, cache):
+        cache[id(self)] = self.value
         return self.value
 
     def _fwd_grad(self, wrt, valuation, cache):

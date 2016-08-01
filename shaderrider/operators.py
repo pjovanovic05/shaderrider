@@ -175,7 +175,7 @@ class Sigmoid(expr.Expression):
 
     def _evaluate(self, valuation, cache):
         if id(self) not in cache:
-            cache[id(self)] = 1.0/(1 + clmath.exp(self.ops[0]._evaluate(valuation, cache)))
+            cache[id(self)] = 1.0/(1 + clmath.exp(-self.ops[0]._evaluate(valuation, cache)))
         return cache[id(self)]
 
     def _fwd_grad(self, wrt, valuation, cache):

@@ -6,6 +6,7 @@
 # from shaderrider.generator import function
 #
 #
+# @unittest.skip('deprecated')
 # class FirstStep(unittest.TestCase):
 #     def setUp(self):
 #         pass

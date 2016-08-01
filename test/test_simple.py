@@ -12,7 +12,6 @@ class SimpleTest(unittest.TestCase):
     def setUpClass(cls):
         plat.init_cl(1)
 
-    @unittest.skip('debug')
     def test_addition(self):
         x = expr.Variable("x")
         y = expr.Constant(2)
@@ -28,7 +27,6 @@ class SimpleTest(unittest.TestCase):
         self.assertEqual(zz[1,0], 2.0)
         self.assertEqual(zz[1,1], 3.0)
 
-    @unittest.skip('debug')
     def test_fwd_grad(self):
         x = expr.Variable('x')
         wrt = {'x': 1}
@@ -40,7 +38,6 @@ class SimpleTest(unittest.TestCase):
         d1 = e1.fwd_grad(wrt, valuation)
         self.assertEqual(d1, 2)
 
-    @unittest.skip('debug')
     def test_rev_grad(self):
         x = expr.Variable('x')
         y = expr.Variable('y')
@@ -61,13 +58,13 @@ class SimpleTest(unittest.TestCase):
         self.assertTrue(np.all(dx == yy))
 
     def test_sigmoid_grads(self):
-        # TODO Testiraj da li AD gradijent 1/(1+exp(x)) daje priblizno iste rezultate
+        # TODO Testiraj da li AD gradijent 1/(1+exp(-x)) daje priblizno iste rezultate
         # kao i sigmoid(x)*(1-sigmoid(x)), tj. grad sigmoida.
         x = expr.Variable('x')
         valuation = plat.valuation()
-        valuation['x'] = np.ones((3,3))*2
+        valuation['x'] = np.ones((3,3), dtype=np.float32)*2
 
-        sigm1 = op.Reciprocal(op.Add(expr.Constant(1.0), op.Neg(op.Exp(x))))
+        sigm1 = op.Div(expr.Constant(1.0), op.Add(expr.Constant(1.0), op.Exp(op.Neg(x))))
         sigm2 = op.Sigmoid(x)
 
         e1 = sigm1.evaluate(valuation)
@@ -84,3 +81,6 @@ class SimpleTest(unittest.TestCase):
         print >> sys.stderr, '\nxg1: ', xg1
         print >> sys.stderr, 'xg2: ', xg2
         self.assertTrue(np.all(xg1 == xg2))
+
+        # TODO osim sto ne radi ovo, po defaultu ti se koriste double-ovi... treba bolje integrisati dtype
+        # TODO mozda kao u onoj nekoj biblioteci gde se globalno koristi samo jedan dtip?
