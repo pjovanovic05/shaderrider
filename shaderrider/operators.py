@@ -7,6 +7,7 @@ import pyopencl as cl
 from pyopencl import array as clarray
 from pyopencl import clmath
 from shaderrider import expr
+from shaderrider import linalg
 
 
 class Add(expr.Expression):
