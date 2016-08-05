@@ -228,16 +228,20 @@ class Dot(expr.Expression):
 
     def _evaluate(self, valuation, cache):
         if id(self) not in cache:
-            # TODO check op shapes
-            # TODO chose best MM algo...
-            pass
-        pass
+            e1, e2 = self.ops[0]._evaluate, self.ops[1]._evaluate
+            cache[id(self)] = linalg.dot(e1(valuation, cache), e2(valuation, cache))
+        return cache[id(self)]
 
     def _fwd_grad(self, wrt, valuation, cache):
-        # kao za mnozenje, samo sto se koristi dot operator umesto *
-        pass
+        lhs = cache[id(self.ops[0])]
+        rhs = cache[id(self.ops[1])]
+        return linalg.dot(self.ops[0]._fwd_grad(wrt, valuation, cache), rhs) + \
+               linalg.dot(lhs, self.ops[1]._fwd_grad(wrt, valuation, cache))
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
-        # kao za mnozenje, samo sto se koristi dot operator umesto *
-        # i ima eventualnih transponovanja!
+        # lhs = cache[id(self.ops[0])]
+        # rhs = cache[id(self.ops[1])]
+        # self.ops[0]._rev_grad(valuation, linalg.dot(adjoint, rhs), gradient, cache)
+        # self.ops[1]._rev_grad(valuation, linalg.dot(lhs, adjoint), gradient, cache)
+        # TODO fale transponovanja ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         pass
