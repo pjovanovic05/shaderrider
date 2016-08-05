@@ -4,6 +4,7 @@ from cpython cimport array
 import array
 
 
+#TODO move externs to separate pxd .. maybe clblas.pxd
 cdef extern from "clBLAS.h":
     ctypedef enum clblasStatus:
         clblasSuccess
@@ -285,18 +286,20 @@ cdef extern from "clBLAS.h":
 cdef class EventList:
     cdef readonly intptr_t *data
     cdef readonly int n
-    def __cinit__(self, list events not None):
-        cdef int i
-        self.n = len(events)
-        self.data = <intptr_t*> malloc(self.n*sizeof(intptr_t))
-        if self.data == NULL:
-            raise MemoryError('Unable to allocate memory for the EventList')
-        for i in range(n):
-            self.data[i] = <intptr_t>events[i].int_ptr
-    def __dealloc__(self):
-        free(self.data)
+    # FIXME def definicije ne mogu u pxd... pure python mora u pyx, a kako onda ovo?
+    # def __cinit__(self, list events not None):
+    #     cdef int i
+    #     self.n = len(events)
+    #     self.data = <intptr_t*> malloc(self.n*sizeof(intptr_t))
+    #     if self.data == NULL:
+    #         raise MemoryError('Unable to allocate memory for the EventList')
+    #     for i in range(n):
+    #         self.data[i] = <intptr_t>events[i].int_ptr
+    # def __dealloc__(self):
+    #     free(self.data)
 
 
 cpdef setup()
 
 cpdef teardown()
+

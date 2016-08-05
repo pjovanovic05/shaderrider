@@ -4,7 +4,7 @@ import pyopencl as cl
 from pyopencl import Array
 
 from libcpp cimport bool
-from clblaswrap cimport *
+#from clblaswrap cimport *      FIXME ovo verovatno ne treba
 
 
 cdef get_status_message(clblasStatus status):
@@ -350,3 +350,18 @@ def gemm(queue, A, B, C, bool transA=False, bool transB=False, float alpha=1.0, 
         raise RuntimeError("'gemm' failed: %s" % get_status_message(err))
 
     return cl.Event.from_int_ptr(<intptr_t>myevent)
+
+
+cdef class EventList:
+    def __cinit__(self, list events not None):
+        cdef int i
+        self.n = len(events)
+        self.data = <intptr_t*> malloc(self.n*sizeof(intptr_t))
+        if self.data == NULL:
+            raise MemoryError('Unable to allocate memory for the EventList')
+        for i in range(n):
+            self.data[i] = <intptr_t>events[i].int_ptr
+    def __dealloc__(self):
+        if self.data != NULL:
+            free(self.data)
+

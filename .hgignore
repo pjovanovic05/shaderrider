@@ -1,11 +1,11 @@
 # use glob syntax.
 syntax: glob
 
-.DS_Store
-*.pyc
-*.swp
+**/*.DS_Store
+**/*.pyc
+**/*.swp
 .idea/*
-*.o
-*.so
-*.orig
+**/*.o
+**/*.so
+**/*.orig
 
