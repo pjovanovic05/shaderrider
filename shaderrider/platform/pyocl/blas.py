@@ -3,8 +3,6 @@ WRITEME
 """
 
 from shaderrider.symbolic import blas
-from shaderrider.platform.pyocl.aux import clblaswrap as clblas
-from shaderrider.platform.pyocl import platformdef
 
 
 class GemmOP(blas.GemmOP):

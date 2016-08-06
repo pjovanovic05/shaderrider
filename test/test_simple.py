@@ -76,6 +76,3 @@ class SimpleTest(unittest.TestCase):
         xg1 = rg1['x'].get()
         xg2 = rg2['x'].get()
         self.assertTrue(np.all((xg1 - xg2) < 0.001))
-
-        # TODO osim sto ne radi ovo, po defaultu ti se koriste double-ovi... treba bolje integrisati dtype
-        # TODO mozda kao u onoj nekoj biblioteci gde se globalno koristi samo jedan dtip?

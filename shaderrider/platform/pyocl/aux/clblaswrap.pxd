@@ -1,7 +1,7 @@
-from libc.stdlib cimport malloc, calloc, free
+#from libc.stdlib cimport malLoc, calloc, free
 from libc.stdint cimport intptr_t, uintptr_t
-from cpython cimport array
-import array
+#from cpython cimport array
+#import array
 
 
 #TODO move externs to separate pxd .. maybe clblas.pxd
