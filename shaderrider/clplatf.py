@@ -8,6 +8,8 @@ import numpy as np
 import pyopencl as cl
 import pyopencl.array as clarray
 
+from shaderrider.aux import clblaswrap
+
 
 def setup_context(ngpus=0):
     """
@@ -29,6 +31,7 @@ def setup_context(ngpus=0):
     else:
         ctx = cl.create_some_context()
         qs = [cl.CommandQueue(ctx)]
+    clblaswrap.setup()
     return ctx, qs
 
 

@@ -124,46 +124,6 @@ cdef extern from "clBLAS.h":
                              cl_uint numEventsInWaitList,
                              const cl_event *eventWaitList,
                              cl_event *events)
-    #clblasStatus clblasCgemv(clblasOrder order,
-    #                         clblasTranspose transA,
-    #                         size_t M,
-    #                         size_t N,
-    #                         cl_float2 alpha,
-    #                         const cl_mem A,
-    #                         size_t offA,
-    #                         size_t lda,
-    #                         const cl_mem x,
-    #                         size_t offx,
-    #                         int incx,
-    #                         cl_float2 beta,
-    #                         cl_mem y,
-    #                         size_t offy,
-    #                         int incy,
-    #                         cl_uint numCommandQueues,
-    #                         cl_command_queue *commandQueues,
-    #                         cl_uint numEventsInWaitList,
-    #                         const cl_event *eventWaitList,
-    #                         cl_event *events)
-    #clblasStatus clblasZgemv(clblasOrder order,
-    #                         clblasTranspose transA,
-    #                         size_t M,
-    #                         size_t N,
-    #                         cl_double2 alpha,
-    #                         const cl_mem A,
-    #                         size_t offA,
-    #                         size_t lda,
-    #                         const cl_mem x,
-    #                         size_t offx,
-    #                         int incx,
-    #                         cl_double2 beta,
-    #                         cl_mem y,
-    #                         size_t offy,
-    #                         int incy,
-    #                         cl_uint numCommandQueues,
-    #                         cl_command_queue *commandQueues,
-    #                         cl_uint numEventsInWaitList,
-    #                         const cl_event *eventWaitList,
-    #                         cl_event *events)
 
     clblasStatus clblasSger(clblasOrder order,
                             size_t M,
@@ -246,50 +206,6 @@ cdef extern from "clBLAS.h":
                              cl_uint numEventsInWaitList,
                              const cl_event *eventWaitList,
                              cl_event *events)
-    #clblasStatus clblasCgemm(clblasOrder order,
-    #                         clblasTranspose transA,
-    #                         clblasTranspose transB,
-    #                         size_t M,
-    #                         size_t N,
-    #                         size_t K,
-    #                         cl_float2 alpha,
-    #                         const cl_mem A,
-    #                         size_t offA,
-    #                         size_t lda,
-    #                         const cl_mem B,
-    #                         size_t offB,
-    #                         size_t ldb,
-    #                         cl_float2 beta,
-    #                         cl_mem C,
-    #                         size_t offC,
-    #                         size_t ldc,
-    #                         cl_uint numCommandQueues,
-    #                         cl_command_queue *commandQueues,
-    #                         cl_uint numEventsInWaitList,
-    #                         const cl_event *eventWaitList,
-    #                         cl_event *events)
-    #clblasStatus clblasZgemm(clblasOrder order,
-    #                         clblasTranspose transA,
-    #                         clblasTranspose transB,
-    #                         size_t M,
-    #                         size_t N,
-    #                         size_t K,
-    #                         cl_double2 alpha,
-    #                         const cl_mem A,
-    #                         size_t offA,
-    #                         size_t lda,
-    #                         const cl_mem B,
-    #                         size_t offB,
-    #                         size_t ldb,
-    #                         cl_double2 beta,
-    #                         cl_mem C,
-    #                         size_t offC,
-    #                         size_t ldc,
-    #                         cl_uint numCommandQueues,
-    #                         cl_command_queue *commandQueues,
-    #                         cl_uint numEventsInWaitList,
-    #                         const cl_event *eventWaitList,
-    #                         cl_event *events)
 
 
 cdef get_status_message(clblasStatus status):
@@ -482,7 +398,7 @@ def ger(queue, A, x, y, float alpha=1.0, clblasOrder order=clblasRowMajor, list 
 def gemv(queue, A, x, y, transA=False, float alpha=1.0, float beta=1.0,
          clblasOrder order=clblasRowMajor, list wait_for=None):
     """y <- alpha*dot(A,x) + beta*y"""
-    dtype = check_dtype([A, x, y], ['float32', 'float64', 'complex64', 'complex128'])
+    dtype = check_dtype([A, x, y], ['float32', 'float64'])
     check_matrix(A, 'A')
     check_vector(x, 'x')
     check_vector(y, 'y')
@@ -527,24 +443,6 @@ def gemv(queue, A, x, y, transA=False, float alpha=1.0, float beta=1.0,
                           0 if el is None else el.n,
                           NULL if el is None else <cl_event*>el.data,
                           &myevent)
-    #elif dtype == np.dtype('complex64'):
-    #    err = clblasCgemv(order,
-    #                      clblasTrans if transA else clblasNoTrans,
-    #                      M, N, <cl_float2>alpha, Adata, offA, lda,
-    #                      xdata, offx, incx, <cl_float2>beta, ydata, offy, incy,
-    #                      1, &commandQueue,
-    #                      0 if el is None else el.n,
-    #                      NULL if el is None else <cl_event*>el.data,
-    #                      &myevent)
-    #elif dtype == np.dtype('complex128'):
-    #    err = clblasZgemv(order,
-    #                      clblasTrans if transA else clblasNoTrans,
-    #                      M, N, <cl_double2>alpha, Adata, offA, lda,
-    #                      xdata, offx, incx, <cl_double2>beta, ydata, offy, incy,
-    #                      1, &commandQueue,
-    #                      0 if el is None else el.n,
-    #                      NULL if el is None else <cl_event*>el.data,
-    #                      &myevent)
     else:
         raise ValueError("Unrecognized dtype '%s'" % dtype)
 
@@ -558,7 +456,7 @@ def gemv(queue, A, x, y, transA=False, float alpha=1.0, float beta=1.0,
 def gemm(queue, A, B, C, transA=False, transB=False, float alpha=1.0, float beta=0.0,
            clblasOrder order=clblasRowMajor, list wait_for=None):
     """C <- alpha*dot(A, B) + beta*C"""
-    dtype = check_dtype([A, B, C], ['float32', 'float64', 'complex64', 'complex128'])
+    dtype = check_dtype([A, B, C], ['float32', 'float64'])
     check_matrix(A, 'A')
     check_matrix(B, 'B')
     check_matrix(C, 'C')
@@ -609,32 +507,6 @@ def gemm(queue, A, B, C, transA=False, transB=False, float alpha=1.0, float beta
                           0 if el is None else el.n,
                           NULL if el is None else <cl_event*>el.data,
                           &myevent)
-    #elif dtype == np.dtype('complex64'):
-    #    err = clblasCgemm(order,
-    #                      clblasTrans if transA else clblasNoTrans,
-    #                      clblasTrans if transB else clblasNoTrans,
-    #                      M, N, K,
-    #                      <cl_float2>cl_float2(x=alpha.real, y=alpha.imag),
-    #                      Adata, offA, lda, Bdata, offB, ldb,
-    #                      <cl_float2>cl_float2(x=beta.real, y=beta.imag),
-    #                      Cdata, offC, ldc,
-    #                      1, &commandQueue,
-    #                      0 if el is None else el.n,
-    #                      NULL if el is None else <cl_event*>el.data,
-    #                      &myevent)
-    #elif dtype == np.dtype('complex128'):
-    #    err = clblasZgemm(order,
-    #                      clblasTrans if transA else clblasNoTrans,
-    #                      clblasTrans if transB else clblasNoTrans,
-    #                      M, N, K,
-    #                      <cl_double2>cl_double2(x=alpha.real, y=alpha.imag),
-    #                      Adata, offA, lda, Bdata, offB, ldb,
-    #                      <cl_double2>cl_double2(x=beta.real, y=beta.imag),
-    #                      Cdata, offC, ldc,
-    #                      1, &commandQueue,
-    #                      0 if el is None else el.n,
-    #                      NULL if el is None else <cl_event*>el.data,
-    #                      &myevent)
     else:
         raise ValueError("Unrecognized dtype '%s'" % dtype)
 
@@ -642,6 +514,15 @@ def gemm(queue, A, B, C, transA=False, transB=False, float alpha=1.0, float beta
         raise RuntimeError("'gemm' failed: %s" % get_status_message(err))
 
     return cl.Event.from_int_ptr(<intptr_t>myevent)
+
+
+def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, float beta=0.0,
+           clblasOrder order=clblasRowMajor, list wait_for=None):
+    # TODO last two dims are the matrices
+    # TODO iterate over other dims
+    # TODO preracunavaj offset za array i koristi base_data+offset da prosledis pointer na
+    # pocetak bafera.
+    pass
 
 
 cdef class EventList:
