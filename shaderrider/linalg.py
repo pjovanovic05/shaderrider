@@ -17,7 +17,8 @@ def dot(a, b, axes=2, out=None):
     if len(a.shape) == 1:
         # TODO
         if len(b.shape) == 1:
-            # vector-vector (inner or outer) product
+            M, N = a.shape[0], b.shape[0]
+            # TODO izracunaj obican dot
             pass
         elif len(b.shape) == 2:
             # TODO ?

@@ -520,6 +520,8 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
            clblasOrder order=clblasRowMajor, list wait_for=None):
     # TODO last two dims are the matrices
     # TODO iterate over other dims
+    # TODO NO NEED TO DO THEM SERIALLY, just make async launches of gemm and wait later
+    #       or merge the events into one.
     # TODO preracunavaj offset za array i koristi base_data+offset da prosledis pointer na
     # pocetak bafera.
     pass
