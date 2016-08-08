@@ -1,7 +1,7 @@
 """
 Wraps clBLAS minimally to support shaderrider.
 
-Based on Eric Hunsberger's clblass wrapper, but with
+Based on Eric Hunsberger's clblas wrapper, but with
 support for more than one event in the wait_for lists.
 """
 
@@ -474,7 +474,7 @@ def gemm(queue, A, B, C, transA=False, transB=False, float alpha=1.0, float beta
     cdef size_t lda = A.strides[0] / element_size
     cdef cl_mem Bdata = <cl_mem><intptr_t>B.base_data.int_ptr
     cdef size_t offB = B.offset / element_size
-    cdef ldb = B.strides[0] / element_size
+    cdef size_t ldb = B.strides[0] / element_size
     cdef cl_mem Cdata = <cl_mem><intptr_t>C.base_data.int_ptr
     cdef size_t offC = C.offset / element_size
     cdef size_t ldc = C.strides[0] / element_size
@@ -524,7 +524,63 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
     #       or merge the events into one.
     # TODO preracunavaj offset za array i koristi base_data+offset da prosledis pointer na
     # pocetak bafera.
-    pass
+    dtype = check_dtype([As, Bs, Cs], ['float32', 'float64'])
+    cdef size_t M = As.shape[-2]
+    cdef size_t K = As.shape[-1]
+    cdef size_t N = Bs.shape[-1]
+    cdef size_t batch_size = 0  # TODO prod(As.shape[:-2])
+    cdef int i
+    check_shape_dim(Bs.shape, -1 if transB else -2, K, 'Bs')
+    check_shape_dim(Cs.shape, -2, M, 'Cs')
+    check_shape_dim(Cs.shape, -1, N, 'Cs')
+
+    cdef size_t element_size = dtype_size[dtype]
+    cdef cl_mem Adata = <cl_mem><intptr_t>As.base_data.int_ptr
+    cdef size_t offA = As.offset / element_size
+    cdef size_t szA = M * K * element_size
+    cdef size_t lda = As.strides[-2] / element_size
+    cdef cl_mem Bdata = <cl_mem><intptr_t>Bs.base_data.int_ptr
+    cdef size_t offB = Bs.offset / element_size
+    cdef size_t szB = K * N * element_size
+    cdef size_t ldb = Bs.strides[-2] / element_size
+    cdef cl_mem Cdata = <cl_mem><intptr_t>Cs.base_data.int_ptr
+    cdef size_t offC = Cs.offset / element_size
+    cdef size_t szC = M * N * element_size
+    cdef size_t ldc = Cs.strides[-2] / element_size
+
+    cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
+    cdef EventList el = EventList(wait_for) if not (wait_for is None) else None
+    cdef cl_event myevent = NULL
+
+    cdef clblasStatus err = clblasSuccess
+
+    if dtype == np.dtype('float32'):
+        for i in range(batch_size):
+            # TODO preracunaj offsete
+            offA += szA
+            offB += szB
+            offC += szC
+            # TODO pozovi odgovarajuci gemm
+            err = clblasSgemm(order,
+                              clblasTrans if transA else clblasNoTrans,
+                              clblasTrans if transB else clblasNoTrans,
+                              M, N, K,
+                              <cl_float>alpha, Adata, offA, lda, Bdata, offB, ldb,
+                              <cl_float>beta, Cdata, offC, ldc,
+                              1, &commandQueue,
+                              0 if el is None else el.n,
+                              NULL if el is None else <cl_event*>el.data,
+                              &myevent)
+            # TODO if err != clblasSuccess break?
+    elif dtype == np.dtype('float64'):
+        for i in range(batch_size):
+            # TODO preracunaj offsete
+            # TODO pozovi odgovarajuci gemm
+            pass
+    else:
+        raise ValueError("Unrecognized dtype '%s'" % dtype)
+
+    raise NotImplementedError
 
 
 cdef class EventList:
