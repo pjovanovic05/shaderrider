@@ -1,9 +1,15 @@
 def make_ext(modname, pyxfilename):
     from distutils.extension import Extension
+    import platform
+    lddir = '-L/opt/clBLAS/lib64'
+    idir = '-I/opt/clBLAS/include'
+    if platform.system() == 'Darwin':
+        lddir = '-L/usr/local/Cellar/clblas/2.6/lib'
+        idir = '-I/usr/local/Cellar/clblas/2.6/include'
     ext = Extension(name=modname,
                     sources=[pyxfilename],
-                    extra_compile_args=['-I/opt/clBLAS/include'],
-                    extra_link_args=['-L/opt/clBLAS/lib64', '-lclBLAS'])
+                    extra_compile_args=[idir],
+                    extra_link_args=[lddir, '-lclBLAS'])
     return ext
 
 

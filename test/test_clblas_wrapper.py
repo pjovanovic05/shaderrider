@@ -27,18 +27,18 @@ class ClBlasWrapperTest(unittest.TestCase):
         clblaswrap.teardown()
 
     def test_gemv(self):
-        A = np.random.uniform(0,1,(50000,5)).astype(np.float32)
+        A = np.random.uniform(0,1,(5000,5)).astype(np.float32)
         X = np.random.uniform(0,1, (5)).astype(np.float32)
         gA = clarray.to_device(self.q, A)
         gX = clarray.to_device(self.q, X)
-        gY = clarray.zeros(self.q, (50000,), np.float32)
+        gY = clarray.zeros(self.q, (5000,), np.float32)
         eY = np.dot(A,X)
         ev = clblaswrap.gemv(self.q, gA, gX, gY, False)
         ev.wait()
         Y = gY.get()
 
         self.assertEqual(Y.shape, eY.shape)
-        self.assertEqual(Y.shape, (50000,))
+        self.assertEqual(Y.shape, (5000,))
         self.assertTrue(np.allclose(Y, eY))
 
     def test_gemm(self):
@@ -68,3 +68,4 @@ class ClBlasWrapperTest(unittest.TestCase):
 
         self.assertEqual(A.shape, eA.shape)
         self.assertTrue(np.allclose(A, eA))
+
