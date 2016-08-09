@@ -528,7 +528,7 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
     cdef size_t M = As.shape[-2]
     cdef size_t K = As.shape[-1]
     cdef size_t N = Bs.shape[-1]
-    cdef size_t batch_size = 0  # TODO prod(As.shape[:-2])
+    cdef size_t batch_size = 1  # TODO prod(As.shape[:-2])
     cdef int i
     check_shape_dim(Bs.shape, -1 if transB else -2, K, 'Bs')
     check_shape_dim(Cs.shape, -2, M, 'Cs')
@@ -554,6 +554,8 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
 
     cdef clblasStatus err = clblasSuccess
 
+    cdef list my_events = []
+
     if dtype == np.dtype('float32'):
         for i in range(batch_size):
             # TODO preracunaj offsete
@@ -572,15 +574,31 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
                               NULL if el is None else <cl_event*>el.data,
                               &myevent)
             # TODO if err != clblasSuccess break?
+            # TODO dodaj myevent u event list nekako?
+            my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent)
     elif dtype == np.dtype('float64'):
         for i in range(batch_size):
             # TODO preracunaj offsete
+            offA += szA
+            offB += szB
+            offC += szC
             # TODO pozovi odgovarajuci gemm
-            pass
+            err = clblasDgemm(order,
+                              clblasTrans if transA else clblasNoTrans,
+                              clblasTrans if transB else clblasNoTrans,
+                              M, N, K,
+                              <cl_double>alpha, Adata, offA, lda, Bdata, offB, ldb,
+                              <cl_double>beta, Cdata, offC, ldc,
+                              1, &commandQueue,
+                              0 if el is None else el.n,
+                              NULL if el is None else <cl_event*>el.data,
+                              &myevent)            
+            # TODO if err != clblasSuccess break?
+            my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent)
     else:
         raise ValueError("Unrecognized dtype '%s'" % dtype)
 
-    raise NotImplementedError
+    return my_events
 
 
 cdef class EventList:
