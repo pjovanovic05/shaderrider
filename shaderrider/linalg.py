@@ -12,32 +12,39 @@ from shaderrider.aux import clblaswrap
 from shaderrider import clplatf
 
 
-def dot(a, b, axes=2, out=None):
-    # TODO a moz biti skalar, vektor ili matrica
-    if len(a.shape) == 1:
-        # TODO
-        if len(b.shape) == 1:
-            M, N = a.shape[0], b.shape[0]
-            # TODO izracunaj obican dot
+def dot(a, b, out=None):
+    if len(a.shape) > 2:
+        raise TypeError, 'A is not a matrix'
+    if len(b.shape) > 2:
+        raise TypeError, 'B is not a matrix'
+
+    M, K = a.shape
+    N = b.shape[1]
+
+    q = clplatf.qs[0]   # FIXME
+    if out is None:
+        out = clarray.empty(q, (M, N), a.dtype)
+
+    # TODO check dims and call gemm, gemv or ger...
+    if M == 1:
+        if N == 1:
+            # TODO vector dot product
++
             pass
-        elif len(b.shape) == 2:
-            # TODO ?
+        else:
+            # TODO gemv where vector is on the left - will need some transpositions
             pass
-    elif len(a.shape) == 2:
-        M, K = a.shape
-        # TODO b moze biti skalar, vektor ili matrica
-        if len(b.shape) == 1:
-            pass
-        elif len(b.shape) == 2:
-            N = b.shape[1]
-            if out is not None:
-                # TODO check if out is large enough and has correct shape
-                pass
-            else:
-                # TODO allocate out array
-                pass
-            ev = clblaswrap.gemm(clplatf.qs[0], a, b, c)
-    else:
-        # TODO batch matrix multiplication... last 2 dims are mm
+    elif K == 1:
+        # TODO outer product
         pass
-    return out  # TODO return i event
+    elif M > 1:
+        if N == 1:
+            # TODO standard gemv
+            pass
+        else:
+            # TODO gemm finally!
+            pass
+
+    # TODO batch gemm goes to a different op
+
+    return out  # TODO return the event too

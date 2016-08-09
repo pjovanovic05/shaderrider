@@ -84,6 +84,37 @@ cdef extern from "clBLAS.h":
     clblasStatus clblasSetup()
     void clblasTeardown()
 
+    clblasStatus clblasSdot(size_t N,
+                            cl_mem DP,
+                            size_t offDP,
+                            cl_mem X,
+                            size_t offX,
+                            int incx,
+                            cl_mem Y,
+                            size_t offY,
+                            int incy,
+                            cl_mem scratchBuff,
+                            cl_uint numCommandQueues,
+                            cl_command_queue *commandQueues,
+                            cl_uint numEventsInWaitList,
+                            const cl_event *eventWaitList,
+                            cl_event *events)
+    clblasStatus clblasDdot(size_t N,
+                            cl_mem DP,
+                            size_t offDP,
+                            cl_mem X,
+                            size_t offX,
+                            int incx,
+                            cl_mem Y,
+                            size_t offY,
+                            int incy,
+                            cl_mem scratchBuff,
+                            cl_uint numCommandQueues,
+                            cl_command_queue *commandQueues,
+                            cl_uint numEventsInWaitList,
+                            const cl_event *eventWaitList,
+                            cl_event *events)
+
     clblasStatus clblasSgemv(clblasOrder order,
                              clblasTranspose transA,
                              size_t M,
@@ -315,6 +346,13 @@ cpdef check_shape_dim(shape, size_t dim, size_t target, str name):
         raise ValueError("'%s.shape[%d]' must be %d (got %d)" % (name, dim, target, shape[dim]))
 
 
+cpdef check_scalar(a, str name):
+    if not isinstance(a, clarray.Array):
+        raise ValueError("'%s' must be a PyOpenCL Array" % name)
+    if any([d>1 for d in a.shape]):
+        raise ValueError("'%s' must have all dimensions equal to 1" % name)
+
+
 cpdef setup():
     """Setup the clBLAS library"""
     global is_setup
@@ -337,6 +375,59 @@ cpdef teardown():
 
 is_setup = False
 atexit.register(teardown)   # TODO do we really need this?
+
+
+def dot(queue, x, y, d, scratchBuff=None, list wait_for=None):
+    """d <- dot(x,y)"""
+    dtype = check_dtype([x, y, d], ['float32', 'float64'])
+    check_vector(x, 'x')
+    check_vector(y, 'y')
+    check_scalar(d, 'd')
+
+    cdef size_t N = x.shape[0]
+    check_shape_dim(y.shape, 0, N, 'y')
+
+    cdef size_t element_size = dtype_size[dtype]
+    cdef cl_mem ddata = <cl_mem><intptr_t>d.base_data.int_ptr
+    cdef size_t offd = d.offset / element_size
+    cdef cl_mem xdata = <cl_mem><intptr_t>x.base_data.int_ptr
+    cdef size_t offx = x.offset / element_size
+    cdef int incx = x.strides[0] / element_size
+    cdef cl_mem ydata = <cl_mem><intptr_t>y.base_data.int_ptr
+    cdef size_t offy = y.offset / element_size
+    cdef int incy = y.strides[0] / element_size
+
+    cdef cl_uint numCommandQueues = 1
+    cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
+    cdef EventList el = None if wait_for is None else EventList(wait_for)
+    cdef cl_event myevent = NULL
+
+    cdef clblasStatus err = clblasSuccess
+
+    # TODO check scratchBuffer if it exists and if it's large enough
+    cdef cl_mem sbuff = <cl_mem><intptr_t>scratchBuff.base_data.int_ptr
+
+    if dtype == np.dtype('float32'):
+        err = clblasSdot(N, ddata, offd, xdata, offx, incx, ydata, offy, incy,
+                        sbuff,
+                        numCommandQueues, &commandQueue,
+                        0 if el is None else el.n,
+                        NULL if el is None else <cl_event*>el.data,
+                        &myevent)
+    elif dtype == np.dtype('float64'):
+        err = clblasDdot(N, ddata, offd, xdata, offx, incx, ydata, offy, incy,
+                        sbuff,
+                        numCommandQueues, &commandQueue,
+                        0 if el is None else el.n,
+                        NULL if el is None else <cl_event*>el.data,
+                        &myevent)
+    else:
+        raise ValueError("Unrecognized dtype '%s'" % dtype)
+
+    if err != clblasSuccess:
+        raise RuntimeError("'dot' failed: %s" % get_status_message(err))
+
+    return cl.Event.from_int_ptr(<intptr_t>myevent)
 
 
 def ger(queue, A, x, y, float alpha=1.0, clblasOrder order=clblasRowMajor, list wait_for=None):
@@ -575,7 +666,7 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
                               &myevent)
             # TODO if err != clblasSuccess break?
             # TODO dodaj myevent u event list nekako?
-            my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent)
+            my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent))
     elif dtype == np.dtype('float64'):
         for i in range(batch_size):
             # TODO preracunaj offsete
@@ -592,9 +683,9 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
                               1, &commandQueue,
                               0 if el is None else el.n,
                               NULL if el is None else <cl_event*>el.data,
-                              &myevent)            
+                              &myevent)
             # TODO if err != clblasSuccess break?
-            my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent)
+            my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent))
     else:
         raise ValueError("Unrecognized dtype '%s'" % dtype)
 

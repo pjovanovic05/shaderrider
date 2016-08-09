@@ -26,6 +26,20 @@ class ClBlasWrapperTest(unittest.TestCase):
     def tearDownClass(cls):
         clblaswrap.teardown()
 
+    def test_ger(self):
+        X = np.random.uniform(0, 1, (10,)).astype(np.float32)
+        Y = np.random.uniform(0, 1, (20,)).astype(np.float32)
+        eA = np.outer(X, Y)
+        gX = clarray.to_device(self.q, X)
+        gY = clarray.to_device(self.q, Y)
+        gA = clarray.zeros(self.q, (10, 20), np.float32)
+        ev = clblaswrap.ger(self.q, gA, gX, gY)
+        ev.wait()
+        A = gA.get()
+
+        self.assertEqual(A.shape, eA.shape)
+        self.assertTrue(np.allclose(A, eA))
+
     def test_gemv(self):
         A = np.random.uniform(0,1,(500,5)).astype(np.float32)
         X = np.random.uniform(0,1, (5)).astype(np.float32)
@@ -55,17 +69,5 @@ class ClBlasWrapperTest(unittest.TestCase):
         self.assertEqual(C.shape, eC.shape)
         self.assertTrue(np.allclose(C, eC))
 
-    def test_ger(self):
-        X = np.random.uniform(0, 1, (10,)).astype(np.float32)
-        Y = np.random.uniform(0, 1, (20,)).astype(np.float32)
-        eA = np.outer(X, Y)
-        gX = clarray.to_device(self.q, X)
-        gY = clarray.to_device(self.q, Y)
-        gA = clarray.zeros(self.q, (10, 20), np.float32)
-        ev = clblaswrap.ger(self.q, gA, gX, gY)
-        ev.wait()
-        A = gA.get()
-
-        self.assertEqual(A.shape, eA.shape)
-        self.assertTrue(np.allclose(A, eA))
-
+    def test_gemm_batch(self):
+        pass
