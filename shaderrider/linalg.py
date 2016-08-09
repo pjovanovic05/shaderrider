@@ -29,7 +29,6 @@ def dot(a, b, out=None):
     if M == 1:
         if N == 1:
             # TODO vector dot product
-+
             pass
         else:
             # TODO gemv where vector is on the left - will need some transpositions
