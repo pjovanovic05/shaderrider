@@ -25,30 +25,26 @@ def dot(a, b, out=None, wait_for=None):
     if out is None:
         out = clarray.empty(q, (M, N), a.dtype)
 
-    # TODO check dims and call gemm, gemv or ger...
     if M == 1:
         if N == 1:
-            # TODO vector dot product
+            # vector dot product
             scratch = clarray.empty_like(a, queue=q)
-            ev = clblaswrap.dot(q, a, b, out, scratch)
+            ev = clblaswrap.dot(q, b, a, out, scratch)
         else:
-            # TODO gemv where vector is on the left - will need some transpositions
-            pass
+            # gemv where vector is on the left - will need some transpositions
+            ev = clblaswrap.gemv(q, a, b, out, 
     elif K == 1:
-        # TODO outer product
+        # outer product
         ev = clblaswrap.ger(q, out, a, b)
-        pass
     elif M > 1:
         if N == 1:
-            # TODO standard gemv
+            # standard gemv
             ev = clblaswrap.gemv(q, a, b, out)
-            pass
         else:
-            # TODO gemm finally!
+            # gemm finally!
             ev = clblaswrap.gemm(q, a, b, out)
-            pass
 
     # TODO batch gemm goes to a different op
 
-    return out, ev  # TODO return the event too
+    return out, ev
 
