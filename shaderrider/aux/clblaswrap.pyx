@@ -377,7 +377,7 @@ is_setup = False
 atexit.register(teardown)   # TODO do we really need this?
 
 
-def dot(queue, x, y, d, scratchBuff=None, list wait_for=None):
+def dot(queue, x, y, d, scratchBuff not None, list wait_for=None):
     """d <- dot(x,y)"""
     dtype = check_dtype([x, y, d], ['float32', 'float64'])
     check_vector(x, 'x')
@@ -404,8 +404,9 @@ def dot(queue, x, y, d, scratchBuff=None, list wait_for=None):
 
     cdef clblasStatus err = clblasSuccess
 
-    # TODO check scratchBuffer if it exists and if it's large enough
     cdef cl_mem sbuff = <cl_mem><intptr_t>scratchBuff.base_data.int_ptr
+    check_vector(scratchBuff, 'scratchBuff')
+    check_shape_dim(scratchBuff.shape, 0, N, 'scratchBuff')
 
     if dtype == np.dtype('float32'):
         err = clblasSdot(N, ddata, offd, xdata, offx, incx, ydata, offy, incy,

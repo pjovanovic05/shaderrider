@@ -26,6 +26,19 @@ class ClBlasWrapperTest(unittest.TestCase):
     def tearDownClass(cls):
         clblaswrap.teardown()
 
+    def test_dot(self):
+        X = np.random.uniform(0, 1, (10,)).astype(np.float32)
+        Y = np.random.uniform(0, 1, (10,)).astype(np.float32)
+        expected = np.dot(X, Y)
+        gX = clarray.to_device(self.q, X)
+        gY = clarray.to_device(self.q, Y)
+        gD = clarray.to_device(self.q, np.empty((1,1), dtype=np.float32))
+        scratch = clarray.empty(self.q, (10,), dtype=np.float32)
+        ev = clblaswrap.dot(self.q, gX, gY, gD, scratch)
+        ev.wait()
+        aD = gD.get()
+        self.assertTrue(np.allclose(aD, expected))
+
     def test_ger(self):
         X = np.random.uniform(0, 1, (10,)).astype(np.float32)
         Y = np.random.uniform(0, 1, (20,)).astype(np.float32)

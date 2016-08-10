@@ -29,7 +29,8 @@ def dot(a, b, out=None):
     if M == 1:
         if N == 1:
             # TODO vector dot product
-            pass
+            scratch = clarray.empty_like(a, queue=self.q)
+            ev = clblaswrap.dot(a, b, out, scratch)
         else:
             # TODO gemv where vector is on the left - will need some transpositions
             pass
@@ -47,3 +48,4 @@ def dot(a, b, out=None):
     # TODO batch gemm goes to a different op
 
     return out  # TODO return the event too
+
