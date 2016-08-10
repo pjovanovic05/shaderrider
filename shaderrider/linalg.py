@@ -12,7 +12,7 @@ from shaderrider.aux import clblaswrap
 from shaderrider import clplatf
 
 
-def dot(a, b, out=None):
+def dot(a, b, out=None, wait_for=None):
     if len(a.shape) > 2:
         raise TypeError, 'A is not a matrix'
     if len(b.shape) > 2:
@@ -29,23 +29,26 @@ def dot(a, b, out=None):
     if M == 1:
         if N == 1:
             # TODO vector dot product
-            scratch = clarray.empty_like(a, queue=self.q)
-            ev = clblaswrap.dot(a, b, out, scratch)
+            scratch = clarray.empty_like(a, queue=q)
+            ev = clblaswrap.dot(q, a, b, out, scratch)
         else:
             # TODO gemv where vector is on the left - will need some transpositions
             pass
     elif K == 1:
         # TODO outer product
+        ev = clblaswrap.ger(q, out, a, b)
         pass
     elif M > 1:
         if N == 1:
             # TODO standard gemv
+            ev = clblaswrap.gemv(q, a, b, out)
             pass
         else:
             # TODO gemm finally!
+            ev = clblaswrap.gemm(q, a, b, out)
             pass
 
     # TODO batch gemm goes to a different op
 
-    return out  # TODO return the event too
+    return out, ev  # TODO return the event too
 
