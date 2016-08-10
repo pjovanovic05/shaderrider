@@ -32,7 +32,7 @@ def dot(a, b, out=None, wait_for=None):
             ev = clblaswrap.dot(q, b, a, out, scratch)
         else:
             # gemv where vector is on the left - will need some transpositions
-            ev = clblaswrap.gemv(q, a, b, out, 
+            ev = clblaswrap.gemv(q, a, b, out)
     elif K == 1:
         # outer product
         ev = clblaswrap.ger(q, out, a, b)
