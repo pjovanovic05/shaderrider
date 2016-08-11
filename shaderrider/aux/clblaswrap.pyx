@@ -350,8 +350,7 @@ cpdef check_scalar(a, str name):
     if not isinstance(a, clarray.Array):
         raise ValueError("'%s' must be a PyOpenCL Array" % name)
     if any([d>1 for d in a.shape]):
-        raise ValueError("'%s' must have all dimensions equal to 1" % name)
-
+        raise ValueError("'%s' must have all dimensions equal to 1, got %s" % (name, str(a.shape)))
 
 cpdef setup():
     """Setup the clBLAS library"""
