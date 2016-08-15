@@ -81,7 +81,7 @@ def get_conv_outsize(size, k, s, p, cover_all=False):
         return (size + p * 2 -k) // s + 1
 
 
-def im2col(q, img, kh, kw, sy, sx,ph, pw, cover_all=False):
+def im2col(q, img, kh, kw, sy, sx, ph, pw, cover_all=False):
     # TODO better dtype conversion
     dtype = 'float' if img.dtype == np.float32 else 'double'
     n, c, h, w = img.shape
@@ -90,9 +90,9 @@ def im2col(q, img, kh, kw, sy, sx,ph, pw, cover_all=False):
 
     col = clarray.empty(q, (n, c, kh, kw, out_h, out_w), img.dtype)
     prg = cl.Program(clplatf.ctx, """
-    __kernel im2col(__global %(dtype)s img, int h, int w, int out_h, int out_w,
-                    int kh, int kw, int sy, int sx, int ph, int pw,
-                    __global %(dtype)s col) {
+    __kernel void im2col(__global %(dtype)s *img, int h, int w, int out_h, int out_w,
+                         int kh, int kw, int sy, int sx, int ph, int pw,
+                         __global %(dtype)s *col) {
         int gid = get_global_id(0);
         int c0 = gid / (kh * kw * out_h * out_w);
         int ky = gid / (kw * out_h * out_w) %% kh;
@@ -103,13 +103,13 @@ def im2col(q, img, kh, kw, sy, sx,ph, pw, cover_all=False):
         int in_x = kx + out_x * sx - pw;
 
         if (in_y>=0 && in_y<h && in_x>=0 && in_x<w)
-            col[gid] = img[in_x + w * (in_y + h * c0);
+            col[gid] = img[in_x + w * (in_y + h * c0)];
         else
             col[gid] = 0;
     }
     """ % locals()).build()
 
-    evt = prg.im2col(q, (n*c*kh*kw*out_h*out_w), None,
+    evt = prg.im2col(q, (n*c*kh*kw*out_h*out_w,), None,
                      img.data,
                      np.int32(h),
                      np.int32(w),
@@ -134,8 +134,8 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
 
     prg = cl.Program(clplatf.ctx, """
     __kernel void col2im(__global %(dtype)s *col, int h, int w, int out_h, int out_w,
-                           int kh, int kw, int sy, int sx, int ph, int pw,
-                           __global %(dtype)s *img) {
+                         int kh, int kw, int sy, int sx, int ph, int pw,
+                         __global %(dtype)s *img) {
         int gid = get_global_id(0);
         int c0 = gid / (h*w);
         int y = gid / w %% h + ph;
@@ -159,7 +159,7 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
     }
     """ % locals()).build()
 
-    evt = prg.col2im(q, (h*w), None,
+    evt = prg.col2im(q, (h*w,), None,
                        col.data,
                        np.int32(h),
                        np.int32(w),
