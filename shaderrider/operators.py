@@ -8,6 +8,7 @@ from pyopencl import array as clarray
 from pyopencl import clmath
 from shaderrider import expr
 from shaderrider import linalg
+from shaderrider import conv
 
 
 class Add(expr.Expression):
@@ -245,3 +246,63 @@ class Dot(expr.Expression):
         # self.ops[1]._rev_grad(valuation, linalg.dot(lhs, adjoint), gradient, cache)
         # TODO fale transponovanja ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         pass
+
+
+class Conv2d(expr.Expression):
+    def __init__(self, img, filter, strides=(0,0), zero_padding=(0,0), cover_all=False, parents=None):
+        super(Conv2d, self).__init__(parents)
+        self.ops = [img, filter]
+        self.sy, self.sx = strides
+        self.ph, self.pw = zero_padding
+        self.cover_all = cover_all
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            X = self.ops[0]._evaluate(valuation, cache)
+            W = self.ops[1]._evaluate(valuation, cache)
+            out_c, _, kh, kw = W.shape
+            n, c, h, w = X.shape
+            out_h = conv.get_conv_outsize(h, kh, self.sy, self.ph, cover_all=self.cover_all)
+            out_w = conv.get_conv_outsize(w, kw, self.sx, self.pw, cover_all=self.cover_all)
+            y = clarray.empty(q, (n, out_c, out_h, out_w), dtype=X.dtype)
+            self.col = conv.im2col(q, X, kh, kw, self.sy, self.sx, self.ph, self.pw, self.cover_all)
+            W_mat = W.reshape(out_c, -1)
+            col_mats = self.col.reshape(n, -1, out_h*out_w)
+            y_mats = y.reshape(n, out_c, -1)
+            for i in xrange(n):
+                y_mats[i] = linalg.dot(q, W_mat, col_mats[i])
+            if b is not None:
+                y += b[:, None, None]               # TODO where is b?
+            cache[id(self)] = y
+        return cache[id(self)]
+
+    def _fwd_grad(self, wrt, valuation, cache):
+        pass
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        X = cache[id(self.ops[0])]
+        W = cache[id(self.ops[1])]
+        gy = adjoint
+        _, out_c, out_h, out_w = gy.shape
+        n, c, h, w = X.shape
+        kh, kw = W.shape[2:]
+
+        gW = clarray.zeros_like(W)
+        gW_mat = gW.reshape(out_c, c * kh * kw)
+        col_mats = self.col.reshape(n, c * kh * kw, out_h * out_w)
+        gy_mats = gy.reshape(n, out_c, out_h * out_w)
+
+        for i in xrange(n):
+            gW_mat += linalg.dot(q, gy_mats[i], col_mats[i].T)
+
+        W_mat = W.reshape(out_c, -1)
+        gcol = clarray.empty_like(self.col)
+        gcol_mats = gcol.reshape(n, c * kh * kw, out_h * out_w)
+        for i in xrange(n):
+            gcol_mats[i] = linalg.dot(q, W_mat.T, gy_mats[i])
+
+        gx = conv.col2im(q, gcol, self.sy, self.sx, self.ph, self.pw, h, w)
+
+        #TODO bias... sum along multiple axes of gy?
+        #TODO set gW, gx and gb in gradient dict
+

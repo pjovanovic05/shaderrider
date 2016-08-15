@@ -130,7 +130,7 @@ class ConvTest(unittest.TestCase):
         gX = clarray.to_device(clplatf.qs[0], X)
         gcol, ev = conv.im2col(clplatf.qs[0], gX, 3, 3, 2, 2, 0, 0)
         ev.wait()
-        col = gcol.reshape((1,27,9)).get()
+        col = gcol.reshape((1,-1,27,9)).get()
 
         self.assertTrue(np.allclose(expectedX, col))
 
