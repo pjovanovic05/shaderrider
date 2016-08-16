@@ -265,7 +265,8 @@ class Conv2d(expr.Expression):
             out_h = conv.get_conv_outsize(h, kh, self.sy, self.ph, cover_all=self.cover_all)
             out_w = conv.get_conv_outsize(w, kw, self.sx, self.pw, cover_all=self.cover_all)
             y = clarray.empty(q, (n, out_c, out_h, out_w), dtype=X.dtype)
-            self.col = conv.im2col(q, X, kh, kw, self.sy, self.sx, self.ph, self.pw, self.cover_all)
+            self.col = conv.im2col(q, X, kh, kw, self.sy, self.sx, self.ph, self.pw,
+                                   self.cover_all)
             W_mat = W.reshape(out_c, -1)
             col_mats = self.col.reshape(n, -1, out_h*out_w)
             y_mats = y.reshape(n, out_c, -1)
@@ -305,4 +306,6 @@ class Conv2d(expr.Expression):
 
         #TODO bias... sum along multiple axes of gy?
         #TODO set gW, gx and gb in gradient dict
+        self.ops[0]._rev_grad(valuation, gx, gradient, cache)
+        self.ops[1]._rev_grad(valuation, gW, gradient, cache)
 
