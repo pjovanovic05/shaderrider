@@ -3,6 +3,7 @@
 import numpy as np
 import pyopencl as cl
 from pyopencl import array as clarray
+from pyopencl.reduction import  ReductionKernel
 
 from shaderrider import clplatf
 
@@ -174,3 +175,10 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
                        img.data,
                        wait_for=wait_for)
     return img, evt
+
+
+def clarray_sum(a, axis):
+    krnl = ReductionKernel(clplatf.ctx, a.dtype, neutral="0",
+                           reduce_expr="a+b", map_expr="x[i*stride]",
+                           arguments="__global %s *x, int stride")
+    pass
