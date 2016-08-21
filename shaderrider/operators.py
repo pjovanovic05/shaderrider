@@ -249,9 +249,9 @@ class Dot(expr.Expression):
 
 
 class Conv2d(expr.Expression):
-    def __init__(self, img, filter, strides=(0,0), zero_padding=(0,0), cover_all=False, parents=None):
+    def __init__(self, img, filters, bias, strides=(0,0), zero_padding=(0,0), cover_all=False, parents=None):
         super(Conv2d, self).__init__(parents)
-        self.ops = [img, filter]
+        self.ops = [img, filters, bias]
         self.sy, self.sx = strides
         self.ph, self.pw = zero_padding
         self.cover_all = cover_all
@@ -260,6 +260,7 @@ class Conv2d(expr.Expression):
         if id(self) not in cache:
             X = self.ops[0]._evaluate(valuation, cache)
             W = self.ops[1]._evaluate(valuation, cache)
+            b = self.ops[2]._evaluate(valuation, cache)
             out_c, _, kh, kw = W.shape
             n, c, h, w = X.shape
             out_h = conv.get_conv_outsize(h, kh, self.sy, self.ph, cover_all=self.cover_all)
@@ -273,7 +274,8 @@ class Conv2d(expr.Expression):
             for i in xrange(n):
                 y_mats[i] = linalg.dot(q, W_mat, col_mats[i])
             if b is not None:
-                y += b[:, None, None]               # TODO where is b?
+                # y += b[:, None, None]
+                conv.bcast_add(q, y, b)
             cache[id(self)] = y
         return cache[id(self)]
 
@@ -308,4 +310,3 @@ class Conv2d(expr.Expression):
         #TODO set gW, gx and gb in gradient dict
         self.ops[0]._rev_grad(valuation, gx, gradient, cache)
         self.ops[1]._rev_grad(valuation, gW, gradient, cache)
-

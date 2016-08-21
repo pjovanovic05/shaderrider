@@ -136,3 +136,9 @@ class ConvTest(unittest.TestCase):
 
     def test_col2im(self):
         pass
+
+    def test_sum_by_axis(self):
+        pass
+
+    def test_bcast_add(self):
+        pass

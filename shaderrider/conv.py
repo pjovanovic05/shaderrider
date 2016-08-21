@@ -109,7 +109,7 @@ def im2col(q, img, kh, kw, sy, sx, ph, pw, cover_all=False):
             col[gid] = 0;
     }
     """ % locals()).build()
-
+    # TODO cache the kernel, this creates new one every time
     evt = prg.im2col(q, (n*c*kh*kw*out_h*out_w,), None,
                      img.data,
                      np.int32(h),
@@ -159,7 +159,7 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
         img[gid] = val;
     }
     """ % locals()).build()
-
+    # TODO cache the kernel, this creates new one every time
     evt = prg.col2im(q, (h*w,), None,
                        col.data,
                        np.int32(h),
@@ -177,8 +177,98 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
     return img, evt
 
 
-def clarray_sum(a, axis):
-    krnl = ReductionKernel(clplatf.ctx, a.dtype, neutral="0",
-                           reduce_expr="a+b", map_expr="x[i*stride]",
-                           arguments="__global %s *x, int stride")
-    pass
+def sum_by_axis(q, a, axis):
+    dtype = 'float' if a.dtype == np.float32 else 'double'
+    element_size = 4 if a.dtype == np.float32 else 8
+    prg = cl.Program(clplatf.ctx, r"""
+        __kernel void ax_sum(__global float *gdata, int n, int dim_n, int sn,
+                int dstride, int dskip, int estride,
+                __global float *output) {
+            int gid = get_global_id(0);
+            float sum = 0.0;
+            int offset = (gid!=0)*((gid*dstride) % sn + (gid/dim_n)*dskip);
+            for (int i=0; i<dim_n; i++) {
+                sum += gdata[i*estride + offset];
+            }
+            output[gid] = sum;
+        }
+        """).build()
+    ax_sum_k = prg.ax_sum
+    axes = reversed(sorted(list(axis)))
+    in_a = a
+    out_shape = a.shape
+    pev = None  # previous event
+    for dim in axes:
+        # TODO calc out dims and kernel dim/stride params
+        out_shape.pop(dim)
+        dn = in_a.shape[dim]
+        n = in_a.size
+        sn = None
+        estride = in_a.strides[dim]/element_size
+        out_a = clarray.empty(q, out_shape, in_a.dtype)
+        launch_shape = int(np.prod(in_a.shape[:dim])*(np.prod(in_a.shape[dim+1:])
+                                                      if dim < in_a.ndim-1 else 1))
+        ev = ax_sum_k(q, (launch_shape,), None,
+                      in_a.data,
+                      np.int32(n),
+                      np.int32(dn),
+                      np.int32(sn),
+                      np.int32(dstride),
+                      np.int32(dskip),
+                      np.int32(estride),
+                      out_a.data,
+                      wait_for=pev)
+        pev = [ev]
+    return out_a, pev
+
+
+def bcast_add(q, A, b, out=None):
+    """Bradcast add b vector to 3d tensor A"""
+    dtype = 'float' if A.dtype == np.float32 else 'double'
+    element_size = 4 if A.dtype == np.float32 else 8
+    prg = cl.Program(clplatf.ctx, """
+        __kernel void bcast_add(__global float *A, __global float *b,
+                __global float *out, int w, int h, int d) {
+            int i = get_global_id(0);
+            int j = get_global_id(1);
+            int k = get_global_id(2);
+            float s = 0;
+            if (i<d && j < h && k < w)
+                s = A[(i*h+j)*w + k] + b[i];
+            out[(i*h+j)*w + k] = s;
+        }
+        """).build()
+    badd = prg.bcast_add
+
+    # TODO assert A and b shapes
+    if out is None:
+        # TODO zero padding maybe?
+        out = clarray.empty_like(A)
+
+    evt = badd(q, A.shape, None,
+              A.data,
+              b.data,
+              out.data,
+              np.int32(A.shape[2]),
+              np.int32(A.shape[1]),
+              np.int32(A.shape[0]))
+
+    return out, evt
+
+
+def bgrads_sum(q, gY, out=None):
+    dtype = 'float' if A.dtype == np.float32 else 'double'
+    element_size = 4 if A.dtype == np.float32 else 8
+    prg = cl.Program(clplatf.ctx, """
+        __kernel void sumX(__global %(dtype)s *A, int w, int h, int c, int bs, __global %(dtype)s *out) {
+            //TODO
+        }
+
+        __kernel void sumY(__global %(dtype)s *A, int w, int h, int c, int bs, __global %(dtype)s *out) {
+            //TODO
+        }
+
+        __kernel void sumZ(__global %(dtype)s *A, int w, int h, int c, int bs, __global %(dtype)s *out) {
+            //TODO
+        }
+        """ % locals()).build()
