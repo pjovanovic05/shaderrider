@@ -261,19 +261,28 @@ def bgrads_sum(q, gY, out=None):
     element_size = 4 if A.dtype == np.float32 else 8
     n, c, h, w = gY.shape
     prg = cl.Program(clplatf.ctx, """
-        __kernel void sumX(__global %(dtype)s *A, int w, int h, int c, int bs, __global %(dtype)s *out) {
-            //TODO
+        __kernel void sumX(__global %(dtype)s *gdata, int w, __global %(dtype)s *output) {
             int gid = get_global_id(0);
-            %(dtype)s sum = 0.0;
-            int offset = gid*
+            %(dtype)s sum = 0;
+            for (int i=0; i<w; i++) {
+                sum += gdata[i + (gid/w)*w];
+            }
+            output[gid] = sum;
         }
 
-        __kernel void sumY(__global %(dtype)s *A, int w, int h, int c, int bs, __global %(dtype)s *out) {
-            //TODO
+        __kernel void sumY(__global %(dtype)s *gdata, int h) {
+            int gid = get_global_id(0);
+            %(dtype)s sum = 0;
+            int offset = gid/h*h;
+            for (int i=0; i<h; i++)
+                sum += gdata[i + offset];
+            gdata[offset] = sum;
         }
 
-        __kernel void sumB(__global %(dtype)s *A, int w, int h, int c, int bs, __global %(dtype)s *out) {
-            //TODO
+        __kernel void sumB(__global %(dtype)s *gdata, int batch_size, int c) {
+            int gid = get_global_id(0);
+            %(dtype)s sum = 0;
+            for()
         }
 
         __kernel void ax_sum(__global %(dtype)s *gdata, int dim_n, int sn,
@@ -281,7 +290,7 @@ def bgrads_sum(q, gY, out=None):
                              __global %(dtype)s *output) {
             int gid = get_global_id(0);
             %(dtype)s sum = 0.0;
-            int offset = (gid!=0)*((gid*dstride) %% sn + (gid/dim_n)*dskip);
+            int offset = (gid*dstride) %% sn + (gid/dim_n)*dskip;
             for (int i=0; i<dim_n; i++) {
                 sum += gdata[i*estride + offset];
             }
@@ -289,8 +298,7 @@ def bgrads_sum(q, gY, out=None):
         }
         """ % locals()).build()
 
+    ax_sum_k = prg.ax_sum
     kstep1 = prg.sumX
-    kstep2 = prg.sumY
-    kstep3 = prg.sumB
     temp = clarray.zeros(q, gY.shape[:-1], gY.dtype)
-    ev1 = kstep1(q, (n*c*h,), gY, )
+    ev1 = kstep1(q, (n*c*h,), gY.data, np.int32(gY.shape[3]), out.data)
