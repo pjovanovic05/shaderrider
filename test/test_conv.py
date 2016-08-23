@@ -11,6 +11,7 @@ class ConvTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         clplatf.init_cl(1)
+        # TODO setup X and gX
 
     @classmethod
     def tearDownClass(cls):
@@ -141,4 +142,7 @@ class ConvTest(unittest.TestCase):
         pass
 
     def test_bcast_add(self):
+        pass
+
+    def test_bgrads_sum(self):
         pass
