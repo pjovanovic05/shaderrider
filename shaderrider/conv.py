@@ -281,8 +281,24 @@ def bgrads_sum(q, gY, out=None):
 
         __kernel void sumB(__global %(dtype)s *gdata, int batch_size, int c) {
             int gid = get_global_id(0);
+            int tid = get_local_id(0);
+            int gwidth = get_local_size(0);
             %(dtype)s sum = 0;
-            for()
+            sdata[tid] = 0;
+            while (i<batch_size/c) {
+                sdata[tid] += gdata[i] + gdata[i+blockSize];
+                i += gridSize;
+            }
+            barrier(CLK_LOCAL_MEM_FENCE);
+
+            for (unsigned int s = gwidth/2; s>0; s>>=1) {
+                if (tid < s) {
+                    sdata[tid*c] += sdata[tid+s];
+                    for (int i=0; i<c; i++)
+                        sdata[tid*c+i] += sdata[tid+s+i];
+                }
+                barrier(CLK_LOCAL_MEM_FENCE);
+            }
         }
 
         __kernel void ax_sum(__global %(dtype)s *gdata, int dim_n, int sn,
