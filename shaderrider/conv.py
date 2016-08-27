@@ -3,7 +3,7 @@
 import numpy as np
 import pyopencl as cl
 from pyopencl import array as clarray
-from pyopencl.reduction import  ReductionKernel
+from pyopencl.elementwise import ElementwiseKernel
 
 from shaderrider import clplatf
 
@@ -226,95 +226,99 @@ def bcast_add(q, A, b, out=None):
     """Bradcast add b vector to 3d tensor A"""
     dtype = 'float' if A.dtype == np.float32 else 'double'
     element_size = 4 if A.dtype == np.float32 else 8
-    prg = cl.Program(clplatf.ctx, """
-        __kernel void bcast_add(__global float *A, __global float *b,
-                __global float *out, int w, int h, int d) {
-            int i = get_global_id(0);
-            int j = get_global_id(1);
-            int k = get_global_id(2);
-            float s = 0;
-            if (i<d && j < h && k < w)
-                s = A[(i*h+j)*w + k] + b[i];
-            out[(i*h+j)*w + k] = s;
-        }
-        """).build()
-    badd = prg.bcast_add
+
+    badd = ElementwiseKernel(clplatf.ctx,
+                             'float *X, float *y, float *out, int nb, int c, int w, int h',
+                             'out[i] = X[i] + y[(i/w/h)%c]',
+                             "badd")
 
     # TODO assert A and b shapes
     if out is None:
         # TODO zero padding maybe?
         out = clarray.empty_like(A)
 
-    evt = badd(q, A.shape, None,
-              A.data,
-              b.data,
-              out.data,
-              np.int32(A.shape[2]),
-              np.int32(A.shape[1]),
-              np.int32(A.shape[0]))
+    evt = badd(A, b, out,
+               np.int32(A.shape[0]),
+               np.int32(A.shape[1]),
+               np.int32(A.shape[2]),
+               np.int32(A.shape[3]))
 
     return out, evt
 
 
-def bgrads_sum(q, gY, out=None):
-    dtype = 'float' if A.dtype == np.float32 else 'double'
-    element_size = 4 if A.dtype == np.float32 else 8
+def bgrads_sum(q, gY, out):
+    dtype = 'float' if gY.dtype == np.float32 else 'double'
+    # element_size = 4 if gY.dtype == np.float32 else 8
     n, c, h, w = gY.shape
+    step3_gridsize = 0
+    if n>=256:
+        step3_gridsize = 256
+    elif n>=128:
+        step3_gridsize = 128
+    elif n>=64:
+        step3_gridsize = 64
+    else:
+        raise ValueError
+
     prg = cl.Program(clplatf.ctx, """
-        __kernel void sumX(__global %(dtype)s *gdata, int w, __global %(dtype)s *output) {
+        __kernel void sumLastD(__global %(dtype)s *gdata, int w, __global %(dtype)s *output) {
             int gid = get_global_id(0);
+            int offset = gid*w;
             %(dtype)s sum = 0;
             for (int i=0; i<w; i++) {
-                sum += gdata[i + (gid/w)*w];
+                sum += gdata[i + offset];
             }
             output[gid] = sum;
         }
 
-        __kernel void sumY(__global %(dtype)s *gdata, int h) {
-            int gid = get_global_id(0);
-            %(dtype)s sum = 0;
-            int offset = gid/h*h;
-            for (int i=0; i<h; i++)
-                sum += gdata[i + offset];
-            gdata[offset] = sum;
-        }
-
-        __kernel void sumB(__global %(dtype)s *gdata, int batch_size, int c) {
+        __kernel void rsum(__global %(dtype)s *gdata, __global %(dtype)s *odata,
+                           int n, int c, __local %(dtype)s *sdata) {
             int gid = get_global_id(0);
             int tid = get_local_id(0);
-            int gwidth = get_local_size(0);
-            %(dtype)s sum = 0;
-            sdata[tid] = 0;
-            while (i<batch_size/c) {
-                sdata[tid] += gdata[i] + gdata[i+blockSize];
+            int blockSize = get_local_size(0)/2;
+            int gridSize = get_global_size(0);
+            int i;
+
+            for (i=0; i<c; i++)
+                sdata[c*tid+i] = 0;
+
+            i = gid;
+            while (i < n) {
+                for (unsigned short d=0; d<c; d++)
+                    sdata[c*tid+d] += gdata[c*i+d] + gdata[c*(i+blockSize)+d];
                 i += gridSize;
             }
             barrier(CLK_LOCAL_MEM_FENCE);
 
-            for (unsigned int s = gwidth/2; s>0; s>>=1) {
-                if (tid < s) {
-                    sdata[tid*c] += sdata[tid+s];
-                    for (int i=0; i<c; i++)
-                        sdata[tid*c+i] += sdata[tid+s+i];
-                }
+            for (unsigned int s=blockSize/2; s>0; s>>=1) {
+                if (tid < s)
+                    for (unsigned short d=0; d<c; d++)
+                        sdata[c*tid+d] += sdata[c*(tid + s)+d];
                 barrier(CLK_LOCAL_MEM_FENCE);
             }
-        }
 
-        __kernel void ax_sum(__global %(dtype)s *gdata, int dim_n, int sn,
-                             int dstride, int dskip, int estride,
-                             __global %(dtype)s *output) {
-            int gid = get_global_id(0);
-            %(dtype)s sum = 0.0;
-            int offset = (gid*dstride) %% sn + (gid/dim_n)*dskip;
-            for (int i=0; i<dim_n; i++) {
-                sum += gdata[i*estride + offset];
+            if (tid == 0) {
+                for (unsigned short d=0; d<c; d++)
+                    gdata[c*gid+d] = sdata[d];
             }
-            output[gid] = sum;
+            if (gid == 0) {
+                for (unsigned short d=0; d<c; d++)
+                    odata[d] += sdata[d];
+            }
         }
         """ % locals()).build()
 
-    ax_sum_k = prg.ax_sum
-    kstep1 = prg.sumX
-    temp = clarray.zeros(q, gY.shape[:-1], gY.dtype)
-    ev1 = kstep1(q, (n*c*h,), gY.data, np.int32(gY.shape[3]), out.data)
+    kstep1 = prg.sumLastD
+    kstep3 = prg.rsum
+    temp1 = clarray.zeros(q, (n, c, h), gY.dtype)
+    temp2 = clarray.zeros(q, (n, c), gY.dtype)
+    ev1 = kstep1(q, (n*c*h,), None, gY.data, np.int32(w), temp1.data)
+    ev2 = kstep1(q, (n*c,), None, temp1.data, np.int32(h), temp2.data,
+                 wait_for=[ev1])
+
+    locMemSize = step3_gridsize*c*(4 if gY.dtype==np.float32 else 8)
+    ev3 =  kstep3(q, (step3_gridsize,), (step3_gridsize,),
+                  temp2.data, out.data, np.int32(n), np.int32(c),
+                  cl.LocalMemory(locMemSize),
+                  wait_for=[ev2])
+    return out, ev3
