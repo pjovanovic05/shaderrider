@@ -140,7 +140,7 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
         int gid = get_global_id(0);
         int c0 = gid / (h*w);
         int y = gid / w %% h + ph;
-        int x = gid %% w + ph;
+        int x = gid %% w + pw;
 
         int out_y_0 = max(0, (y-kh+sy)/sy);
         int out_y_1 = min(out_h, (y+sy)/sy);
@@ -160,7 +160,7 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
     }
     """ % locals()).build()
     # TODO cache the kernel, this creates new one every time
-    evt = prg.col2im(q, (h*w,), None,
+    evt = prg.col2im(q, (n*c*h*w,), None,
                        col.data,
                        np.int32(h),
                        np.int32(w),

@@ -12,13 +12,25 @@ from shaderrider.aux import clblaswrap
 
 
 def dot(queue, a, b, out=None, wait_for=None):
-    lsa, lsb = len(a.shape), len(b.shape)
-    if lsa > 2:
-        raise TypeError, 'A is not a matrix'
-    if lsb > 2:
-        raise TypeError, 'B is not a matrix'
+    lsa, lsb = 0, 0
+    try:
+        lsa = len(a.shape)
+    except AttributeError:
+        lsa = 0     # scalar
+    try:
+        lsb = len(b.shape)
+    except AttributeError:
+        lsb = 0     # scalar
 
-    M, K = a.shape if len(a.shape) == 2 else a.shape[0],1
+    if lsa == 0 or lsb == 0:
+        return a*b, None
+
+    if lsa > 2:
+        raise TypeError('A is not a matrix')
+    if lsb > 2:
+        raise TypeError('B is not a matrix')
+
+    M, K = a.shape if len(a.shape) == 2 else (a.shape[0], 1)
     N = b.shape[1] if len(b.shape) == 2 else 1
     ev = None
 
@@ -40,6 +52,10 @@ def dot(queue, a, b, out=None, wait_for=None):
         ev = clblaswrap.gemm(queue, a, b, out)
 
     return out, ev
+
+
+def batch_dot(queue, a, b, out=None, wait_for=None):
+    pass
 
 
 def outer(queue, a, b, out=None, wait_for=None):

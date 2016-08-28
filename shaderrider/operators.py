@@ -9,6 +9,7 @@ from pyopencl import clmath
 from shaderrider import expr
 from shaderrider import linalg
 from shaderrider import conv
+from shaderrider import clplatf as pl
 
 
 class Add(expr.Expression):
@@ -177,7 +178,8 @@ class Sigmoid(expr.Expression):
 
     def _evaluate(self, valuation, cache):
         if id(self) not in cache:
-            cache[id(self)] = 1.0/(1 + clmath.exp(-self.ops[0]._evaluate(valuation, cache)))
+            x = self.ops[0]._evaluate(valuation, cache)
+            cache[id(self)] = 1.0/(1 + clmath.exp(-x))
         return cache[id(self)]
 
     def _fwd_grad(self, wrt, valuation, cache):
@@ -228,28 +230,42 @@ class Dot(expr.Expression):
         self.ops = [op1, op2]
 
     def _evaluate(self, valuation, cache):
+        q = pl.qs[0]
         if id(self) not in cache:
             e1, e2 = self.ops[0]._evaluate, self.ops[1]._evaluate
-            cache[id(self)] = linalg.dot(q, e1(valuation, cache), e2(valuation, cache))
+            cache[id(self)], evt = linalg.dot(q, e1(valuation, cache), e2(valuation, cache))
+            evt.wait()  # TODO asynchronize this
         return cache[id(self)]
 
     def _fwd_grad(self, wrt, valuation, cache):
+        q = pl.qs[0]
         lhs = cache[id(self.ops[0])]
         rhs = cache[id(self.ops[1])]
-        return linalg.dot(q, self.ops[0]._fwd_grad(wrt, valuation, cache), rhs) + \
-               linalg.dot(q, lhs, self.ops[1]._fwd_grad(wrt, valuation, cache))
+        a, ev1 = linalg.dot(q, self.ops[0]._fwd_grad(wrt, valuation, cache), rhs)
+        b, ev2 = linalg.dot(q, lhs, self.ops[1]._fwd_grad(wrt, valuation, cache))
+        if ev1 is not None:
+            ev1.wait()  # TODO asynchronize
+        if ev2 is not None:
+            ev2.wait()  # TODO asynchronize
+        return a + b
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
-        # lhs = cache[id(self.ops[0])]
-        # rhs = cache[id(self.ops[1])]
-        # self.ops[0]._rev_grad(valuation, linalg.dot(adjoint, rhs), gradient, cache)
-        # self.ops[1]._rev_grad(valuation, linalg.dot(lhs, adjoint), gradient, cache)
-        # TODO fale transponovanja ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        pass
+        q = pl.qs[0]
+        lhs = cache[id(self.ops[0])]
+        rhs = cache[id(self.ops[1])]
+        adj1, ev1 = linalg.dot(q, adjoint, rhs.T)
+        adj2, ev2 = linalg.dot(q, lhs.T, adjoint)
+        if ev1 is not None:
+            ev1.wait()  # TODO asynchronize
+        if ev2 is not None:
+            ev2.wait()  # TODO asynchronize
+        self.ops[0]._rev_grad(valuation, adj1, gradient, cache)
+        self.ops[1]._rev_grad(valuation, adj2, gradient, cache)
 
 
 class Conv2d(expr.Expression):
-    def __init__(self, img, filters, bias, strides=(0,0), zero_padding=(0,0), cover_all=False, parents=None):
+    def __init__(self, img, filters, bias, strides=(0, 0), zero_padding=(0, 0),
+                 cover_all=False, parents=None):
         super(Conv2d, self).__init__(parents)
         self.ops = [img, filters, bias]
         self.sy, self.sx = strides
@@ -257,25 +273,31 @@ class Conv2d(expr.Expression):
         self.cover_all = cover_all
 
     def _evaluate(self, valuation, cache):
+        q = pl.qs[0]
         if id(self) not in cache:
             X = self.ops[0]._evaluate(valuation, cache)
             W = self.ops[1]._evaluate(valuation, cache)
             b = self.ops[2]._evaluate(valuation, cache)
             out_c, _, kh, kw = W.shape
             n, c, h, w = X.shape
-            out_h = conv.get_conv_outsize(h, kh, self.sy, self.ph, cover_all=self.cover_all)
-            out_w = conv.get_conv_outsize(w, kw, self.sx, self.pw, cover_all=self.cover_all)
+            out_h = conv.get_conv_outsize(h, kh, self.sy, self.ph,
+                                          cover_all=self.cover_all)
+            out_w = conv.get_conv_outsize(w, kw, self.sx, self.pw,
+                                          cover_all=self.cover_all)
             y = clarray.empty(q, (n, out_c, out_h, out_w), dtype=X.dtype)
-            self.col = conv.im2col(q, X, kh, kw, self.sy, self.sx, self.ph, self.pw,
-                                   self.cover_all)
+            self.col, ev1 = conv.im2col(q, X, kh, kw, self.sy, self.sx,
+                                        self.ph, self.pw, self.cover_all)
             W_mat = W.reshape(out_c, -1)
+            ev1.wait()  # TODO asynchronize
             col_mats = self.col.reshape(n, -1, out_h*out_w)
             y_mats = y.reshape(n, out_c, -1)
             for i in xrange(n):
-                y_mats[i] = linalg.dot(q, W_mat, col_mats[i])
+                y_mats[i], ev2 = linalg.dot(q, W_mat, col_mats[i])
+                ev2.wait()  # TODO asynchronize
             if b is not None:
                 # y += b[:, None, None]
-                conv.bcast_add(q, y, b)
+                _, ev3 = conv.bcast_add(q, y, b)
+                ev3.wait()  # TODO asynchronize
             cache[id(self)] = y
         return cache[id(self)]
 
@@ -283,8 +305,10 @@ class Conv2d(expr.Expression):
         pass
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
+        q = pl.qs[0]
         X = cache[id(self.ops[0])]
         W = cache[id(self.ops[1])]
+        b = cache[id(self.ops[2])]
         gy = adjoint
         _, out_c, out_h, out_w = gy.shape
         n, c, h, w = X.shape
@@ -296,17 +320,26 @@ class Conv2d(expr.Expression):
         gy_mats = gy.reshape(n, out_c, out_h * out_w)
 
         for i in xrange(n):
-            gW_mat += linalg.dot(q, gy_mats[i], col_mats[i].T)
+            gwmat, ev = linalg.dot(q, gy_mats[i], col_mats[i].T)
+            gW_mat += gwmat
+            ev.wait()
 
         W_mat = W.reshape(out_c, -1)
         gcol = clarray.empty_like(self.col)
         gcol_mats = gcol.reshape(n, c * kh * kw, out_h * out_w)
         for i in xrange(n):
-            gcol_mats[i] = linalg.dot(q, W_mat.T, gy_mats[i])
+            gcol_mats[i], ev = linalg.dot(q, W_mat.T, gy_mats[i])
+            ev.wait()
 
-        gx = conv.col2im(q, gcol, self.sy, self.sx, self.ph, self.pw, h, w)
-
-        #TODO bias... sum along multiple axes of gy?
-        #TODO set gW, gx and gb in gradient dict
+        gx, ev = conv.col2im(q, gcol, self.sy, self.sx, self.ph, self.pw, h, w)
+        ev.wait()
+        gb = None
+        if b is not None:
+            gb, ev = conv.bgrads_sum(gy)
+            ev.wait()
+        # TODO bias... sum along multiple axes of gy?
+        # TODO set gW, gx and gb in gradient dict
         self.ops[0]._rev_grad(valuation, gx, gradient, cache)
         self.ops[1]._rev_grad(valuation, gW, gradient, cache)
+        if gb is not None:
+            self.ops[2]._rev_grad(valuation, gb, gradient, cache)
