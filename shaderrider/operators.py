@@ -296,7 +296,7 @@ class Conv2d(expr.Expression):
                 ev2.wait()  # TODO asynchronize
             if b is not None:
                 # y += b[:, None, None]
-                _, ev3 = conv.bcast_add(q, y, b)
+                _, ev3 = conv.bcast_add(q, y, b, y)
                 ev3.wait()  # TODO asynchronize
             cache[id(self)] = y
         return cache[id(self)]

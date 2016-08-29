@@ -7,7 +7,7 @@ from shaderrider import clplatf as pl
 from shaderrider import expr
 from shaderrider import operators as op
 
-import sys
+# import sys
 
 
 class OperatorsTest(unittest.TestCase):
@@ -45,7 +45,7 @@ class OperatorsTest(unittest.TestCase):
 
         gddot = dotprod.fwd_grad({'x': xw, 'y': yw}, valuation)
         ddot = gddot.get()
-        print >>sys.stderr, '\nddot: ', ddot
+        # print >>sys.stderr, '\nddot: ', ddot
 
     def test_dot_revgrad(self):
         x = expr.Variable('x')
@@ -71,10 +71,65 @@ class OperatorsTest(unittest.TestCase):
         convolution = op.Conv2d(img, k, b, strides=(2, 2), zero_padding=(0, 0))
 
         valuation = pl.valuation()
-        # valuation['img'] = np.asarray()
-        # valuation['k'] = np.asarray()
-        # valuation['b'] = np.asarray()
-        # nX = np.asarray()
+        nimg = np.asarray([[[[0., 0., 0., 0., 0., 0., 0.],
+                             [0., 2., 1., 0., 2., 2., 0.],
+                             [0., 2., 2., 1., 1., 2., 0.],
+                             [0., 2., 0., 0., 2., 1., 0.],
+                             [0., 0., 2., 0., 1., 0., 0.],
+                             [0., 1., 1., 0., 0., 0., 0.],
+                             [0., 0., 0., 0., 0., 0., 0.]],
+
+                            [[0., 0., 0., 0., 0., 0., 0.],
+                             [0., 2., 0., 2., 0., 1., 0.],
+                             [0., 2., 2., 1., 0., 2., 0.],
+                             [0., 2., 1., 0., 0., 1., 0.],
+                             [0., 2., 0., 1., 0., 0., 0.],
+                             [0., 1., 1., 0., 2., 2., 0.],
+                             [0., 0., 0., 0., 0., 0., 0.]],
+
+                            [[0., 0., 0., 0., 0., 0., 0.],
+                             [0., 2., 0., 0., 2., 1., 0.],
+                             [0., 2., 2., 2., 2., 0., 0.],
+                             [0., 1., 1., 2., 1., 0., 0.],
+                             [0., 2., 1., 2., 1., 0., 0.],
+                             [0., 1., 0., 0., 0., 2., 0.],
+                             [0., 0., 0., 0., 0., 0., 0.]]]]).astype(np.float32)
+        nk = np.asarray([[
+                [[-1, 1, 1],
+                 [1, 0, 0],
+                 [1, 0, 0]],
+                [[1, -1, 1],
+                 [1, -1, -1],
+                 [1, 1, 1]],
+                [[0, 0, 0],
+                 [0, -1, 1],
+                 [0, 1, -1]]
+            ],
+            [
+                [[0, 0, -1],
+                 [0, 1, 0],
+                 [0, 0, -1]],
+                [[-1, -1, 1],
+                 [-1, 1, -1],
+                 [1, 1, 0]],
+                [[0, 1, -1],
+                 [1, 0, 0],
+                 [0, -1, 0]]
+            ]]).astype(np.float32)
+        nb = np.asarray([1, 0]).astype(np.float32)
+        expected = np.asarray([[[[1, 7, 4],
+                                 [5, 6, 2],
+                                 [-2, -1, -2]],
+                                [[2, 2, 7],
+                                 [-1, -6, 1],
+                                 [-2, -4, 0]]]]).astype(np.float32)
+
+        valuation['img'] = nimg
+        valuation['k'] = nk
+        valuation['b'] = nb
+        ret = convolution.evaluate(valuation)
+        nret = ret.get()
+        self.assertTrue(np.allclose(expected, nret))
 
     def test_conv2d_revgrad(self):
         pass

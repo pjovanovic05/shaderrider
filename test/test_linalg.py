@@ -27,3 +27,14 @@ class LinalgTest(unittest.TestCase):
         ev.wait()
         R = gR.get()
         self.assertTrue(np.allclose(R, expected))
+
+        A = np.random.uniform(0, 1, (512, 512)).astype(np.float32)
+        B = np.random.uniform(0, 1, (512, 512)).astype(np.float32)
+
+        expected = np.dot(A, B)
+        gA = clarray.to_device(q, A)
+        gB = clarray.to_device(q, B)
+        gC, ev = linalg.dot(q, gA, gB)
+        ev.wait()
+        C = gC.get()
+        self.assertTrue(np.allclose(C, expected))
