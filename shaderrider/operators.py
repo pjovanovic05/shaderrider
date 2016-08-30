@@ -1,11 +1,9 @@
-"""
-Operator definitions.
-
-"""
+"""Operator definitions."""
 import numpy as np
 import pyopencl as cl
 from pyopencl import array as clarray
 from pyopencl import clmath
+from pyopencl import clrandom
 from shaderrider import expr
 from shaderrider import linalg
 from shaderrider import conv
@@ -343,3 +341,24 @@ class Conv2d(expr.Expression):
         self.ops[1]._rev_grad(valuation, gW, gradient, cache)
         if gb is not None:
             self.ops[2]._rev_grad(valuation, gb, gradient, cache)
+
+
+class Dropout(expr.Expression):
+    def __init__(self, op, ratio=0.5, parents=None):
+        super(Dropout, self).__init__(parents)
+        self.ops = [op]
+        self.ratio = ratio
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            q = pl.qs[0]
+            op = self.ops[0]._evaluate(valuation, cache)
+            self.mask = clrandom.rand(q, op.shape, op.dtype) >= self.ratio
+            cache[id(self)] = op * self.mask
+        return cache[id(self)]
+
+    def _fwd_grad(self, wrt, valuation, cache):
+        pass
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        self.ops[0]._rev_grad(valuation, adjoint*self.mask, gradient, cache)
