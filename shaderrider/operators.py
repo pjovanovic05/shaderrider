@@ -149,6 +149,26 @@ class Exp(expr.Expression):
         self.ops[0]._rev_grad(valuation, adjoint*clmath.exp(ex), gradient, cache)
 
 
+class Log(expr.Expression):
+    def __init__(self, op, parents=None):
+        super(Log, self).__init__(parents)
+        self.ops = [op]
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            cache[id(self)] = clmath.log(self.ops[0]._evaluate(valuation, cache))
+        return cache[id(self)]
+
+    def _fwd_grad(self, wrt, valuation, cache):
+        op = cache[id(self.ops[0])]
+        dop = self.ops[0]._fwd_grad(wrt, valuation, cache)
+        return 1/op * dop
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        op = cache[id(self.ops[0])]
+        self.ops[0]._rev_grad(valuation, 1/op*adjoint, gradient, cache)
+
+
 class Reciprocal(expr.Expression):
     def __init__(self, op, parents=None):
         super(Reciprocal, self).__init__(parents)
@@ -362,3 +382,44 @@ class Dropout(expr.Expression):
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
         self.ops[0]._rev_grad(valuation, adjoint*self.mask, gradient, cache)
+
+
+class Softmax(expr.Expression):
+    pass
+
+
+class Mean(expr.Expression):
+    pass
+
+
+class MeanSquaredErr(expr.Expression):
+    def __init__(self, op1, op2, parents=None):
+        super(MeanSquaredErr, self).__init__(parents)
+        self.ops = [op1, op2]
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            q = pl.qs[0]
+            e1, e2 = (op._evaluate for op in self.ops)
+            self.diff = e1(valuation, cache) - e2(valuation, cache)
+            self.diff = self.diff.ravel()
+            cache[id(self)] = linalg.dot(q, self.diff, self.diff)/self.diff.size
+        return cache[id(self)]
+
+    def _fwd_grad(self, wrt, valuation, cache):
+        pass
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        coeff = adjoint * 2/self.diff.size
+        df = coeff * self.diff
+        self.ops[0]._rev_grad(valuation, df, gradient, cache)
+        self.ops[1]._rev_grad(valuation, -df, gradient, cache)
+
+
+class NotEq(expr.Expression):
+    def __init__(self, op1, op2, parents=None):
+        super(NotEq, self).__init__(parents)
+        self.ops = [op1, op2]
+
+    def _evaluate(self, valuation, cache):
+        pass
