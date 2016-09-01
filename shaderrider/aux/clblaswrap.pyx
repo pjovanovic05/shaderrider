@@ -619,7 +619,8 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
     cdef size_t M = As.shape[-2]
     cdef size_t K = As.shape[-1]
     cdef size_t N = Bs.shape[-1]
-    cdef size_t batch_size = 1  # TODO prod(As.shape[:-2])
+    cdef size_t batch_size = np.prod(As.shape[:-2])
+    cdef int bcast_b = len(Bs.shape)>2
     cdef int i
     check_shape_dim(Bs.shape, -1 if transB else -2, K, 'Bs')
     check_shape_dim(Cs.shape, -2, M, 'Cs')
@@ -651,7 +652,7 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
         for i in range(batch_size):
             # TODO preracunaj offsete
             offA += szA
-            offB += szB
+            offB += szB if bcast_b else 0
             offC += szC
             # TODO pozovi odgovarajuci gemm
             err = clblasSgemm(order,
@@ -708,4 +709,3 @@ cdef class EventList:
     def __dealloc__(self):
         if self.data != NULL:
             free(self.data)
-

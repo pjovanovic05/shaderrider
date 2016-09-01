@@ -1,4 +1,4 @@
-"""Convolution things"""
+"""Convolution things."""
 
 import numpy as np
 import pyopencl as cl

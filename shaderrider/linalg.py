@@ -46,7 +46,7 @@ def dot(queue, a, b, out=None, wait_for=None):
             out = clarray.empty(queue, (M, N), a.dtype)
         ev = clblaswrap.gemv(queue, a, b, out)
     elif (lsa == 2 and lsb == 2):
-        # gemv
+        # gemm
         if out is None:
             out = clarray.empty(queue, (M, N), a.dtype)
         ev = clblaswrap.gemm(queue, a, b, out)
@@ -55,10 +55,18 @@ def dot(queue, a, b, out=None, wait_for=None):
 
 
 def batch_dot(queue, a, b, out=None, wait_for=None):
-    pass
+    lsa, lsb = len(a.shape), len(b.shape)
+    M, K = a.shape if len(a.shape) == 2 else (a.shape[0], 1)
+    N = b.shape[1] if len(b.shape) == 2 else 1
+    evl = []
+    if (lsa > 2) and (lsb >= 2):
+        d = np.prod(a.shape[:-2])
+        if out is None:
+            out = clarray.empty*queue, (d, M, N), a.dtype)
+        evl = clblaswrap.gemm_batch(queue, a, b, out)   # TODO transpositions?
+
+    return out, evl
 
 
 def outer(queue, a, b, out=None, wait_for=None):
     pass
-
-# TODO batch gemm

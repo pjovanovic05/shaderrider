@@ -26,7 +26,7 @@ def get_mnist_data():
                 # labels...
                 lbls = array('b', f.read())
                 arry = np.frombuffer(lbls, dtype=np.int8)
-                arry.shape = (n,1)
+                arry.shape = (n,)
                 outs.append(arry)
             elif magic == 2051:
                 # images

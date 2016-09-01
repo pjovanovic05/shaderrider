@@ -7,6 +7,7 @@ from pyopencl import clrandom
 from shaderrider import expr
 from shaderrider import linalg
 from shaderrider import conv
+from shaderrider import nnet
 from shaderrider import clplatf as pl
 
 
@@ -389,7 +390,19 @@ class Softmax(expr.Expression):
 
 
 class Mean(expr.Expression):
-    pass
+    def __init__(self, op, parents=None):
+        super(Mean, self).__init__(parents)
+        self.ops = [op]
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            op = self.ops[0]._evaluate(valuation, cache)
+            cache[id(self)] = clarray.sum(op) / op.size     # TODO truediv maybe?
+        return cache[id(self)]
+
+    def _rev_grad(valuation, adjoint, gradient, cache):
+        op = cache[id(self.ops[0])]
+        self.ops[0],_rev_grad(valuation, ajoint / op.size, gradient, cache)
 
 
 class MeanSquaredErr(expr.Expression):
@@ -422,4 +435,22 @@ class NotEq(expr.Expression):
         self.ops = [op1, op2]
 
     def _evaluate(self, valuation, cache):
-        pass
+        if id(self) not in cache:
+            e1, e2 = self.ops[0]._evaluate, self.ops[0]._evaluate
+            cache[id(self)] = e1(valuation, cache) != e2(valuation, cache)
+        return cache[id(self)]
+
+
+class Argmax(expr.Expression):
+    def __init__(self, op, axis, parents=None):
+        super(Argmax, self).__init__(parents)
+        self.ops = [op]
+        self.axis = axis
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            q = pl.qs[0]
+            A = self.ops[0]._evaluate(valuation, cache)
+            cache[id(self)], ev = nnet.argmax(q, A, self.axis)
+            ev.wait()
+        return cache[id(self)]
