@@ -54,10 +54,11 @@ class MLP(object):
 
         grad = self.cost.rev_grad(val)
         for name, value in self.params:
-            value -= learning_rate * grad[name]
+            print 'updating', name, 'shape:', value.shape, 'gshape:', grad[name].shape
+            value = value + -learning_rate * grad[name]
 
     def test(self, X, Y):
-        val = pl.valuation(784, 1024, 10)
+        val = pl.valuation()
         val['X'] = X
         val['Y'] = Y
         for param, value in self.params:
@@ -71,10 +72,12 @@ def main():
     mlp = MLP(784, 1024, 10)
 
     tvX, tvY, testX, testY = get_mnist_data()
+    tvX.shape = (60000, 784)
+    testX.shape = (10000, 784)
     tvX = (tvX/255.0).astype(np.float32)
     testX = (testX/255.0).astype(np.float32)
-    tvYoh = pd.get_dummies(tvY).values
-    testYoh = pd.get_dummies(testY).values
+    tvYoh = pd.get_dummies(tvY).values.astype(np.float32)
+    testYoh = pd.get_dummies(testY).values.astype(np.float32)
     vsplit = int(0.9 * tvX.shape[0])
     trainX = tvX[:vsplit, :]
     validX = tvX[vsplit:, :]

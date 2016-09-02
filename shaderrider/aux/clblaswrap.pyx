@@ -341,7 +341,7 @@ cpdef check_vector(a, str name):
     check_array(a, 1, name)
 
 
-cpdef check_shape_dim(shape, size_t dim, size_t target, str name):
+cpdef check_shape_dim(shape, int dim, size_t target, str name):
     if shape[dim] != target:
         raise ValueError("'%s.shape[%d]' must be %d (got %d)" % (name, dim, target, shape[dim]))
 
@@ -619,7 +619,7 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
     cdef size_t M = As.shape[-2]
     cdef size_t K = As.shape[-1]
     cdef size_t N = Bs.shape[-1]
-    cdef size_t batch_size = np.prod(As.shape[:-2])
+    cdef int batch_size = np.prod(As.shape[:-2])
     cdef int bcast_b = len(Bs.shape)>2
     cdef int i
     check_shape_dim(Bs.shape, -1 if transB else -2, K, 'Bs')
