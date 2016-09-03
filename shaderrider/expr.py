@@ -4,6 +4,7 @@ Abstract syntax tree for expression graphs that support automatic differentiatio
 """
 
 import weakref
+from pyopencl import array as clarray
 
 
 class Expression(object):
@@ -26,9 +27,10 @@ class Expression(object):
 
     def rev_grad(self, valuation):
         cache = {}
-        self._evaluate(valuation, cache)
-        grad = {key:0 for key in valuation}
-        self._rev_grad(valuation, 1, grad, cache)
+        res = self._evaluate(valuation, cache)
+        adjoint = clarray.empty_like(res).fill(1.0)
+        grad = {key: 0 for key in valuation}
+        self._rev_grad(valuation, adjoint, grad, cache)
         return grad
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):

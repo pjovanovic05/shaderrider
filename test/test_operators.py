@@ -7,7 +7,7 @@ from shaderrider import clplatf as pl
 from shaderrider import expr
 from shaderrider import operators as op
 
-# import sys
+import sys
 
 
 class OperatorsTest(unittest.TestCase):
@@ -21,8 +21,8 @@ class OperatorsTest(unittest.TestCase):
         dotprod = op.Dot(x, y)
 
         valuation = pl.valuation()
-        nx = np.random.uniform(0, 1, (10,)).astype(np.float32)
-        ny = np.random.uniform(0, 1, (10,)).astype(np.float32)
+        nx = np.random.uniform(0, 1, (5, 10)).astype(np.float32)
+        ny = np.random.uniform(0, 1, (10, 3)).astype(np.float32)
         valuation['x'] = nx
         valuation['y'] = ny
         gd = dotprod.evaluate(valuation)
@@ -53,16 +53,28 @@ class OperatorsTest(unittest.TestCase):
         dotprod = op.Dot(x, y)
 
         valuation = pl.valuation()
-        nx = np.random.uniform(0, 1, (10,)).astype(np.float32)
-        ny = np.random.uniform(0, 1, (10,)).astype(np.float32)
+        nx = np.random.uniform(0, 1, (5, 10)).astype(np.float32)
+        ny = np.random.uniform(0, 1, (10, 3)).astype(np.float32)
+
+        D = nx.dot(ny)
+        dD = np.ones_like(D)
+        print >>sys.stderr, '\nDDshape:', dD.shape
+        dX = dD.dot(ny.T)
+        dY = nx.T.dot(dD)
+        print >>sys.stderr, '\ndX.shape:', dX.shape, 'dY.shape:', dY.shape
+
         valuation['x'] = nx
         valuation['y'] = ny
 
         grad = dotprod.rev_grad(valuation)
         dx = grad['x'].get()
         dy = grad['y'].get()
-        self.assertTrue(np.allclose(dx, ny))
-        self.assertTrue(np.allclose(dy, nx))
+
+        print >>sys.stderr, '\ndx:', dx.shape
+        print >>sys.stderr, 'dy:', dy.shape
+
+        self.assertTrue(np.allclose(dx, dX))
+        self.assertTrue(np.allclose(dy, dY))
 
     def test_conv2d_eval(self):
         img = expr.Variable('img')

@@ -7,23 +7,26 @@ from shaderrider import clplatf
 
 def argmax(q, A, dim, out=None):
     dtype = 'float' if A.dtype == np.float32 else 'double'
-    nstride = A.strides[dim]
+    nstride = A.strides[dim]/4
     n = A.shape[dim]
-    mstride = A.strides[dim-1]
+    mstride = A.strides[dim-1]/4
     m = A.shape[dim-1]
     prg = cl.Program(clplatf.ctx, """
         __kernel void argmaxk(__global %(dtype)s *A, int n, int m, int nstride,
                               int mstride, __global %(dtype)s *output) {
-            //TODO
             int gid = get_global_id(0);
             int i = gid*mstride;
             int maxj = 0;
             %(dtype)s maxv = A[i];
             for (int j=1; j<n; j++) {
-                %(dtype)s d = maxv - A[i+j*nstride];
-                maxj = fmax(d, 0)*maxj + ceil(fmax(-d, 0))*j;
+                //%(dtype)s d = maxv - A[i+j*nstride];
+                //maxj = ceil(fmax(d, 0))*maxj + ceil(fmax(-d, 0))*j;
+                if (A[i+j*nstride]>maxv) {
+                    maxv = A[i+j*nstride];
+                    maxj = j;
+                }
             }
-            out[gid] = maxj;
+            output[gid] = maxj;
         }
     """ % locals()).build()
 
