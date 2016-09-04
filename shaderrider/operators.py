@@ -214,10 +214,10 @@ class Sigmoid(expr.Expression):
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
         ev = cache[id(self)]
-        op = cache[id(self.ops[0])]
-        # adj = adjoint*ev*(1-ev)
-        sig = 1/(1+clmath.exp(-op))
-        adj = adjoint * sig*(1-sig)
+        # op = cache[id(self.ops[0])]
+        adj = adjoint*ev*(1-ev)
+        # sig = 1/(1+clmath.exp(-op))
+        # adj = adjoint * sig*(1-sig)
         self.ops[0]._rev_grad(valuation, adj, gradient, cache)
 
 
