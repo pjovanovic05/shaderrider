@@ -17,14 +17,13 @@ class LinalgTest(unittest.TestCase):
 
     def test_dot(self):
         q = clplatf.qs[0]
-        X = np.random.uniform(0, 1, (10,)).astype(np.float32)
-        Y = np.random.uniform(0, 1, (10,)).astype(np.float32)
+        X = np.random.uniform(0, 1, (50000,)).astype(np.float32)
+        Y = np.random.uniform(0, 1, (50000,)).astype(np.float32)
         expected = np.dot(X, Y)
         gX = clarray.to_device(q, X)
         gY = clarray.to_device(q, Y)
 
-        gR, ev = linalg.dot(q, gX, gY)
-        ev.wait()
+        gR = linalg.dot(q, gX, gY)
         R = gR.get()
         self.assertTrue(np.allclose(R, expected))
 
@@ -34,7 +33,9 @@ class LinalgTest(unittest.TestCase):
         expected = np.dot(A, B)
         gA = clarray.to_device(q, A)
         gB = clarray.to_device(q, B)
-        gC, ev = linalg.dot(q, gA, gB)
-        ev.wait()
+        gC = linalg.dot(q, gA, gB)
         C = gC.get()
         self.assertTrue(np.allclose(C, expected))
+
+    def test_batch_dot(self):
+        pass

@@ -11,8 +11,6 @@ from shaderrider import nnet
 from shaderrider import bcast
 from shaderrider import clplatf as pl
 
-import sys
-
 
 class Add(expr.Expression):
     def __init__(self, op1, op2, parents=None):
@@ -23,7 +21,6 @@ class Add(expr.Expression):
         if id(self) not in cache:
             op1 = self.ops[0]._evaluate(valuation, cache)
             op2 = self.ops[1]._evaluate(valuation, cache)
-            # print 'Add: Op1:', op1.shape, 'Op2:', op2.shape
             if op1.shape == op2.shape:
                 cache[id(self)] = op1 + op2
             else:
@@ -36,7 +33,6 @@ class Add(expr.Expression):
                self.ops[1]._fwd_grad(wrt, valuation, cache)
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
-        # print 'Add_r_grad shapes: adj:', adjoint.shape
         self.ops[0]._rev_grad(valuation, adjoint, gradient, cache)
         self.ops[1]._rev_grad(valuation, adjoint, gradient, cache)
 
@@ -218,10 +214,10 @@ class Sigmoid(expr.Expression):
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
         ev = cache[id(self)]
-        # print 'sig_r_grad: adj:', adjoint.shape, 'op:', ev.shape
-        # print 'sig_r_grad types, adj:', adjoint.dtype, 'op:', ev.dtype
-        adj = adjoint*ev*(1-ev)
-        # print 'sig_r_grad, adj shape:', adj.shape
+        op = cache[id(self.ops[0])]
+        # adj = adjoint*ev*(1-ev)
+        sig = 1/(1+clmath.exp(-op))
+        adj = adjoint * sig*(1-sig)
         self.ops[0]._rev_grad(valuation, adj, gradient, cache)
 
 
@@ -268,37 +264,23 @@ class Dot(expr.Expression):
         q = pl.qs[0]
         if id(self) not in cache:
             e1, e2 = self.ops[0]._evaluate, self.ops[1]._evaluate
-            cache[id(self)], evt = linalg.dot(q, e1(valuation, cache), e2(valuation, cache))
-            for ev in evt:
-                ev.wait()  # TODO asynchronize this
+            cache[id(self)] = linalg.dot(q, e1(valuation, cache), e2(valuation, cache))
         return cache[id(self)]
 
     def _fwd_grad(self, wrt, valuation, cache):
         q = pl.qs[0]
         lhs = cache[id(self.ops[0])]
         rhs = cache[id(self.ops[1])]
-        a, ev1 = linalg.dot(q, self.ops[0]._fwd_grad(wrt, valuation, cache), rhs)
-        b, ev2 = linalg.dot(q, lhs, self.ops[1]._fwd_grad(wrt, valuation, cache))
-        for ev in ev1:
-            ev.wait()  # TODO asynchronize
-        for ev in ev2:
-            ev.wait()  # TODO asynchronize
+        a = linalg.dot(q, self.ops[0]._fwd_grad(wrt, valuation, cache), rhs)
+        b = linalg.dot(q, lhs, self.ops[1]._fwd_grad(wrt, valuation, cache))
         return a + b
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
         q = pl.qs[0]
         lhs = cache[id(self.ops[0])]
         rhs = cache[id(self.ops[1])]
-        # print >>sys.stderr, "LHS: name:", self.ops[0].name, 'shape:', lhs.shape
-        # print >>sys.stderr, 'RHS: name:', self.ops[1].name, 'shape:', rhs.shape
-        # print '>dot_r_grad shapes, lhs:', lhs.shape, 'rhs:', rhs.shape, 'adj:', adjoint.shape
-        # print '>dot_r_grad types, lhs:', lhs.dtype, 'rhs:', rhs.dtype, 'adj:', adjoint.dtype
-        adj1, ev1 = linalg.dot(q, adjoint, rhs, transB=not self.transB)
-        adj2, ev2 = linalg.dot(q, lhs, adjoint, transA=not self.transA)
-        for ev in ev1:
-            ev.wait()  # TODO asynchronize
-        for ev in ev2:
-            ev.wait()  # TODO asynchronize
+        adj1 = linalg.dot(q, adjoint, rhs, transB=not self.transB)
+        adj2 = linalg.dot(q, lhs, adjoint, transA=not self.transA)
         self.ops[0]._rev_grad(valuation, adj1, gradient, cache)
         self.ops[1]._rev_grad(valuation, adj2, gradient, cache)
 
@@ -332,9 +314,7 @@ class Conv2d(expr.Expression):
             col_mats = self.col.reshape(n, -1, out_h*out_w)
             y_mats = y.reshape(n, out_c, -1)
             for i in xrange(n):
-                y_mats[i], ev2 = linalg.dot(q, W_mat, col_mats[i])
-                for ev in ev2:
-                    ev.wait()  # TODO asynchronize
+                y_mats[i] = linalg.dot(q, W_mat, col_mats[i])
             if b is not None:
                 # y += b[:, None, None]
                 _, ev3 = conv.bcast_add(q, y, b, y)
@@ -361,18 +341,14 @@ class Conv2d(expr.Expression):
         gy_mats = gy.reshape(n, out_c, out_h * out_w)
 
         for i in xrange(n):
-            gwmat, ev = linalg.dot(q, gy_mats[i], col_mats[i].T)
-            for e in ev:
-                e.wait()
+            gwmat = linalg.dot(q, gy_mats[i], col_mats[i].T)
             gW_mat += gwmat
 
         W_mat = W.reshape(out_c, -1)
         gcol = clarray.empty_like(self.col)
         gcol_mats = gcol.reshape(n, c * kh * kw, out_h * out_w)
         for i in xrange(n):
-            gcol_mats[i], ev = linalg.dot(q, W_mat.T, gy_mats[i])
-            for e in ev:    # FIXME this looks so wrong
-                e.wait()
+            gcol_mats[i] = linalg.dot(q, W_mat.T, gy_mats[i])
 
         gx, ev = conv.col2im(q, gcol, self.sy, self.sx, self.ph, self.pw, h, w)
         ev.wait()
@@ -421,12 +397,12 @@ class Mean(expr.Expression):
     def _evaluate(self, valuation, cache):
         if id(self) not in cache:
             op = self.ops[0]._evaluate(valuation, cache)
-            cache[id(self)] = clarray.sum(op) / np.float32(op.size)     # TODO truediv maybe?
+            cache[id(self)] = clarray.sum(op) / np.float32(op.size)
         return cache[id(self)]
 
-    def _rev_grad(valuation, adjoint, gradient, cache):
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
         op = cache[id(self.ops[0])]
-        self.ops[0],_rev_grad(valuation, ajoint / op.size, gradient, cache)
+        self.ops[0]._rev_grad(valuation, adjoint / op.size, gradient, cache)
 
 
 class MeanSquaredErr(expr.Expression):
@@ -437,31 +413,24 @@ class MeanSquaredErr(expr.Expression):
     def _evaluate(self, valuation, cache):
         if id(self) not in cache:
             q = pl.qs[0]
-            e1, e2 = (op._evaluate for op in self.ops)
-            o1 = e1(valuation, cache)
-            o2 = e2(valuation, cache)
-            #print '>MSE_eval, shapes: o1:', o1.shape, 'o2:', o2.shape
+            o1 = self.ops[0]._evaluate(valuation, cache)
+            o2 = self.ops[1]._evaluate(valuation, cache)
             self.diff = o1 - o2
             self.diffr = self.diff.ravel()
-            dop, evl = linalg.dot(q, self.diffr, self.diffr)
-            for ev in evl:
-                ev.wait()
-            cache[id(self)] = dop/self.diff.size
-            print 'MSE dop:', dop
-            print 'MSE value:', cache[id(self)]
+            dop = linalg.dot(q, self.diffr, self.diffr)
+            cache[id(self)] = dop/(2.0*self.diff.size)
         return cache[id(self)]
 
     def _fwd_grad(self, wrt, valuation, cache):
         pass
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
-        # print '>>MSE adj:', adjoint
-        coeff = adjoint * 2/self.diff.size
-        # print 'MSE shapes: adjoint:', adjoint.shape, 'coeff:', coeff.shape, 'diff:', self.diff.shape
+        # coeff = adjoint * 2/self.diff.size
         # df = coeff * self.diff
-        df, ev = bcast.bcast_mul(coeff, self.diff)
-        ev.wait()
-        #print 'MSE rgrad shape: df:', df.shape#, 'adj:', adj.shape
+        # df, ev = bcast.bcast_mul(coeff, self.diff)
+        df = bcast.bcast_mul(adjoint, self.diff)
+        # ev.wait()
+
         self.ops[0]._rev_grad(valuation, df, gradient, cache)
         self.ops[1]._rev_grad(valuation, -df, gradient, cache)
 
@@ -473,13 +442,8 @@ class NotEq(expr.Expression):
 
     def _evaluate(self, valuation, cache):
         if id(self) not in cache:
-            e1, e2 = self.ops[0]._evaluate, self.ops[0]._evaluate
-            o1 = e1(valuation, cache)
-            o2 = e2(valuation, cache)
-            print 'neq: o1:', o1
-            print 'neq: o2:', o2
-            cache[id(self)] = o1 != o2
-            print 'NEQ:', cache[id(self)]
+            e1, e2 = self.ops[0]._evaluate, self.ops[1]._evaluate
+            cache[id(self)] = e1(valuation, cache) != e2(valuation, cache)
         return cache[id(self)]
 
 

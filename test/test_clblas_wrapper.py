@@ -83,4 +83,33 @@ class ClBlasWrapperTest(unittest.TestCase):
         self.assertTrue(np.allclose(C, eC))
 
     def test_gemm_batch(self):
-        pass
+        batch_size = 10
+        m, k, n = 5, 10, 3
+        A = np.random.uniform(0, 1, (batch_size, m, k)).astype(np.float32)
+        B = np.random.uniform(0, 1, (batch_size, k, n)).astype(np.float32)
+        eC = np.array([np.dot(A[i], B[i]) for i in range(batch_size)])
+        gA = clarray.to_device(self.q, A)
+        gB = clarray.to_device(self.q, B)
+        gC = clarray.zeros(self.q, (batch_size, m, n), np.float32)
+        evl = clblaswrap.gemm_batch(self.q, gA, gB, gC)
+        for ev in evl:
+            ev.wait()
+        C = gC.get()
+
+        self.assertTrue(np.allclose(C, eC))
+
+    def test_gemm_batch2(self):
+        batch_size = 10
+        m, k, n = 5, 10, 3
+        A = np.random.uniform(0, 1, (batch_size, m, k)).astype(np.float32)
+        B = np.random.uniform(0, 1, (k, n)).astype(np.float32)
+        eC = np.array([np.dot(A[i], B) for i in range(batch_size)])
+        gA = clarray.to_device(self.q, A)
+        gB = clarray.to_device(self.q, B)
+        gC = clarray.zeros(self.q, (batch_size, m, n), np.float32)
+        evl = clblaswrap.gemm_batch(self.q, gA, gB, gC)
+        for ev in evl:
+            ev.wait()
+        C = gC.get()
+
+        self.assertTrue(np.allclose(C, eC))

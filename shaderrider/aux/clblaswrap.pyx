@@ -14,6 +14,8 @@ from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport intptr_t, uintptr_t
 
 
+
+
 cdef extern from "clBLAS.h":
     ctypedef enum clblasStatus:
         clblasSuccess
@@ -50,6 +52,7 @@ cdef extern from "clBLAS.h":
     ctypedef float cl_float
     ctypedef double cl_double
     ctypedef unsigned int cl_uint
+    ctypedef int cl_int
 
     ctypedef struct cl_float2:
         cl_float x
@@ -238,6 +241,8 @@ cdef extern from "clBLAS.h":
                              const cl_event *eventWaitList,
                              cl_event *events)
 
+cdef extern from "CL/cl.h":
+    cl_int clWaitForEvents(cl_uint num_events, const cl_event *event_list)
 
 cdef get_status_message(clblasStatus status):
     if status == clblasSuccess:
@@ -486,7 +491,7 @@ def ger(queue, A, x, y, float alpha=1.0, clblasOrder order=clblasRowMajor, list 
     return cl.Event.from_int_ptr(<intptr_t>myevent)
 
 
-def gemv(queue, A, x, y, transA=False, float alpha=1.0, float beta=1.0,
+def gemv(queue, A, x, y, transA=False, float alpha=1.0, float beta=0.0,
          clblasOrder order=clblasRowMajor, list wait_for=None):
     """y <- alpha*dot(A,x) + beta*y"""
     dtype = check_dtype([A, x, y], ['float32', 'float64'])
@@ -561,13 +566,13 @@ def gemm(queue, A, B, C, transA=False, transB=False, float alpha=1.0, float beta
 
     cdef size_t element_size = dtype_size[dtype]
     cdef cl_mem Adata = <cl_mem><intptr_t>A.base_data.int_ptr
-    cdef size_t offA = A.offset / element_size
+    cdef size_t offA = A.offset  # / element_size
     cdef size_t lda = A.strides[0] / element_size
     cdef cl_mem Bdata = <cl_mem><intptr_t>B.base_data.int_ptr
-    cdef size_t offB = B.offset / element_size
+    cdef size_t offB = B.offset  # / element_size
     cdef size_t ldb = B.strides[0] / element_size
     cdef cl_mem Cdata = <cl_mem><intptr_t>C.base_data.int_ptr
-    cdef size_t offC = C.offset / element_size
+    cdef size_t offC = C.offset  # / element_size
     cdef size_t ldc = C.strides[0] / element_size
 
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
@@ -620,7 +625,7 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
     cdef size_t K = As.shape[-1]
     cdef size_t N = Bs.shape[-1]
     cdef int batch_size = np.prod(As.shape[:-2])
-    cdef int bcast_b = len(Bs.shape)>2
+    cdef int bcast_b = len(Bs.shape) <= 2
     cdef int i
     check_shape_dim(Bs.shape, -1 if transB else -2, K, 'Bs')
     check_shape_dim(Cs.shape, -2, M, 'Cs')
@@ -628,16 +633,16 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
 
     cdef size_t element_size = dtype_size[dtype]
     cdef cl_mem Adata = <cl_mem><intptr_t>As.base_data.int_ptr
-    cdef size_t offA = As.offset / element_size
-    cdef size_t szA = M * K * element_size
+    cdef size_t offA = As.offset  # / element_size
+    cdef size_t szA = M * K  # * element_size
     cdef size_t lda = As.strides[-2] / element_size
     cdef cl_mem Bdata = <cl_mem><intptr_t>Bs.base_data.int_ptr
-    cdef size_t offB = Bs.offset / element_size
-    cdef size_t szB = K * N * element_size
+    cdef size_t offB = Bs.offset  # / element_size
+    cdef size_t szB = K * N  # * element_size
     cdef size_t ldb = Bs.strides[-2] / element_size
     cdef cl_mem Cdata = <cl_mem><intptr_t>Cs.base_data.int_ptr
-    cdef size_t offC = Cs.offset / element_size
-    cdef size_t szC = M * N * element_size
+    cdef size_t offC = Cs.offset  # / element_size
+    cdef size_t szC = M * N  # * element_size
     cdef size_t ldc = Cs.strides[-2] / element_size
 
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
@@ -650,10 +655,6 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
 
     if dtype == np.dtype('float32'):
         for i in range(batch_size):
-            # TODO preracunaj offsete
-            offA += szA
-            offB += szB if bcast_b else 0
-            offC += szC
             # TODO pozovi odgovarajuci gemm
             err = clblasSgemm(order,
                               clblasTrans if transA else clblasNoTrans,
@@ -667,13 +668,14 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
                               &myevent)
             # TODO if err != clblasSuccess break?
             # TODO dodaj myevent u event list nekako?
-            my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent))
-    elif dtype == np.dtype('float64'):
-        for i in range(batch_size):
+            clWaitForEvents(1, &myevent)
+            # my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent))
             # TODO preracunaj offsete
             offA += szA
-            offB += szB
+            offB += szB if not bcast_b else 0
             offC += szC
+    elif dtype == np.dtype('float64'):
+        for i in range(batch_size):
             # TODO pozovi odgovarajuci gemm
             err = clblasDgemm(order,
                               clblasTrans if transA else clblasNoTrans,
@@ -687,6 +689,10 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
                               &myevent)
             # TODO if err != clblasSuccess break?
             my_events.append(cl.Event.from_int_ptr(<intptr_t>myevent))
+            # TODO preracunaj offsete
+            offA += szA
+            offB += szB if not bcast_b else 0
+            offC += szC
     else:
         raise ValueError("Unrecognized dtype '%s'" % dtype)
 

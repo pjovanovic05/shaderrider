@@ -25,14 +25,14 @@ def get_mnist_data():
             if magic == 2049:
                 # labels...
                 lbls = array('b', f.read())
-                arry = np.frombuffer(lbls, dtype=np.int8)
+                arry = np.frombuffer(lbls, dtype=np.uint8)
                 arry.shape = (n,)
                 outs.append(arry)
             elif magic == 2051:
                 # images
                 w, h = struct.unpack('>II', f.read(8))
                 imgs = array('b', f.read())
-                arry = np.frombuffer(imgs, dtype=np.int8)
+                arry = np.frombuffer(imgs, dtype=np.uint8)
                 arry.shape = (n, h, w)
                 outs.append(arry)
     return outs

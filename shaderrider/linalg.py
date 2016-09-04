@@ -50,29 +50,30 @@ def dot(queue, a, b, out=None, transA=False, transB=False, wait_for=None):
     if (lsa == 1 and lsb == 1) or (M == 1 and N == 1) or (K == 1 and M == N):
         # dot
         if out is None:
-            out = clarray.empty(queue, (1, 1), a.dtype)
-        scratch = clarray.empty_like(a, queue=queue)
+            out = clarray.zeros(queue, (1, 1), a.dtype)
+        scratch = clarray.zeros_like(a)
         ev = clblaswrap.dot(queue, a, b, out, scratch)
         evl = [ev]
     elif (lsa > 1 and lsb == 1):
         # gemv
         if out is None:
-            out = clarray.empty(queue, (M, N), a.dtype)
+            out = clarray.zeros(queue, (M, N), a.dtype)
         ev = clblaswrap.gemv(queue, a, b, out, transA=transA)
         evl = [ev]
     elif (lsa == 2 and lsb == 2):
         # gemm
         if out is None:
-            out = clarray.empty(queue, (M, N), a.dtype)
+            out = clarray.zeros(queue, (M, N), a.dtype)
         ev = clblaswrap.gemm(queue, a, b, out, transA=transA, transB=transB)
         evl = [ev]
     elif (lsa > 2) and (lsb >= 2):
         d = np.prod(a.shape[:-2])
         if out is None:
-            out = clarray.empty(queue, (d, M, N), a.dtype)
+            out = clarray.zeros(queue, (d, M, N), a.dtype)
         evl = clblaswrap.gemm_batch(queue, a, b, out, transA=transA, transB=transB)   # TODO transpositions?
-
-    return out, evl
+    for ev in evl:
+        ev.wait()
+    return out
 
 
 def batch_dot(queue, a, b, out=None, wait_for=None):
@@ -83,7 +84,7 @@ def batch_dot(queue, a, b, out=None, wait_for=None):
     if (lsa > 2) and (lsb >= 2):
         d = np.prod(a.shape[:-2])
         if out is None:
-            out = clarray.empty(queue, (d, M, N), a.dtype)
+            out = clarray.zeros(queue, (d, M, N), a.dtype)
         evl = clblaswrap.gemm_batch(queue, a, b, out)   # TODO transpositions?
 
     return out, evl

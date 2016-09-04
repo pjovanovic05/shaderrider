@@ -17,11 +17,17 @@ from get_data import get_mnist_data
 
 
 class FullyConnectedLayer(object):
-    def __init__(self, li, input, nin, nout, W=None, b=None, activation_fn=op.Sigmoid):
+    def __init__(self, rng, li, input, nin, nout, W=None, b=None, activation_fn=op.Sigmoid):
         self.input = input
         q = pl.qs[0]
         if W is None:
-            W = clrandom.rand(q, (nin, nout), np.float32, a=-1, b=1)
+            nw = np.asarray(rng.uniform(low=-np.sqrt(6./(nin+nout)),
+                                        high=np.sqrt(6./(nin+nout)),
+                                        size=(nin, nout)),
+                            dtype=np.float32)
+            if activation_fn == op.Sigmoid:
+                nw *= 4
+            W = clarray.to_device(q, nw)  #clrandom.rand(q, (nin, nout), np.float32, a=-1, b=1)
         if b is None:
             b = clarray.zeros(q, (nout,), np.float32)
 
@@ -36,16 +42,17 @@ class FullyConnectedLayer(object):
 
 
 class MLP(object):
-    def __init__(self, nin, nhid, nout):
+    def __init__(self, rng, nin, nhid, nout):
         X = expr.Variable('X')
         Y = expr.Variable('Y')
-        self.layer1 = FullyConnectedLayer('1', X, nin, nhid)
-        self.layer2 = FullyConnectedLayer('2', self.layer1.output, nhid, nout)
+        self.layer1 = FullyConnectedLayer(rng, '1', X, nin, nhid)
+        self.layer2 = FullyConnectedLayer(rng, '2', self.layer1.output, nhid, nout)
+        # self.layer2 = FullyConnectedLayer(rng, '2', X, nin, nout, activation_fn=None)
 
         self.y_pred = op.Argmax(self.layer2.output, -1)  # TODO test this axis
-        self.cost = op.Sub(self.layer2.output, Y)  # op.MeanSquaredErr(self.layer2.output, Y)
+        self.cost = op.MeanSquaredErr(self.layer2.output, Y)  # op.Sub(self.layer2.output, Y)
         self.errors = op.Mean(op.NotEq(self.y_pred, Y))
-        self.params = self.layer1.params + self.layer2.params
+        self.params = self.layer1.params + self.layer2.params        # self.params = self.layer2.params
 
     def train(self, X, Y, learning_rate=0.01):
         val = pl.valuation()
@@ -55,20 +62,13 @@ class MLP(object):
             val[name] = value
 
         grad = self.cost.rev_grad(val)
-        # print '>>GRAD:\n', grad  # ['W1'], '\nshape', grad['W1'].shape, '\nallzeros?', grad['W1'].any()
-        # for key in grad:
-        #     print '>>>>GRAD: %s shape:' % key, grad[key].shape
-        # for key,value in self.params:
-        #     print '>>>>\t\t', key, 'shape:', value.shape
-        debatch_help_vector = clarray.zeros(pl.qs[0], (Y.shape[0],1), dtype=np.float32) + 1
+
+        debatch_help_vector = clarray.zeros(pl.qs[0], (Y.shape[0], 1),
+                                            dtype=np.float32) + 1
         for name, value in self.params:
-            # print 'updating', name, 'shape:', value.shape, 'gshape:', grad[name].shape
             if name.startswith('b'):
-                # print 'debatch?', grad[name].shape, value.shape
-                dbh, evs = linalg.dot(pl.qs[0], grad[name].T, debatch_help_vector)
-                for ev in evs:
-                    ev.wait()
-                # print 'DBH shape:', dbh.shape
+                dbh= linalg.dot(pl.qs[0], grad[name],
+                                      debatch_help_vector, transA=True)
                 value -= learning_rate*dbh.ravel()
             else:
                 value -= learning_rate*grad[name]
@@ -85,14 +85,13 @@ class MLP(object):
 
 def main():
     pl.init_cl(1)
-    mlp = MLP(784, 32, 10)
-
-    # print 'model params:\n', mlp.params
+    rng = np.random.RandomState(1234)
+    mlp = MLP(rng, 784, 32, 10)
 
     tvX, tvY, testX, testY = get_mnist_data()
     tvX.shape = (60000, 784)
     testX.shape = (10000, 784)
-    tvX = (tvX/255.0).astype(np.float32)
+    tvX = (tvX.astype(np.float32)/255.0).astype(np.float32)
     testX = (testX/255.0).astype(np.float32)
     tvYoh = pd.get_dummies(tvY).values.astype(np.float32)
     testYoh = pd.get_dummies(testY).values.astype(np.float32)
@@ -101,7 +100,6 @@ def main():
     validX = tvX[vsplit:, :]
     trainY = tvYoh[:vsplit, :]
     validY = tvY[vsplit:].astype(np.float32)
-    print '>VALID Y:', validY
 
     n_epochs = 1  # 000
     batch_size = 512
@@ -113,19 +111,16 @@ def main():
         for minibatch_index in xrange(n_train_batches):
             mlp.train(trainX[minibatch_index*batch_size:(minibatch_index+1)*batch_size, :],
                       trainY[minibatch_index*batch_size:(minibatch_index+1)*batch_size, :])
-            #print 'train batch:', minibatch_index
+
             if (minibatch_index % 26 == 0) and minibatch_index>0:
-                # err = mlp.test(validX, validY)
-                print '\n>>>>>>>>>>>>>>>>>>>>>>>>>validation error:', 0, 'batch:', minibatch_index, '/', n_train_batches
+                err = mlp.test(validX, validY)
+                print '\n>>>>>>>>>>>>>>>>>>>>>>>>>validation error:', err, 'batch:', minibatch_index, '/', n_train_batches
 
-    print 'Posle treniranja:\n', mlp.params
-
-    # TODO convert training data into batches
-    # iterate over batches calling train
-    # on each n-th iteration, call validation
-    # when the validation error improvement is low enough break out
-    # give training error results
-
+    for param, value in mlp.params:
+        val = value.get()
+        print '>PARAM', param, val.shape
+        print val
+        print '-'*79
 
 if __name__ == '__main__':
     main()
