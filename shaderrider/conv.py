@@ -177,51 +177,6 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
     return img, evt
 
 
-def sum_by_axis(q, a, axis):
-    dtype = 'float' if a.dtype == np.float32 else 'double'
-    element_size = 4 if a.dtype == np.float32 else 8
-    prg = cl.Program(clplatf.ctx, r"""
-        __kernel void ax_sum(__global float *gdata, int n, int dim_n, int sn,
-                int dstride, int dskip, int estride,
-                __global float *output) {
-            int gid = get_global_id(0);
-            float sum = 0.0;
-            int offset = (gid!=0)*((gid*dstride) % sn + (gid/dim_n)*dskip);
-            for (int i=0; i<dim_n; i++) {
-                sum += gdata[i*estride + offset];
-            }
-            output[gid] = sum;
-        }
-        """).build()
-    ax_sum_k = prg.ax_sum
-    axes = reversed(sorted(list(axis)))
-    in_a = a
-    out_shape = a.shape
-    pev = None  # previous event
-    for dim in axes:
-        # TODO calc out dims and kernel dim/stride params
-        out_shape.pop(dim)
-        dn = in_a.shape[dim]
-        n = in_a.size
-        sn = None
-        estride = in_a.strides[dim]/element_size
-        out_a = clarray.empty(q, out_shape, in_a.dtype)
-        launch_shape = int(np.prod(in_a.shape[:dim])*(np.prod(in_a.shape[dim+1:])
-                                                      if dim < in_a.ndim-1 else 1))
-        ev = ax_sum_k(q, (launch_shape,), None,
-                      in_a.data,
-                      np.int32(n),
-                      np.int32(dn),
-                      np.int32(sn),
-                      np.int32(dstride),
-                      np.int32(dskip),
-                      np.int32(estride),
-                      out_a.data,
-                      wait_for=pev)
-        pev = [ev]
-    return out_a, pev
-
-
 def bcast_add(q, A, b, out=None):
     """Bradcast add b vector to 3d tensor A"""
     dtype = 'float' if A.dtype == np.float32 else 'double'
