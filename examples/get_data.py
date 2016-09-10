@@ -8,6 +8,7 @@ from array import array
 
 
 def get_mnist_data():
+    """Fetch and load mnist data."""
     mnist_base = 'http://yann.lecun.com/exdb/mnist/'
     mnist_files = ['train-images-idx3-ubyte.gz', 'train-labels-idx1-ubyte.gz',
                    't10k-images-idx3-ubyte.gz', 't10k-labels-idx1-ubyte.gz']
@@ -36,3 +37,12 @@ def get_mnist_data():
                 arry.shape = (n, h, w)
                 outs.append(arry)
     return outs
+
+
+def cifunpickle(file):
+    """Load cifar data."""
+    import cPickle
+    fo = open(file, 'rb')
+    dict = cPickle.load(fo)
+    fo.close()
+    return dict

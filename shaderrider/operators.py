@@ -4,6 +4,7 @@ import pyopencl as cl
 from pyopencl import array as clarray
 from pyopencl import clmath
 from pyopencl import clrandom
+from pyopencl.elementwise import ElementwiseKernel
 from shaderrider import expr
 from shaderrider import linalg
 from shaderrider import conv
@@ -245,7 +246,9 @@ class Max(expr.Expression):
         self.ops = [op1, op2]
 
     def _evaluate(self, valuation, cache):
-        pass
+        if id(self) not in cache:
+            pass
+        return cache[id(self)]
 
     def _fwd_grad(self, wrt, valuation, cache):
         pass
@@ -386,6 +389,34 @@ class Dropout(expr.Expression):
         self.ops[0]._rev_grad(valuation, adjoint*self.mask, gradient, cache)
 
 
+class ReLU(expr.Expression):
+    def __init__(self, op, parents=None):
+        self.ops = [op]
+        self.eval_kernel = ElementwiseKernel(pl.ctx, 'float *arr, float *out',
+                                             'out[i] = max(0, arr[i])',
+                                             'relu_fwd')
+        self.backprop_kernel = ElementwiseKernel(pl.ctx,
+                                                 'float *res, float *gy, float *gx',
+                                                 'gx[i] = res[i]>0 ? gy[i] : 0',
+                                                 'relu_bwd')
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            op = self.ops[0]._evaluate(valuation, cache)
+            val = clarray.empty_like(op)
+            ev = self.eval_kernel(op, val)
+            ev.wait()
+            cache[id(self)] = val
+        return cache[id(self)]
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        x = cache[id(self)]
+        gx = clarray.empty_like(x)
+        ev = self.backprop_kernel(x, adjoint, gx)
+        ev.wait()
+        self.ops[0]._rev_grad(valuation, gx, gradient, cache)
+
+
 class Softmax(expr.Expression):
     def __init__(self, op, parents=None):
         super(Softmax, self).__init__(parents)
@@ -398,24 +429,40 @@ class Softmax(expr.Expression):
             op = self.ops[0]._evaluate(valuation, cache)
             self.y = op - misc.max(q, op, axis=1, keepdims=True)
             self.y = clmath.exp(self.y)
-            self.y /= self.y.sum(q, self.y, axis=1, keepdims=True)
+            self.y /= misc.sum(q, self.y, axis=1, keepdims=True)
             cache[id(self)] = self.y
         return cache[id(self)]
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
-        pass
+        q = pl.qs[0]
+        gx = self.y * adjoint
+        sumdx = misc.sum(q, gx, axis=1, keepdims=True)
+        gx -= self.y * sumdx
+        self.ops[0]._rev_grad(valuation, gx, gradient, cache)
 
 
-class MaxPool(expr.Expression):     # elementwise po pomerajima poolinga i dubini i batchu...
-    def __init__(self, op, parents=None):
+class MaxPool(expr.Expression):
+    def __init__(self, op, f, stride, parents=None):
         super(MaxPool, self).__init__(parents)
         self.ops = [op]
+        self.f = f
+        self.stride = stride
 
     def _evaluate(self, valuation, cache):
-        pass
+        if id(self) not in cache:
+            q = pl.qs[0]
+            op = self.ops[0]._evaluate(valuation, cache)
+            val, ind = nnet.maxpool2d(q, op, self.f, self.stride)
+            self.indices = ind
+            cache[id(self)] = val
+        return cache[id(self)]
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):
-        pass
+        q = pl.qs[0]
+        x = cache[id(self.ops[0])]
+        gx = nnet.maxpool2d_backprop(q, adjoint, self.indices, x, self.f, self.stride)
+        self.ops[0]._rev_grad(valuation, gx, gradient, cache)
+
 
 
 class Mean(expr.Expression):

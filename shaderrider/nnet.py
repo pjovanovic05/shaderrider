@@ -1,12 +1,13 @@
 """Miscelaneous neural net related operations."""
 import numpy as np
 import pyopencl as cl
+from pyopencl.tools import dtype_to_ctype
 from pyopencl import array as clarray
 from shaderrider import clplatf
 
 
 def argmax(q, A, dim, out=None):
-    dtype = 'float' if A.dtype == np.float32 else 'double'
+    dtype = dtype_to_ctype(A.dtype)
     nstride = A.strides[dim]/4
     n = A.shape[dim]
     mstride = A.strides[dim-1]/4

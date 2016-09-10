@@ -2,6 +2,7 @@
 
 import numpy as np
 import pyopencl as cl
+from pyopencl.tools import dtype_to_ctype
 from pyopencl import array as clarray
 from pyopencl.elementwise import ElementwiseKernel
 
@@ -161,20 +162,127 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
     """ % locals()).build()
     # TODO cache the kernel, this creates new one every time
     evt = prg.col2im(q, (n*c*h*w,), None,
-                       col.data,
-                       np.int32(h),
-                       np.int32(w),
-                       np.int32(out_h),
-                       np.int32(out_w),
-                       np.int32(kh),
-                       np.int32(kw),
-                       np.int32(sy),
-                       np.int32(sx),
-                       np.int32(ph),
-                       np.int32(pw),
-                       img.data,
-                       wait_for=wait_for)
+                     col.data,
+                     np.int32(h),
+                     np.int32(w),
+                     np.int32(out_h),
+                     np.int32(out_w),
+                     np.int32(kh),
+                     np.int32(kw),
+                     np.int32(sy),
+                     np.int32(sx),
+                     np.int32(ph),
+                     np.int32(pw),
+                     img.data,
+                     wait_for=wait_for)
     return img, evt
+
+
+_maxpool_template = """
+    __kernel void max_pool(__global %(dtype)s *A,
+                        __global %(dtype)s *out, __global int *indices,
+                        int h, int w, int out_h, int out_w,
+                        int kh, int kw, int sy, int sx) {
+        int gid = get_global_id(0);
+        int d = gid / (out_h*out_w);
+        int out_y = gid / out_w %% out_h;
+        int out_x = gid %% out_w;
+        int in_y_0 = max(0, out_y*sy);
+        int in_y_1 = min(h, out_y*sy+kh);
+        int in_x_0 = max(0, out_x*sx);
+        int in_x_1 = min(w, out_x*sx+kw);
+
+        %(dtype)s maxval = A[in_x_0 + w*(in_y_0 + h*d)];
+        int argmax_y = in_y_0;
+        int argmax_x = in_x_0;
+        for (int y=in_y_0; y<in_y_1; y++) {
+            int offset_y = w*(y + h*d);
+            for(int x=in_x_0; x<in_x_1; x++) {
+                %(dtype)s v = A[x+offset_y];
+                if (maxval < v) {
+                    maxval = v;
+                    argmax_y = y;
+                    argmax_x = x;
+                }
+            }
+        }
+        out[gid] = maxval;
+        int argmax_ky = argmax_y - out_y*sy;
+        int argmax_kx = argmax_x -out_x*sx;
+        indices[gid] = argmax_kx + kw*argmax_ky;
+    }
+"""
+
+
+def maxpool2d(q, A, f, stride, out=None, indices=None):
+    dtype = dtype_to_ctype(A.dtype)
+    n, c, h, w = A.shape
+    out_h = (h-f)/stride + 1
+    out_w = (w-f)/stride + 1
+
+    if out is None:
+        out = clarray.empty(q, (out_h, out_w), dtype=np.int32Z
+    if indices is None:
+        indices = clarray.empty(q, (out_h, out_w), dtype=np.int32)
+
+    prg = cl.Program(clplatf.ctx, _maxpool_template % dtype).build()
+    krnl = prg.max_pool
+    # TODO better global and local dimensions (make divisible by 64 etc.)
+    ev = krnl(q, (out_h, out_w), None,
+              A.data, out.data, indices.data, h, w, out_h, out_w,
+              f, f, stride, stride)
+
+    ev.wait()
+    return out, indices
+
+
+_maxpool_backprop_template = """
+    __kernel void max_unpool(__global %(dtype)s *adjoints,
+                             __global int *indices,
+                             __global %(dtype)s *gx,
+                             int h, int w, int out_h, int out_w,
+                             int kh, int kw, int sy, int sx) {
+        int gid = get_global_id();
+        int d = gid / (h*w);
+        int y = gid / w %% h;
+        int x = gid %% w;
+        int out_y_0 = max(0, (y-kh+sy)/sy);
+        int out_y_1 = min(out_h, (y+sy)/sy);
+        int out_x_0 = max(0, (x-kw+sx)/sx);
+        int out_x_1 = min(out_w, (x+sx)/sx);
+
+        %(dtype)s val = 0;
+        for (int out_y = out_y_0; out_y<out_y_1; out_y++) {
+            int ky = y-out_y*sy;
+            for (int out_x=out_x_0; out_x<out_x_1; out_x++) {
+                int kx = x-out_x*sx;
+                int offset = out_x + out_w*(out_y+out_h*d);
+                if (indices[offset] == kx+kw*ky) {
+                    val += adjoints[offset];
+                }
+            }
+        }
+        gx[gid] = val;
+    }
+"""
+
+
+def maxpool2d_backprop(q, adjoint, indices, x, f, stride, out=None):
+    dtype = dtype_to_ctype(adjoint.dtype)
+    n, c, h, w = x.shape
+    y_h, y_w = adjoint.shape[2:]
+
+    if out is None:
+        out = clarray.empty_like(x)
+
+    prg = cl.Program(clplatf.ctx, _maxpool_backprop_template % dtype).build()
+    krnl = prg.max_unpool
+    ev = krnl(q, (n*c*h*w, ), None,
+              adjoint.data, indices.data, out.data,
+              h, w, y_h, y_w, f, f, stride, stride)
+    ev.wait()
+
+    return out
 
 
 def bcast_add(q, A, b, out=None):
