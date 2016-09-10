@@ -9,6 +9,7 @@ from shaderrider import linalg
 from shaderrider import conv
 from shaderrider import nnet
 from shaderrider import bcast
+from shaderrider.util import misc
 from shaderrider import clplatf as pl
 
 
@@ -386,7 +387,35 @@ class Dropout(expr.Expression):
 
 
 class Softmax(expr.Expression):
-    pass
+    def __init__(self, op, parents=None):
+        super(Softmax, self).__init__(parents)
+        self.ops = [op]
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            # TODO
+            q = pl.qs[0]
+            op = self.ops[0]._evaluate(valuation, cache)
+            self.y = op - misc.max(q, op, axis=1, keepdims=True)
+            self.y = clmath.exp(self.y)
+            self.y /= self.y.sum(q, self.y, axis=1, keepdims=True)
+            cache[id(self)] = self.y
+        return cache[id(self)]
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        pass
+
+
+class MaxPool(expr.Expression):     # elementwise po pomerajima poolinga i dubini i batchu...
+    def __init__(self, op, parents=None):
+        super(MaxPool, self).__init__(parents)
+        self.ops = [op]
+
+    def _evaluate(self, valuation, cache):
+        pass
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        pass
 
 
 class Mean(expr.Expression):
@@ -397,7 +426,7 @@ class Mean(expr.Expression):
     def _evaluate(self, valuation, cache):
         if id(self) not in cache:
             op = self.ops[0]._evaluate(valuation, cache)
-            cache[id(self)] = clarray.sum(op) / np.float32(op.size)
+            cache[id(self)] = clarray.sum(op, dtype=np.dtype('float32')) / np.float32(op.size)
         return cache[id(self)]
 
     def _rev_grad(self, valuation, adjoint, gradient, cache):

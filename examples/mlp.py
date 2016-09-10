@@ -51,6 +51,8 @@ class MLP(object):
 
         self.y_pred = op.Argmax(self.layer2.output, -1)  # TODO test this axis
         self.cost = op.MeanSquaredErr(self.layer2.output, Y)  # op.Sub(self.layer2.output, Y)
+        self.cost = op.MeanSquaredErr(self.layer2.output, Y)  # op.Sub(self.layer2.output, Y)
+        self.cost = op.MeanSquaredErr(self.layer2.output, Y)  # op.Sub(self.layer2.output, Y)
         self.errors = op.Mean(op.NotEq(self.y_pred, Y))     # FIXME u nekim iteracijama greska je bila negativna!!
         self.params = self.layer1.params + self.layer2.params        # self.params = self.layer2.params
 
@@ -67,8 +69,8 @@ class MLP(object):
                                             dtype=np.float32) + 1
         for name, value in self.params:
             if name.startswith('b'):
-                dbh= linalg.dot(pl.qs[0], grad[name],
-                                      debatch_help_vector, transA=True)
+                dbh = linalg.dot(pl.qs[0], grad[name],
+                                 debatch_help_vector, transA=True)
                 value -= learning_rate*dbh.ravel()
             else:
                 value -= learning_rate*grad[name]
@@ -101,7 +103,7 @@ def main():
     trainY = tvYoh[:vsplit, :]
     validY = tvY[vsplit:].astype(np.float32)
 
-    n_epochs = 1  # 000
+    n_epochs = 30  # 000
     batch_size = 512
     n_train_batches = trainY.shape[0] / batch_size
 
