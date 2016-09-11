@@ -10,7 +10,7 @@ from shaderrider import linalg
 from shaderrider import conv
 from shaderrider import nnet
 from shaderrider import bcast
-from shaderrider.util import misc
+from shaderrider.utils import misc
 from shaderrider import clplatf as pl
 
 
@@ -358,7 +358,7 @@ class Conv2d(expr.Expression):
         ev.wait()
         gb = None
         if b is not None:
-            gb, ev = conv.bgrads_sum(gy)
+            gb, ev = conv.bgrads_sum(q, gy)
             ev.wait()
         # TODO bias... sum along multiple axes of gy?
         # TODO set gW, gx and gb in gradient dict
@@ -391,9 +391,10 @@ class Dropout(expr.Expression):
 
 class ReLU(expr.Expression):
     def __init__(self, op, parents=None):
+        super(ReLU, self).__init__(parents)
         self.ops = [op]
         self.eval_kernel = ElementwiseKernel(pl.ctx, 'float *arr, float *out',
-                                             'out[i] = max(0, arr[i])',
+                                             'out[i] = fmax(0.0f, arr[i])',
                                              'relu_fwd')
         self.backprop_kernel = ElementwiseKernel(pl.ctx,
                                                  'float *res, float *gy, float *gx',
@@ -424,10 +425,11 @@ class Softmax(expr.Expression):
 
     def _evaluate(self, valuation, cache):
         if id(self) not in cache:
-            # TODO
             q = pl.qs[0]
             op = self.ops[0]._evaluate(valuation, cache)
-            self.y = op - misc.max(q, op, axis=1, keepdims=True)
+            maxes, ids = misc.max(q, op, axis=1, keepdims=True)
+            self.y, ev = bcast.bcast_add(op, -maxes)
+            ev.wait()
             self.y = clmath.exp(self.y)
             self.y /= misc.sum(q, self.y, axis=1, keepdims=True)
             cache[id(self)] = self.y
@@ -452,7 +454,7 @@ class MaxPool(expr.Expression):
         if id(self) not in cache:
             q = pl.qs[0]
             op = self.ops[0]._evaluate(valuation, cache)
-            val, ind = nnet.maxpool2d(q, op, self.f, self.stride)
+            val, ind = conv.maxpool2d(q, op, np.int32(self.f), np.int32(self.stride))
             self.indices = ind
             cache[id(self)] = val
         return cache[id(self)]
@@ -460,7 +462,7 @@ class MaxPool(expr.Expression):
     def _rev_grad(self, valuation, adjoint, gradient, cache):
         q = pl.qs[0]
         x = cache[id(self.ops[0])]
-        gx = nnet.maxpool2d_backprop(q, adjoint, self.indices, x, self.f, self.stride)
+        gx = conv.maxpool2d_backprop(q, adjoint, self.indices, x, np.int32(self.f), np.int32(self.stride))
         self.ops[0]._rev_grad(valuation, gx, gradient, cache)
 
 
@@ -536,3 +538,24 @@ class Argmax(expr.Expression):
             cache[id(self)], ev = nnet.argmax(q, A, self.axis)
             ev.wait()
         return cache[id(self)]
+
+
+class Reshape(expr.Expression):
+    def __init__(self, op, new_shape, parents=None):
+        super(Reshape, self).__init__(parents)
+        self.ops = [op]
+        self.new_shape = new_shape
+
+    def _evaluate(self, valuation, cache):
+        if id(self) not in cache:
+            op = self.ops[0]._evaluate(valuation, cache)
+            self.old_shape = op.shape
+            cache[id(self)] = op.reshape(self.new_shape)
+        return cache[id(self)]
+
+    def _fwd_grad(self, wrt, valuation, cache):
+        pass
+
+    def _rev_grad(self, valuation, adjoint, gradient, cache):
+        self.ops[0]._rev_grad(valuation, adjoint.reshape(self.old_shape),
+                              gradient, cache)

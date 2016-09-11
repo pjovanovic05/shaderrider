@@ -51,8 +51,6 @@ class MLP(object):
 
         self.y_pred = op.Argmax(self.layer2.output, -1)  # TODO test this axis
         self.cost = op.MeanSquaredErr(self.layer2.output, Y)  # op.Sub(self.layer2.output, Y)
-        self.cost = op.MeanSquaredErr(self.layer2.output, Y)  # op.Sub(self.layer2.output, Y)
-        self.cost = op.MeanSquaredErr(self.layer2.output, Y)  # op.Sub(self.layer2.output, Y)
         self.errors = op.Mean(op.NotEq(self.y_pred, Y))     # FIXME u nekim iteracijama greska je bila negativna!!
         self.params = self.layer1.params + self.layer2.params        # self.params = self.layer2.params
 

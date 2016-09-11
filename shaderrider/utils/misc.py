@@ -29,14 +29,14 @@ def sum(q, a, axis=None, out=None, keepdims=False):
         transA = True if axis == 0 else False
         sum_axis, out_axis = (n, m) if axis == 0 else (m, n)
 
-    ones = clarray.empty((sum_axis,), a.dtype).fill(1)
+    ones = clarray.empty(q, (sum_axis,), a.dtype).fill(1)
     if keepdims:
         out_shape = (1, out_axis) if axis == 0 else (out_axis, 1)
     else:
         out_shape = (out_axis,)
 
     if out is None:
-        out = clarray.zeros(out_shape, a.dtype)
+        out = clarray.zeros(q, out_shape, a.dtype)
     else:
         assert out.dtype == a.dtype
         assert out.size >= out_axis
@@ -51,7 +51,7 @@ def sum(q, a, axis=None, out=None, keepdims=False):
     alpha = 1.0
     beta = 0.0
 
-    ev = gemv(q, transA, m, n, alpha, a, lda, ones, 1, out, 1, beta, out, 1)
+    ev = gemv(q, transA, m, n, alpha, a, lda, ones, 1, beta, out, 1)
     ev.wait()
 
     return out
@@ -66,7 +66,7 @@ _cmp_by_axis_kernel_template = """
         int workgroup_sz = get_local_size(0);
         int blockid = get_global_id(0)/workgroup_sz;
         unsigned int curr_idx = 0;
-        %(dtype)s curr_max = 0;
+        %(dtype)s curr_max = %(init_val)s;
         %(dtype)s curr_val = 0;
 
         //find local max
@@ -84,9 +84,9 @@ _cmp_by_axis_kernel_template = """
 
         //find global max
         if (tid == 0) {
-            curr_max = 0;
+            curr_max = %(init_val)s;
             curr_idx = 0;
-            for (unsigned int i=0; i<workgroup_sz; i++)
+            for (unsigned int i=0; i<min(workgroup_sz, w); i++)
                 if (maxs[i] %(cmp_op)s curr_max) {
                     curr_max = maxs[i];
                     curr_idx = maxids[i];
@@ -104,7 +104,7 @@ _cmp_by_axis_kernel_template = """
         int workgroup_sz = get_local_size(0);
         int blockid = get_global_id(0)/workgroup_sz;
         unsigned int curr_idx = 0;
-        %(dtype)s curr_max = 0;
+        %(dtype)s curr_max = %(init_val)s;
         %(dtype)s curr_val = 0;
 
         //find thread max
@@ -122,9 +122,9 @@ _cmp_by_axis_kernel_template = """
 
         //find workgroup max
         if (tid == 0) {
-            curr_max = 0;
+            curr_max = %(init_val)s;
             curr_idx = 0;
-            for (unsigned int i=0; i<workgroup_sz; i++)
+            for (unsigned int i=0; i<min(workgroup_sz, h); i++)
                 if (maxs[i] %(cmp_op)s curr_max) {
                     curr_max = maxs[i];
                     curr_idx = maxids[i];
@@ -149,7 +149,8 @@ def max(q, a, axis=None, keepdims=False):
     prg = cl.Program(clplatf.ctx,
                      _cmp_by_axis_kernel_template % {
                             'cmp_op': '>',
-                            'dtype': dtype_to_ctype(a.dtype)
+                            'dtype': dtype_to_ctype(a.dtype),
+                            'init_val': str(np.finfo(a.dtype).min)
                         }).build()
     col_max = prg._max_by_cols
     row_max = prg._max_by_rows
@@ -172,8 +173,12 @@ def max(q, a, axis=None, keepdims=False):
             out_shape = (n,)
         maxes = clarray.empty(q, out_shape, dtype=a.dtype)
         idxes = clarray.empty(q, out_shape, dtype=np.int32)
-        ev = row_max(q, (n,), (64,), a, maxes, idxes, np.int32(m), np.int32(n),
+        ev = row_max(q, (n,), (64,), a.data, maxes.data, idxes.data, np.int32(m), np.int32(n),
                      cl.LocalMemory(64*element_size), cl.LocalMemory(64*4))
     if ev is not None:
         ev.wait()
     return maxes, idxes
+
+
+# TODO max se ponasa cudno... konsultuj https://scikit-cuda.readthedocs.io/en/latest/_modules/skcuda/misc.html#sum
+# TODO napisi unittest

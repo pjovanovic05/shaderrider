@@ -193,3 +193,71 @@ def bcast_mul(A, B, out=None):
                np.int32(out.strides[1]))
     evt.wait()
     return out
+
+
+def bcast_sub(A, B, out=None):
+    q = pl.qs[0]
+    nda, ndb = A.ndim, B.ndim
+    a_shape, b_shape = list(A.shape), list(B.shape)
+    a_strides, b_strides = list(A.strides), list(B.strides)
+    ndim = max(nda, ndb)
+    dtype = 'float' if A.dtype == np.float32 else 'double'
+
+    if nda != ndb:
+        # TODO extend smaller shape with 1s
+        # extend smaller strides with 0s
+        if nda > ndb:
+            b_shape = [1, ] * (nda - ndb) + b_shape
+            b_strides = [0, ] * (nda - ndb) + b_strides
+        if nda < ndb:
+            a_shape = [1, ] * (ndb - nda) + a_shape
+            b_strides = [0, ] * (ndb - nda) + a_strides
+
+    # check broadcasting compatibility
+    c_shape = []
+    for i in range(ndim):
+        # TODO dimenzije jednake ili je jedna odnjih == 1
+        if a_shape[i] != b_shape[i]:
+            if a_shape[i] == 1:
+                a_strides[i] = 0
+            if b_shape[i] == 1:
+                b_strides[i] = 0
+            if a_shape[i] != 1 and b_shape[i] != 1:
+                raise ValueError('Incompatible broadcasting shapes: ' + str(a_shape) + ' & ' + str(b_shape))
+        c_shape.append(max(a_shape[i], b_shape[i]))
+
+    # generate kernel
+    kdesc = {
+        'nargs': 3,
+        'nd': ndim,
+        'kname': 'ewk_sub_'+str(ndim),
+        'expression': '*arg2 = *arg0 - *arg1;',
+        'dtype': dtype
+    }
+    ksource = yaptu.generate_kernel(_kernel_template, kdesc)
+    prg = cl.Program(pl.ctx, ksource).build()
+    krnl = eval('prg.'+kdesc['kname'])
+
+    if out is None:
+        # c_shape = a_shape if nda > ndb else b_shape
+        out = clarray.empty(q, tuple(c_shape), dtype=A.dtype)
+
+    launch_sz = int(np.prod(out.shape))
+    evt = krnl(q, (launch_sz,), None,
+               np.int32(launch_sz),
+               np.int32(out.shape[0]),
+               np.int32(out.shape[1]),
+               A.base_data,
+               np.int32(A.offset),
+               np.int32(a_strides[0]),
+               np.int32(a_strides[1]),
+               B.base_data,
+               np.int32(B.offset),
+               np.int32(b_strides[0]),
+               np.int32(b_strides[1]),
+               out.base_data,
+               np.int32(out.offset),
+               np.int32(out.strides[0]),
+               np.int32(out.strides[1]))
+    evt.wait()
+    return out

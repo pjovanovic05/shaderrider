@@ -221,16 +221,17 @@ def maxpool2d(q, A, f, stride, out=None, indices=None):
     out_w = (w-f)/stride + 1
 
     if out is None:
-        out = clarray.empty(q, (out_h, out_w), dtype=np.int32Z
+        out = clarray.empty(q, (n, c, out_h, out_w), dtype=A.dtype)
     if indices is None:
-        indices = clarray.empty(q, (out_h, out_w), dtype=np.int32)
+        indices = clarray.empty(q, (n, c, out_h, out_w), dtype=np.int32)
 
-    prg = cl.Program(clplatf.ctx, _maxpool_template % dtype).build()
+    prg = cl.Program(clplatf.ctx, _maxpool_template % {'dtype': dtype}).build()
     krnl = prg.max_pool
     # TODO better global and local dimensions (make divisible by 64 etc.)
     ev = krnl(q, (out_h, out_w), None,
-              A.data, out.data, indices.data, h, w, out_h, out_w,
-              f, f, stride, stride)
+              A.data, out.data, indices.data,
+              np.int32(h), np.int32(w), np.int32(out_h), np.int32(out_w),
+              np.int32(f), np.int32(f), np.int32(stride), np.int32(stride))
 
     ev.wait()
     return out, indices
@@ -242,7 +243,7 @@ _maxpool_backprop_template = """
                              __global %(dtype)s *gx,
                              int h, int w, int out_h, int out_w,
                              int kh, int kw, int sy, int sx) {
-        int gid = get_global_id();
+        int gid = get_global_id(0);
         int d = gid / (h*w);
         int y = gid / w %% h;
         int x = gid %% w;
@@ -275,11 +276,12 @@ def maxpool2d_backprop(q, adjoint, indices, x, f, stride, out=None):
     if out is None:
         out = clarray.empty_like(x)
 
-    prg = cl.Program(clplatf.ctx, _maxpool_backprop_template % dtype).build()
+    prg = cl.Program(clplatf.ctx, _maxpool_backprop_template % {'dtype': dtype}).build()
     krnl = prg.max_unpool
     ev = krnl(q, (n*c*h*w, ), None,
               adjoint.data, indices.data, out.data,
-              h, w, y_h, y_w, f, f, stride, stride)
+              np.int32(h), np.int32(w), np.int32(y_h), np.int32(y_w),
+              np.int32(f), np.int32(f), np.int32(stride), np.int32(stride))
     ev.wait()
 
     return out
@@ -309,7 +311,7 @@ def bcast_add(q, A, b, out=None):
     return out, evt
 
 
-def bgrads_sum(q, gY, out):
+def bgrads_sum(q, gY, out=None):
     dtype = 'float' if gY.dtype == np.float32 else 'double'
     # element_size = 4 if gY.dtype == np.float32 else 8
     n, c, h, w = gY.shape
@@ -378,7 +380,8 @@ def bgrads_sum(q, gY, out):
     ev1 = kstep1(q, (n*c*h,), None, gY.data, np.int32(w), temp1.data)
     ev2 = kstep1(q, (n*c,), None, temp1.data, np.int32(h), temp2.data,
                  wait_for=[ev1])
-
+    if out is None:
+        out = clarray.zeros(q, (c,), gY.dtype)
     locMemSize = step3_gridsize*c*(4 if gY.dtype==np.float32 else 8)
     ev3 =  kstep3(q, (step3_gridsize,), (step3_gridsize,),
                   temp2.data, out.data, np.int32(n), np.int32(c),
