@@ -431,7 +431,8 @@ class Softmax(expr.Expression):
             self.y, ev = bcast.bcast_add(op, -maxes)
             ev.wait()
             self.y = clmath.exp(self.y)
-            self.y /= misc.sum(q, self.y, axis=1, keepdims=True)
+            ysum = misc.sum(q, self.y, axis=1, keepdims=True)
+            bcast.bcast_div(self.y, ysum, out=self.y)
             cache[id(self)] = self.y
         return cache[id(self)]
 
@@ -439,7 +440,7 @@ class Softmax(expr.Expression):
         q = pl.qs[0]
         gx = self.y * adjoint
         sumdx = misc.sum(q, gx, axis=1, keepdims=True)
-        gx -= self.y * sumdx
+        gx -= bcast.bcast_mul(self.y, sumdx)
         self.ops[0]._rev_grad(valuation, gx, gradient, cache)
 
 

@@ -21,15 +21,15 @@ def sum(q, a, axis=None, out=None, keepdims=False):
     if a.flags.c_contiguous:
         m, n = a.shape
         lda = a.shape[1]
-        transA = False if axis == 0 else True
+        transA = True if axis == 0 else False
         sum_axis, out_axis = (m, n) if axis == 0 else (n, m)
     else:
         n, m = a.shape
         lda = a.shape[0]
-        transA = True if axis == 0 else False
+        transA = False if axis == 0 else True
         sum_axis, out_axis = (n, m) if axis == 0 else (m, n)
 
-    ones = clarray.empty(q, (sum_axis,), a.dtype).fill(1)
+    ones = clarray.empty(q, (sum_axis,), a.dtype).fill(1.0)
     if keepdims:
         out_shape = (1, out_axis) if axis == 0 else (out_axis, 1)
     else:

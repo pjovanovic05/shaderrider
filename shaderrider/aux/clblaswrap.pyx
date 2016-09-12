@@ -497,6 +497,9 @@ def ger(queue, A, x, y, float alpha=1.0, clblasOrder order=clblasRowMajor, list 
 
 def sgemv(queue, transA, M, N, alpha, A, lda, x, incx, beta, y, incy,
           clblasOrder order=clblasRowMajor, list wait_for=None):
+    print 'A:', A.shape
+    print 'x:', x.shape
+    print 'y:', y.shape
     dtype = check_dtype([A, x, y], ['float32'])
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
     cdef EventList el = None if wait_for is None else EventList(wait_for)
@@ -526,7 +529,7 @@ def sgemv(queue, transA, M, N, alpha, A, lda, x, incx, beta, y, incy,
 
 def dgemv(queue, transA, M, N, alpha, A, lda, x, incx, beta, y, incy,
           clblasOrder order=clblasRowMajor, list wait_for=None):
-    dtype = check_dtype([A, x, y], ['float32'])
+    dtype = check_dtype([A, x, y], ['float64'])
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
     cdef EventList el = None if wait_for is None else EventList(wait_for)
     cdef cl_event myevent = NULL

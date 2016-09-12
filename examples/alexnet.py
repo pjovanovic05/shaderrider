@@ -105,7 +105,7 @@ class Alexnet(object):
         for name, value in self.params:
             print 'updating', name
             print 'shape:', value.shape, 'grad shape:', grad[name].shape
-            if name.startswith('bF'):
+            if name.startswith('bF') or name.startswith('bS'):
                 bgsum = misc.sum(pl.qs[0], grad[name], axis=0)
                 value -= learning_rate*bgsum
             else:
