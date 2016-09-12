@@ -1,3 +1,4 @@
+"""My clBLAS wrapper test."""
 import unittest
 import numpy as np
 import pyopencl as cl

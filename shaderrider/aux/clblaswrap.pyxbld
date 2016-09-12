@@ -3,16 +3,20 @@ def make_ext(modname, pyxfilename):
     import platform
     lddir = '-L/opt/clBLAS/lib64'
     idir = '-I/opt/clBLAS/include -I/opt/AMDAPPSDK-3.0/include'
+    clopts = []
     if platform.system() == 'Darwin':
         lddir = '-L/usr/local/Cellar/clblas/2.6/lib'
         idir = '-I/usr/local/Cellar/clblas/2.6/include'
+        clopts = ['-framework', 'OpenCL']
+    elif platform.system() == 'Linux':
+        clopts = ['-L/opt/AMDAPPSDK-3.0/lib/x86_64', '-lOpenCL']
+
     ext = Extension(name=modname,
                     sources=[pyxfilename],
                     extra_compile_args=[idir],
-                    extra_link_args=[lddir, '-lclBLAS', '-L/opt/AMDAPPSDK-3.0/lib/x86_64', '-lOpenCL'])
+                    extra_link_args=[lddir, '-lclBLAS'] + clopts)
     return ext
 
 
 def make_setup_args():
     return dict(script_args=['--verbose', '--inplace'])
-

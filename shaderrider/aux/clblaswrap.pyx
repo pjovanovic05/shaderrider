@@ -13,7 +13,7 @@ from pyopencl import array as clarray
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport intptr_t, uintptr_t
 
-
+import platform
 
 
 cdef extern from "clBLAS.h":
@@ -241,8 +241,12 @@ cdef extern from "clBLAS.h":
                              const cl_event *eventWaitList,
                              cl_event *events)
 
-cdef extern from "CL/cl.h":
-    cl_int clWaitForEvents(cl_uint num_events, const cl_event *event_list)
+IF UNAME_SYSNAME == 'Linux':
+    cdef extern from "CL/cl.h":
+        cl_int clWaitForEvents(cl_uint num_events, const cl_event *event_list)
+ELIF UNAME_SYSNAME == 'Darwin':
+    cdef extern from "OpenCL/cl.h":
+        cl_int clWaitForEvents(cl_uint num_events, const cl_event *event_list)
 
 cdef get_status_message(clblasStatus status):
     if status == clblasSuccess:
