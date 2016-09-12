@@ -70,7 +70,7 @@ _cmp_by_axis_kernel_template = """
         %(dtype)s curr_val = 0;
 
         //find local max
-        for (unsigned int i=tid; i<w; i+=workgroup_sz) {
+        for (int i=tid; i<w; i+=workgroup_sz) {
             curr_val = A[blockid * w + i];
             if (curr_val %(cmp_op)s curr_max) {
                 curr_max = curr_val;
@@ -86,7 +86,7 @@ _cmp_by_axis_kernel_template = """
         if (tid == 0) {
             curr_max = %(init_val)s;
             curr_idx = 0;
-            for (unsigned int i=0; i<min(workgroup_sz, w); i++)
+            for (int i=0; i<min(workgroup_sz, w); i++)
                 if (maxs[i] %(cmp_op)s curr_max) {
                     curr_max = maxs[i];
                     curr_idx = maxids[i];
@@ -108,7 +108,7 @@ _cmp_by_axis_kernel_template = """
         %(dtype)s curr_val = 0;
 
         //find thread max
-        for (unsigned int i=tid; i<h; i+=workgroup_sz) {
+        for (int i=tid; i<h; i+=workgroup_sz) {
             curr_val = A[blockid + i*w];
             if (curr_val %(cmp_op)s curr_max) {
                 curr_max = curr_val;
@@ -124,7 +124,7 @@ _cmp_by_axis_kernel_template = """
         if (tid == 0) {
             curr_max = %(init_val)s;
             curr_idx = 0;
-            for (unsigned int i=0; i<min(workgroup_sz, h); i++)
+            for (int i=0; i<min(workgroup_sz, h); i++)
                 if (maxs[i] %(cmp_op)s curr_max) {
                     curr_max = maxs[i];
                     curr_idx = maxids[i];
@@ -163,8 +163,8 @@ def max(q, a, axis=None, keepdims=False):
         else:
             out_shape = (m,)
         maxes = clarray.empty(q, out_shape, dtype=a.dtype)
-        idxes = clarray.empty(q, out_shape, dtype=np.int32)
-        ev = col_max(q, (m,), (64,), a, maxes, idxes, np.int32(m), np.int32(n),
+        indices = clarray.empty(q, out_shape, dtype=np.int32)
+        ev = col_max(q, (m*64,), (64,), a.data, maxes.data, indices.data, np.int32(m), np.int32(n),
                      cl.LocalMemory(64*element_size), cl.LocalMemory(64*4))
     else:
         if keepdims:
@@ -172,12 +172,12 @@ def max(q, a, axis=None, keepdims=False):
         else:
             out_shape = (n,)
         maxes = clarray.empty(q, out_shape, dtype=a.dtype)
-        idxes = clarray.empty(q, out_shape, dtype=np.int32)
-        ev = row_max(q, (n,), (64,), a.data, maxes.data, idxes.data, np.int32(m), np.int32(n),
+        indices = clarray.empty(q, out_shape, dtype=np.int32)
+        ev = row_max(q, (n*64,), (64,), a.data, maxes.data, indices.data, np.int32(m), np.int32(n),
                      cl.LocalMemory(64*element_size), cl.LocalMemory(64*4))
     if ev is not None:
         ev.wait()
-    return maxes, idxes
+    return maxes, indices
 
 
 # TODO max se ponasa cudno... konsultuj https://scikit-cuda.readthedocs.io/en/latest/_modules/skcuda/misc.html#sum
