@@ -23,6 +23,7 @@ class ConvLayer(object):
         fan_out = filter_shape[0]*np.prod(filter_shape[2:])
         W_bound = np.sqrt(6./(fan_in+fan_out))
         nW = np.asarray(rng.uniform(low=-W_bound, high=W_bound, size=filter_shape), dtype=np.float32)
+        print '>>>start CW1:\n', nW
         self.W = clarray.to_device(q, nW)
         self.b = clarray.zeros(q, (filter_shape[0],), dtype=np.float32)
 
@@ -101,10 +102,10 @@ class Alexnet(object):
             val[name] = value
 
         grad = self.cost.rev_grad(val)
-        print grad
+        # print grad
         for name, value in self.params:
-            print 'updating', name
-            print 'shape:', value.shape, 'grad shape:', grad[name].shape
+            # print 'updating', name
+            # print 'shape:', value.shape, 'grad shape:', grad[name].shape
             if name.startswith('bF') or name.startswith('bS'):
                 bgsum = misc.sum(pl.qs[0], grad[name], axis=0)
                 value -= learning_rate*bgsum
@@ -117,7 +118,7 @@ class Alexnet(object):
         val['Y'] = Y
         for param, value in self.params:
             val[param] = value
-        err = self.errors.evaluate(val)
+        err = self.error.evaluate(val)
         return err
 
 
@@ -139,8 +140,20 @@ def main():
     Y = db1['labels']
     trainY = pd.get_dummies(Y).values.astype(np.float32)
 
+    n_epochs = 1
     batch_size = 128
-    anet.train(X[0:batch_size, :], trainY[0:batch_size, :])
+    n_train_batches = trainY.shape[0] / batch_size
+
+    epoch = 0
+    while epoch < n_epochs:
+        epoch += 1
+        g = None
+        for mbi in xrange(n_train_batches):
+            anet.train(X[mbi*batch_size:(mbi+1)*batch_size, :], trainY[mbi*batch_size:(mbi+1)*batch_size, :])
+            print mbi,', ',
+        print
+        print '='*70
+        print '>>final wc:\n', anet.layer1.params[0][1]
 
 
 if __name__ == '__main__':

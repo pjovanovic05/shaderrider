@@ -114,7 +114,7 @@ def main():
 
             if (minibatch_index % 5 == 0) and minibatch_index>0:
                 err = mlp.test(validX, validY)
-                print '\n>>>>>>>>>>>>>>>>>>>>>>>>>validation error:', err, 'batch:', minibatch_index, '/', n_train_batches
+                print '\n>>>>>>>>>>>>>>>>>validation error:', err, 'batch:', minibatch_index, '/', n_train_batches
 
     for param, value in mlp.params:
         val = value.get()

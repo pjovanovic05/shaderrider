@@ -345,14 +345,14 @@ class Conv2d(expr.Expression):
         gy_mats = gy.reshape(n, out_c, out_h * out_w)
 
         for i in xrange(n):
-            gwmat = linalg.dot(q, gy_mats[i], col_mats[i].T)
+            gwmat = linalg.dot(q, gy_mats[i], col_mats[i], transB=True)
             gW_mat += gwmat
 
         W_mat = W.reshape(out_c, -1)
         gcol = clarray.empty_like(self.col)
         gcol_mats = gcol.reshape(n, c * kh * kw, out_h * out_w)
         for i in xrange(n):
-            gcol_mats[i] = linalg.dot(q, W_mat.T, gy_mats[i])
+            gcol_mats[i] = linalg.dot(q, W_mat, gy_mats[i], transA=True)
 
         gx, ev = conv.col2im(q, gcol, self.sy, self.sx, self.ph, self.pw, h, w)
         ev.wait()

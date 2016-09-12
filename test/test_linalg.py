@@ -5,6 +5,8 @@ from pyopencl import array as clarray
 from shaderrider import clplatf
 from shaderrider import linalg
 
+import sys
+
 
 class LinalgTest(unittest.TestCase):
     @classmethod
@@ -36,6 +38,25 @@ class LinalgTest(unittest.TestCase):
         gC = linalg.dot(q, gA, gB)
         C = gC.get()
         self.assertTrue(np.allclose(C, expected))
+
+    def test_dot_again(self):
+        q = clplatf.qs[0]
+        X = np.random.uniform(0, 1, (128, 64, 1024)).astype(np.float32)
+        Y = np.random.uniform(0, 1, (128, 27, 1024)).astype(np.float32)
+        gX = clarray.to_device(q, X)
+        gY = clarray.to_device(q, Y)
+
+        for i in range(128):
+            expected = X[i].dot(Y[i].T)
+            gR = linalg.dot(q, gX[i], gY[i], transB=True)
+            R = gR.get()
+            if not np.allclose(R, expected):
+                print >>sys.stderr, '\nReal:\n', R
+                print >>sys.stderr, 'expected:\n', expected
+                print >>sys.stderr, 'shapes: r:', R.shape, 'e:', expected.shape
+                print >>sys.stderr, 'mean diff:', np.mean(R-expected)
+                break
+            self.assertTrue(np.allclose(R, expected))
 
     def test_batch_dot(self):
         pass
