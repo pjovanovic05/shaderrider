@@ -84,11 +84,12 @@ class Alexnet(object):
         X = expr.Variable('X')
         Y = expr.Variable('Y')
         self.layer1 = ConvLayer('_C1', rng, X, img_shape, (64, 3, 3, 3),
-                                fstrides=(1, 1), zero_pad=(1, 1), poolsize=(2,2),
-                                activation_fn=op.ReLU)
+                                fstrides=(1, 1), zero_pad=(1, 1),
+                                poolsize=(2, 2), activation_fn=op.ReLU)
         nin = 64*16*16
         reshaped_conv_out = op.Reshape(self.layer1.output, (-1, nin))
-        self.layer2 = FullyConnectedLayer('F1', rng, reshaped_conv_out, nin, 100)
+        self.layer2 = FullyConnectedLayer('F1', rng, reshaped_conv_out, nin,
+                                          100, activation_fn=op.ReLU)
         self.layer3 = SoftmaxLayer('S1', rng, self.layer2.output, 100, 10)
         self.cost = op.MeanSquaredErr(self.layer3.p_y_given_x, Y)
         self.error = op.Mean(op.NotEq(self.layer3.y_pred, Y))
@@ -136,23 +137,45 @@ def main():
     anet = Alexnet(rng, (10, 3, 32, 32), 10)
 
     db1 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
+    db2 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_2')
+    db3 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_3')
+    db4 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_4')
+    db5 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_5')
     tdb = unpickle('/home/petar/datasets/cifar-10-batches-py/test_batch')
-    X = db1['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    Y = db1['labels']
-    trainY = pd.get_dummies(Y).values.astype(np.float32)
+    X1 = db1['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
+    Y1 = db1['labels']
+    trainY1 = pd.get_dummies(Y1).values.astype(np.float32)
+    X2 = db2['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
+    Y2 = db2['labels']
+    trainY2 = pd.get_dummies(Y2).values.astype(np.float32)
+    X3 = db3['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
+    Y3 = db3['labels']
+    trainY3 = pd.get_dummies(Y3).values.astype(np.float32)
+    X4 = db4['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
+    Y4 = db4['labels']
+    trainY4 = pd.get_dummies(Y4).values.astype(np.float32)
+    X5 = db5['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
+    Y5 = db5['labels']
+    trainY5 = pd.get_dummies(Y5).values.astype(np.float32)
+
     tX = tdb['data'].reshape(-1, 3, 32, 32).astype(np.float32)/255.0
     tY = np.asarray(tdb['labels'], dtype=np.float32)
 
     n_epochs = 1
     batch_size = 128
-    n_train_batches = trainY.shape[0] / batch_size
+    n_train_batches = trainY1.shape[0] / batch_size
 
     epoch = 0
     while epoch < n_epochs:
         epoch += 1
         g = None
         for mbi in xrange(n_train_batches):
-            anet.train(X[mbi*batch_size:(mbi+1)*batch_size, :], trainY[mbi*batch_size:(mbi+1)*batch_size, :])
+            print '>training batch', mbi, 'of', n_train_batches
+            anet.train(X1[mbi*batch_size:(mbi+1)*batch_size, :], trainY1[mbi*batch_size:(mbi+1)*batch_size, :])
+            anet.train(X2[mbi*batch_size:(mbi+1)*batch_size, :], trainY2[mbi*batch_size:(mbi+1)*batch_size, :])
+            anet.train(X3[mbi*batch_size:(mbi+1)*batch_size, :], trainY3[mbi*batch_size:(mbi+1)*batch_size, :])
+            anet.train(X4[mbi*batch_size:(mbi+1)*batch_size, :], trainY4[mbi*batch_size:(mbi+1)*batch_size, :])
+            anet.train(X5[mbi*batch_size:(mbi+1)*batch_size, :], trainY5[mbi*batch_size:(mbi+1)*batch_size, :])
         print '='*70
         print '>>final wc:\n', anet.layer1.params[0][1]
     print 'test error:'
