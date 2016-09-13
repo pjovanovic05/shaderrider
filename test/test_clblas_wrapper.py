@@ -34,7 +34,7 @@ class ClBlasWrapperTest(unittest.TestCase):
         expected = np.dot(X, Y)
         gX = clarray.to_device(self.q, X)
         gY = clarray.to_device(self.q, Y)
-        gD = clarray.to_device(self.q, np.empty((1,1), dtype=np.float32))
+        gD = clarray.to_device(self.q, np.empty((1, 1), dtype=np.float32))
         scratch = clarray.empty(self.q, (10,), dtype=np.float32)
         ev = clblaswrap.dot(self.q, gX, gY, gD, scratch)
         ev.wait()
