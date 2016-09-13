@@ -498,15 +498,16 @@ def ger(queue, A, x, y, float alpha=1.0, clblasOrder order=clblasRowMajor, list 
 def sgemv(queue, transA, M, N, alpha, A, lda, x, incx, beta, y, incy,
           clblasOrder order=clblasRowMajor, list wait_for=None):
     dtype = check_dtype([A, x, y], ['float32'])
+    cdef size_t element_size = dtype_size[dtype]
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
     cdef EventList el = None if wait_for is None else EventList(wait_for)
     cdef cl_event myevent = NULL
     cdef cl_mem Adata = <cl_mem><intptr_t>A.base_data.int_ptr
-    cdef size_t offA = A.offset
+    cdef size_t offA = A.offset / element_size
     cdef cl_mem xdata = <cl_mem><intptr_t>x.base_data.int_ptr
-    cdef size_t offx = x.offset
+    cdef size_t offx = x.offset / element_size
     cdef cl_mem ydata = <cl_mem><intptr_t>y.base_data.int_ptr
-    cdef size_t offy = y.offset
+    cdef size_t offy = y.offset / element_size
 
     cdef clblasStatus = clblasSuccess
     err = clblasSgemv(order,
@@ -527,15 +528,16 @@ def sgemv(queue, transA, M, N, alpha, A, lda, x, incx, beta, y, incy,
 def dgemv(queue, transA, M, N, alpha, A, lda, x, incx, beta, y, incy,
           clblasOrder order=clblasRowMajor, list wait_for=None):
     dtype = check_dtype([A, x, y], ['float64'])
+    cdef size_t element_size = dtype_size[dtype]
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
     cdef EventList el = None if wait_for is None else EventList(wait_for)
     cdef cl_event myevent = NULL
     cdef cl_mem Adata = <cl_mem><intptr_t>A.base_data.int_ptr
-    cdef size_t offA = A.offset
+    cdef size_t offA = A.offset / element_size
     cdef cl_mem xdata = <cl_mem><intptr_t>x.base_data.int_ptr
-    cdef size_t offx = x.offset
+    cdef size_t offx = x.offset / element_size
     cdef cl_mem ydata = <cl_mem><intptr_t>y.base_data.int_ptr
-    cdef size_t offy = y.offset
+    cdef size_t offy = y.offset / element_size
 
     cdef clblasStatus = clblasSuccess
     err = clblasDgemv(order,
@@ -569,13 +571,13 @@ def gemv(queue, A, x, y, transA=False, float alpha=1.0, float beta=0.0,
 
     cdef size_t element_size = dtype_size[dtype]
     cdef cl_mem Adata = <cl_mem><intptr_t>A.base_data.int_ptr
-    cdef size_t offA = A.offset
+    cdef size_t offA = A.offset / element_size
     cdef size_t lda = A.strides[0] / element_size
     cdef cl_mem xdata = <cl_mem><intptr_t>x.base_data.int_ptr
-    cdef size_t offx = x.offset
+    cdef size_t offx = x.offset / element_size
     cdef size_t incx = x.strides[0] / element_size
     cdef cl_mem ydata = <cl_mem><intptr_t>y.base_data.int_ptr
-    cdef size_t offy = y.offset
+    cdef size_t offy = y.offset / element_size
     cdef size_t incy = y.strides[0] / element_size
 
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
@@ -629,13 +631,13 @@ def gemm(queue, A, B, C, transA=False, transB=False, float alpha=1.0, float beta
 
     cdef size_t element_size = dtype_size[dtype]
     cdef cl_mem Adata = <cl_mem><intptr_t>A.base_data.int_ptr
-    cdef size_t offA = A.offset  # / element_size
+    cdef size_t offA = A.offset / element_size
     cdef size_t lda = A.strides[1 if transA else 0] / element_size
     cdef cl_mem Bdata = <cl_mem><intptr_t>B.base_data.int_ptr
-    cdef size_t offB = B.offset  # / element_size
+    cdef size_t offB = B.offset / element_size
     cdef size_t ldb = B.strides[1 if transA else 0] / element_size
     cdef cl_mem Cdata = <cl_mem><intptr_t>C.base_data.int_ptr
-    cdef size_t offC = C.offset  # / element_size
+    cdef size_t offC = C.offset / element_size
     cdef size_t ldc = C.strides[0] / element_size
 
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr
@@ -696,16 +698,16 @@ def gemm_batch(queue, As, Bs, Cs, transA=False, transB=False, float alpha=1.0, f
 
     cdef size_t element_size = dtype_size[dtype]
     cdef cl_mem Adata = <cl_mem><intptr_t>As.base_data.int_ptr
-    cdef size_t offA = As.offset  # / element_size
-    cdef size_t szA = M * K  # * element_size
+    cdef size_t offA = As.offset / element_size
+    cdef size_t szA = M * K # * element_size
     cdef size_t lda = As.strides[-2] / element_size
     cdef cl_mem Bdata = <cl_mem><intptr_t>Bs.base_data.int_ptr
-    cdef size_t offB = Bs.offset  # / element_size
-    cdef size_t szB = K * N  # * element_size
+    cdef size_t offB = Bs.offset / element_size
+    cdef size_t szB = K * N # * element_size
     cdef size_t ldb = Bs.strides[-2] / element_size
     cdef cl_mem Cdata = <cl_mem><intptr_t>Cs.base_data.int_ptr
-    cdef size_t offC = Cs.offset  # / element_size
-    cdef size_t szC = M * N  # * element_size
+    cdef size_t offC = Cs.offset / element_size
+    cdef size_t szC = M * N # * element_size
     cdef size_t ldc = Cs.strides[-2] / element_size
 
     cdef cl_command_queue commandQueue = <cl_command_queue><intptr_t>queue.int_ptr

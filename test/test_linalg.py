@@ -43,6 +43,7 @@ class LinalgTest(unittest.TestCase):
         q = clplatf.qs[0]
         X = np.random.uniform(0, 1, (128, 64, 1024)).astype(np.float32)
         Y = np.random.uniform(0, 1, (128, 27, 1024)).astype(np.float32)
+
         gX = clarray.to_device(q, X)
         gY = clarray.to_device(q, Y)
 
@@ -57,6 +58,22 @@ class LinalgTest(unittest.TestCase):
                 print >>sys.stderr, 'mean diff:', np.mean(R-expected)
                 break
             self.assertTrue(np.allclose(R, expected))
+
+    def test_dot_offentdingvectors(self):
+        q = clplatf.qs[0]
+        X = np.loadtxt(open('test/gymat.txt', 'r'), delimiter=',').astype(np.float32)
+        Y = np.loadtxt(open('test/colmat.txt', 'r'), delimiter=',').astype(np.float32)
+        gX = clarray.to_device(q, X)
+        gY = clarray.to_device(q, Y)
+
+        expected = X.dot(Y.T)
+        gR = linalg.dot(q, gX, gY, transB=True)
+        R = gR.get()
+        print >>sys.stderr, '\nReal:\n', R
+        print >>sys.stderr, 'expected:\n', expected
+        print >>sys.stderr, 'shapes: r:', R.shape, 'e:', expected.shape
+        print >>sys.stderr, 'mean diff:', np.mean(R-expected)
+        self.assertTrue(np.allclose(R, expected))
 
     def test_batch_dot(self):
         pass
