@@ -136,9 +136,12 @@ def main():
     anet = Alexnet(rng, (10, 3, 32, 32), 10)
 
     db1 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
+    tdb = unpickle('/home/petar/datasets/cifar-10-batches-py/test_batch')
     X = db1['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
     Y = db1['labels']
     trainY = pd.get_dummies(Y).values.astype(np.float32)
+    tX = tdb['data'].reshape(-1, 3, 32, 32).astype(np.float32)/255.0
+    tY = np.asarray(tdb['labels'], dtype=np.float32)
 
     n_epochs = 1
     batch_size = 128
@@ -150,10 +153,10 @@ def main():
         g = None
         for mbi in xrange(n_train_batches):
             anet.train(X[mbi*batch_size:(mbi+1)*batch_size, :], trainY[mbi*batch_size:(mbi+1)*batch_size, :])
-            print mbi,', ',
-        print
         print '='*70
         print '>>final wc:\n', anet.layer1.params[0][1]
+    print 'test error:'
+    print anet.test(tX, tY)
 
 
 if __name__ == '__main__':

@@ -208,7 +208,7 @@ _maxpool_template = """
         }
         out[gid] = maxval;
         int argmax_ky = argmax_y - out_y*sy;
-        int argmax_kx = argmax_x -out_x*sx;
+        int argmax_kx = argmax_x - out_x*sx;
         indices[gid] = argmax_kx + kw*argmax_ky;
     }
 """
@@ -228,7 +228,7 @@ def maxpool2d(q, A, f, stride, out=None, indices=None):
     prg = cl.Program(clplatf.ctx, _maxpool_template % {'dtype': dtype}).build()
     krnl = prg.max_pool
     # TODO better global and local dimensions (make divisible by 64 etc.)
-    ev = krnl(q, (out_h, out_w), None,
+    ev = krnl(q, (n*c*out_h*out_w,), None,
               A.data, out.data, indices.data,
               np.int32(h), np.int32(w), np.int32(out_h), np.int32(out_w),
               np.int32(f), np.int32(f), np.int32(stride), np.int32(stride))

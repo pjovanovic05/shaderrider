@@ -195,3 +195,14 @@ class ConvTest(unittest.TestCase):
         evt.wait()
         out = gout.get()
         self.assertTrue(np.allclose(expected, out))
+
+    def test_maxpool2d(self):
+        q = clplatf.qs[0]
+        A = np.arange(2*3*6*6).astype(np.float32)
+        A.shape = (2, 3, 6, 6)
+        gA = clarray.to_device(q, A)
+        expected = A[:, :, 1:6:2, 1:6:2]
+
+        gout, gindices = conv.maxpool2d(q, gA, np.int32(2), np.int32(2))
+        out = gout.get()
+        self.assertTrue(np.allclose(expected, out))
