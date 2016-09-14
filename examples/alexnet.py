@@ -90,12 +90,14 @@ class Alexnet(object):
         reshaped_conv_out = op.Reshape(self.layer1.output, (-1, nin))
         self.layer2 = FullyConnectedLayer('F1', rng, reshaped_conv_out, nin,
                                           100, activation_fn=op.ReLU)
-        self.layer3 = SoftmaxLayer('S1', rng, self.layer2.output, 100, 10)
+        self.do1 = op.Dropout(self.layer2.output)
+        self.layer3 = SoftmaxLayer('S1', rng, self.do1, 100, 10)
         self.cost = op.MeanSquaredErr(self.layer3.p_y_given_x, Y)
         self.error = op.Mean(op.NotEq(self.layer3.y_pred, Y))
         self.params = self.layer1.params + self.layer2.params + self.layer3.params
 
     def train(self, X, Y, learning_rate=0.01):
+        self.do1.test = False
         val = pl.valuation()
         val['X'] = X
         val['Y'] = Y
@@ -119,6 +121,7 @@ class Alexnet(object):
         val['Y'] = Y
         for param, value in self.params:
             val[param] = value
+        self.do1.test = True
         err = self.error.evaluate(val)
         return err
 

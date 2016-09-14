@@ -369,12 +369,15 @@ class Conv2d(expr.Expression):
 
 
 class Dropout(expr.Expression):
-    def __init__(self, op, ratio=0.5, parents=None):
+    def __init__(self, op, ratio=0.5, test=False, parents=None):
         super(Dropout, self).__init__(parents)
         self.ops = [op]
         self.ratio = ratio
+        self.test = test
 
     def _evaluate(self, valuation, cache):
+        if self.test:
+            return self.ops[0]._evaluate(valuation, cache)
         if id(self) not in cache:
             q = pl.qs[0]
             op = self.ops[0]._evaluate(valuation, cache)
