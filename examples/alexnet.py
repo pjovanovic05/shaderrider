@@ -83,15 +83,15 @@ class Alexnet(object):
     def __init__(self, rng, img_shape, n_out):
         X = expr.Variable('X')
         Y = expr.Variable('Y')
-        self.layer1 = ConvLayer('_C1', rng, X, img_shape, (64, 3, 3, 3),
+        self.layer1 = ConvLayer('_C1', rng, X, img_shape, (12, 3, 3, 3),
                                 fstrides=(1, 1), zero_pad=(1, 1),
                                 poolsize=(2, 2), activation_fn=op.ReLU)
-        nin = 64*16*16
+        nin = 12*16*16
         reshaped_conv_out = op.Reshape(self.layer1.output, (-1, nin))
         self.layer2 = FullyConnectedLayer('F1', rng, reshaped_conv_out, nin,
-                                          100, activation_fn=op.ReLU)
+                                          10, activation_fn=op.ReLU)
         self.do1 = op.Dropout(self.layer2.output)
-        self.layer3 = SoftmaxLayer('S1', rng, self.do1, 100, 10)
+        self.layer3 = SoftmaxLayer('S1', rng, self.do1, 10, n_out)
         self.cost = op.MeanSquaredErr(self.layer3.p_y_given_x, Y)
         self.error = op.Mean(op.NotEq(self.layer3.y_pred, Y))
         self.params = self.layer1.params + self.layer2.params + self.layer3.params
@@ -137,7 +137,7 @@ def unpickle(file):
 def main():
     pl.init_cl(1)
     rng = np.random.RandomState(1234)
-    anet = Alexnet(rng, (10, 3, 32, 32), 10)
+    anet = Alexnet(rng, (128, 3, 32, 32), 10)
 
     db1 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
     db2 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_2')
