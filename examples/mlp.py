@@ -51,8 +51,8 @@ class MLP(object):
 
         self.y_pred = op.Argmax(self.layer2.output, -1)  # TODO test this axis
         self.cost = op.MeanSquaredErr(self.layer2.output, Y)  # op.Sub(self.layer2.output, Y)
-        self.errors = op.Mean(op.NotEq(self.y_pred, Y))     # FIXME u nekim iteracijama greska je bila negativna!!
-        self.params = self.layer1.params + self.layer2.params        # self.params = self.layer2.params
+        self.errors = op.Mean(op.NotEq(self.y_pred, Y))
+        self.params = self.layer1.params + self.layer2.params
 
     def train(self, X, Y, learning_rate=0.01):
         val = pl.valuation()
@@ -114,7 +114,7 @@ def main():
 
             if (minibatch_index % 5 == 0) and minibatch_index>0:
                 err = mlp.test(validX, validY)
-                print '\n>>>>>>>>>>>>>>>>>validation error:', err, 'batch:', minibatch_index, '/', n_train_batches
+                print '>>>>>>>>validation error:', err, 'batch:', minibatch_index, '/', n_train_batches
 
     for param, value in mlp.params:
         val = value.get()
