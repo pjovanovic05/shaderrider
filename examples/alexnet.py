@@ -18,11 +18,12 @@ class ConvLayer(object):
                  poolsize=(0, 0), activation_fn=None):
         q = pl.qs[0]
         self.img = img
-        # TODO init W and b
+        # init W and b
         fan_in = np.prod(filter_shape[1:])
         fan_out = filter_shape[0]*np.prod(filter_shape[2:])
         W_bound = np.sqrt(6./(fan_in+fan_out))
-        nW = np.asarray(rng.uniform(low=-W_bound, high=W_bound, size=filter_shape), dtype=np.float32)
+        nW = np.asarray(rng.uniform(low=-W_bound, high=W_bound,
+                                    size=filter_shape), dtype=np.float32)
         print '>>>start CW1:\n', nW
         self.W = clarray.to_device(q, nW)
         self.b = clarray.zeros(q, (filter_shape[0],), dtype=np.float32)
@@ -31,7 +32,8 @@ class ConvLayer(object):
 
         vW = expr.Variable('W'+label)
         vb = expr.Variable('b'+label)
-        _out = op.Conv2d(self.img, vW, vb, strides=fstrides, zero_padding=zero_pad)
+        _out = op.Conv2d(self.img, vW, vb, strides=fstrides,
+                         zero_padding=zero_pad)
         if pf > 0 and ps > 0:
             _out = op.MaxPool(_out, pf, ps)
         self.output = activation_fn(_out)
@@ -89,15 +91,19 @@ class Alexnet(object):
         self.conv2 = ConvLayer('_C2', rng, self.conv1.output, (32, 32, 5, 5),
                                fstrides=(1, 1), zero_pad=(2, 2),
                                poolsize=(2, 2), activation_fn=op.ReLU)
-        nin = 32*8*8
-        reshaped_conv_out = op.Reshape(self.conv2.output, (-1, nin))
+        self.conv3 = ConvLayer('_C3', rng, self.conv2.output, (64, 32, 5, 5),
+                               fstrides=(1, 1), zero_pad=(2, 2),
+                               poolsize=(2, 2), activation_fn=op.ReLU)
+        nin = 64*4*4
+        reshaped_conv_out = op.Reshape(self.conv3.output, (-1, nin))
         self.layer2 = FullyConnectedLayer('_F1', rng, reshaped_conv_out, nin,
                                           10, activation_fn=op.ReLU)
         self.do1 = op.Dropout(self.layer2.output)
         self.layer3 = SoftmaxLayer('_S1', rng, self.do1, 10, n_out)
         self.cost = op.MeanSquaredErr(self.layer3.p_y_given_x, Y)
         self.error = op.Mean(op.NotEq(self.layer3.y_pred, Y))
-        self.params = self.conv1.params + self.conv2.params  + self.layer2.params + self.layer3.params
+        self.params = self.conv1.params + self.conv2.params + \
+            self.layer2.params + self.layer3.params
 
     def train(self, X, Y, learning_rate=0.01):
         self.do1.test = False
@@ -170,24 +176,34 @@ def main():
     n_epochs = 1
     batch_size = 128
     n_train_batches = trainY1.shape[0] / batch_size
+    n_valid_batches = trainY5.shape[0] / batch_size
+    n_test_batches = tY.shape[0] / batch_size
 
     epoch = 0
     while epoch < n_epochs:
-        epoch += 1
-        g = None
         for mbi in xrange(n_train_batches):
             print '>training batch', mbi, 'of', n_train_batches
-            anet.train(X1[mbi*batch_size:(mbi+1)*batch_size, :], trainY1[mbi*batch_size:(mbi+1)*batch_size, :])
-            anet.train(X2[mbi*batch_size:(mbi+1)*batch_size, :], trainY2[mbi*batch_size:(mbi+1)*batch_size, :])
-            anet.train(X3[mbi*batch_size:(mbi+1)*batch_size, :], trainY3[mbi*batch_size:(mbi+1)*batch_size, :])
-            anet.train(X4[mbi*batch_size:(mbi+1)*batch_size, :], trainY4[mbi*batch_size:(mbi+1)*batch_size, :])
-            anet.train(X5[mbi*batch_size:(mbi+1)*batch_size, :], trainY5[mbi*batch_size:(mbi+1)*batch_size, :])
+            anet.train(X1[mbi*batch_size:(mbi+1)*batch_size, :],
+                       trainY1[mbi*batch_size:(mbi+1)*batch_size, :])
+            anet.train(X2[mbi*batch_size:(mbi+1)*batch_size, :],
+                       trainY2[mbi*batch_size:(mbi+1)*batch_size, :])
+            anet.train(X3[mbi*batch_size:(mbi+1)*batch_size, :],
+                       trainY3[mbi*batch_size:(mbi+1)*batch_size, :])
+            anet.train(X4[mbi*batch_size:(mbi+1)*batch_size, :],
+                       trainY4[mbi*batch_size:(mbi+1)*batch_size, :])
+            if mbi % 5 == 0:
+                # TODO validation
+                verr = np.mean([anet.error()])
+            anet.train(X5[mbi*batch_size:(mbi+1)*batch_size, :],
+                       trainY5[mbi*batch_size:(mbi+1)*batch_size, :])
         print '='*70
         print '>>final wc:\n', anet.conv1.params[0][1]
     print 'test error:'
     es = []
-    for mbi in xrange(tY.shape[0]/batch_size):
-        er =  anet.test(tX[mbi*batch_size:(mbi+1)*batch_size], tY[mbi*batch_size:(mbi+1)*batch_size])
+    for mbi in xrange(n_test_batches):
+        er = anet.test(tX[mbi*batch_size:(mbi+1)*batch_size],
+                       tY[mbi*batch_size:(mbi+1)*batch_size])
+
         print 'test batch', mbi, 'error:', er
         es.append(er)
     print es
