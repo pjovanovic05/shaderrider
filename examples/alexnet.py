@@ -13,7 +13,7 @@ from shaderrider.utils import misc
 
 
 class ConvLayer(object):
-    def __init__(self, label, rng, img, img_shape, filter_shape,
+    def __init__(self, label, rng, img, filter_shape,
                  fstrides=(0, 0), zero_pad=(0, 0),
                  poolsize=(0, 0), activation_fn=None):
         q = pl.qs[0]
@@ -80,21 +80,24 @@ class SoftmaxLayer(object):
 
 
 class Alexnet(object):
-    def __init__(self, rng, img_shape, n_out):
+    def __init__(self, rng, n_out):
         X = expr.Variable('X')
         Y = expr.Variable('Y')
-        self.layer1 = ConvLayer('_C1', rng, X, img_shape, (12, 3, 3, 3),
-                                fstrides=(1, 1), zero_pad=(1, 1),
-                                poolsize=(2, 2), activation_fn=op.ReLU)
-        nin = 12*16*16
-        reshaped_conv_out = op.Reshape(self.layer1.output, (-1, nin))
-        self.layer2 = FullyConnectedLayer('F1', rng, reshaped_conv_out, nin,
+        self.conv1 = ConvLayer('_C1', rng, X, (32, 3, 5, 5),
+                               fstrides=(1, 1), zero_pad=(2, 2),
+                               poolsize=(2, 2), activation_fn=op.ReLU)
+        self.conv2 = ConvLayer('_C2', rng, self.conv1.output, (32, 32, 5, 5),
+                               fstrides=(1, 1), zero_pad=(2, 2),
+                               poolsize=(2, 2), activation_fn=op.ReLU)
+        nin = 32*8*8
+        reshaped_conv_out = op.Reshape(self.conv2.output, (-1, nin))
+        self.layer2 = FullyConnectedLayer('_F1', rng, reshaped_conv_out, nin,
                                           10, activation_fn=op.ReLU)
         self.do1 = op.Dropout(self.layer2.output)
-        self.layer3 = SoftmaxLayer('S1', rng, self.do1, 10, n_out)
+        self.layer3 = SoftmaxLayer('_S1', rng, self.do1, 10, n_out)
         self.cost = op.MeanSquaredErr(self.layer3.p_y_given_x, Y)
         self.error = op.Mean(op.NotEq(self.layer3.y_pred, Y))
-        self.params = self.layer1.params + self.layer2.params + self.layer3.params
+        self.params = self.conv1.params + self.conv2.params  + self.layer2.params + self.layer3.params
 
     def train(self, X, Y, learning_rate=0.01):
         self.do1.test = False
@@ -109,7 +112,7 @@ class Alexnet(object):
         for name, value in self.params:
             # print 'updating', name
             # print 'shape:', value.shape, 'grad shape:', grad[name].shape
-            if name.startswith('bF') or name.startswith('bS'):
+            if name.startswith('b_F') or name.startswith('b_S'):
                 bgsum = misc.sum(pl.qs[0], grad[name], axis=0)
                 value -= learning_rate*bgsum
             else:
@@ -137,7 +140,7 @@ def unpickle(file):
 def main():
     pl.init_cl(1)
     rng = np.random.RandomState(1234)
-    anet = Alexnet(rng, (128, 3, 32, 32), 10)
+    anet = Alexnet(rng, 10)
 
     db1 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
     db2 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_2')
@@ -180,9 +183,14 @@ def main():
             anet.train(X4[mbi*batch_size:(mbi+1)*batch_size, :], trainY4[mbi*batch_size:(mbi+1)*batch_size, :])
             anet.train(X5[mbi*batch_size:(mbi+1)*batch_size, :], trainY5[mbi*batch_size:(mbi+1)*batch_size, :])
         print '='*70
-        print '>>final wc:\n', anet.layer1.params[0][1]
+        print '>>final wc:\n', anet.conv1.params[0][1]
     print 'test error:'
-    print anet.test(tX, tY)
+    es = []
+    for mbi in xrange(tY.shape[0]/batch_size):
+        er =  anet.test(tX[mbi*batch_size:(mbi+1)*batch_size], tY[mbi*batch_size:(mbi+1)*batch_size])
+        print 'test batch', mbi, 'error:', er
+        es.append(er)
+    print es
 
 
 if __name__ == '__main__':
