@@ -632,10 +632,10 @@ def gemm(queue, A, B, C, transA=False, transB=False, float alpha=1.0, float beta
     cdef size_t element_size = dtype_size[dtype]
     cdef cl_mem Adata = <cl_mem><intptr_t>A.base_data.int_ptr
     cdef size_t offA = A.offset / element_size
-    cdef size_t lda = A.strides[1 if transA else 0] / element_size
+    cdef size_t lda = A.strides[0] / element_size
     cdef cl_mem Bdata = <cl_mem><intptr_t>B.base_data.int_ptr
     cdef size_t offB = B.offset / element_size
-    cdef size_t ldb = B.strides[1 if transA else 0] / element_size
+    cdef size_t ldb = B.strides[0] / element_size
     cdef cl_mem Cdata = <cl_mem><intptr_t>C.base_data.int_ptr
     cdef size_t offC = C.offset / element_size
     cdef size_t ldc = C.strides[0] / element_size
