@@ -82,7 +82,7 @@ class SoftmaxLayer(object):
 
 
 class Alexnet(object):
-    def __init__(self, rng, n_out):
+    def __init__(self, rng, n_out, params=None):
         X = expr.Variable('X')
         Y = expr.Variable('Y')
         self.conv1 = ConvLayer('_C1', rng, X, (32, 3, 5, 5),
@@ -135,6 +135,14 @@ class Alexnet(object):
         return err.get()
 
 
+def load_net(netf):
+    pass
+
+
+def save_net(nnet, netf):
+    pass
+
+
 def unpickle(file):
     import cPickle
     fo = open(file, 'rb')
@@ -174,7 +182,7 @@ def main():
     tX = tdb['data'].reshape(-1, 3, 32, 32).astype(np.float32)/255.0
     tY = np.asarray(tdb['labels'], dtype=np.float32)
 
-    n_epochs = 10
+    n_epochs = 20
     batch_size = 128
     n_train_batches = trainY1.shape[0] / batch_size
     n_valid_batches = trainY5.shape[0] / batch_size
@@ -202,7 +210,7 @@ def main():
                                           validY[vbi*batch_size:(vbi+1)*batch_size]))
                                 for vbi in range(n_valid_batches)])
                 print '\rvalidation error:', verr
-        if epoch % 3 == 0 and epoch > 0:
+        if epoch % 8 == 0 and epoch > 0:
             lrn_rate /= 10.0
         print
         print '='*70
