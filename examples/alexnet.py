@@ -5,6 +5,7 @@ import pyopencl as cl
 from pyopencl import array as clarray
 
 import cPickle
+import argparse
 import sys
 sys.path.append('..')
 from shaderrider import clplatf as pl
@@ -100,30 +101,44 @@ class Alexnet(object):
     def __init__(self, rng, n_out, params=None):
         X = expr.Variable('X')
         Y = expr.Variable('Y')
+
         self.conv1 = ConvLayer('_C1', rng, X, (32, 3, 5, 5),
                                fstrides=(1, 1), zero_pad=(2, 2),
-                               poolsize=(2, 2), activation_fn=op.ReLU)
+                               poolsize=(2, 2), activation_fn=op.ReLU,
+                               W=None if params is None else params['W_C1'],
+                               b=None if params is None else params['b_C1'])
         self.conv2 = ConvLayer('_C2', rng, self.conv1.output, (32, 32, 5, 5),
                                fstrides=(1, 1), zero_pad=(2, 2),
-                               poolsize=(2, 2), activation_fn=op.ReLU)
+                               poolsize=(2, 2), activation_fn=op.ReLU,
+                               W=None if params is None else params['W_C2'],
+                               b=None if params is None else params['b_C2'])
         self.conv3 = ConvLayer('_C3', rng, self.conv2.output, (64, 32, 5, 5),
                                fstrides=(1, 1), zero_pad=(2, 2),
-                               poolsize=(2, 2), activation_fn=op.ReLU)
+                               poolsize=(2, 2), activation_fn=op.ReLU,
+                               W=None if params is None else params['W_C3'],
+                               b=None if params is None else params['b_C3'])
         nin = 64*4*4
         reshaped_conv_out = op.Reshape(self.conv3.output, (-1, nin))
         self.fc64 = FullyConnectedLayer('_F1', rng, reshaped_conv_out, nin, 64,
-                                        activation_fn=op.ReLU)
+                                        activation_fn=op.ReLU,
+                                        W=None if params is None else params['W_F1'],
+                                        b=None if params is None else params['b_F1'])
         self.fc10 = FullyConnectedLayer('_F2', rng, self.fc64.output, 64, 10,
-                                        activation_fn=op.ReLU)
+                                        activation_fn=op.ReLU,
+                                        W=None if params is None else params['W_F2'],
+                                        b=None if params is None else params['b_F2'])
         # self.do1 = op.Dropout(self.fc10.output)
-        self.layer3 = SoftmaxLayer('_S1', rng, self.fc10.output, 10, n_out)
+        self.layer3 = SoftmaxLayer('_S1', rng, self.fc10.output, 10, n_out,
+                                   W=None if params is None else params['W_S1'],
+                                   b=None if params is None else params['b_S1'])
         self.cost = op.MeanSquaredErr(self.layer3.p_y_given_x, Y)
         self.error = op.Mean(op.NotEq(self.layer3.y_pred, Y))
         self.params = self.conv1.params + self.conv2.params + \
             self.conv3.params + self.fc64.params + self.fc10.params + \
             self.layer3.params
+        self.prev_grad = None
 
-    def train(self, X, Y, learning_rate=0.01):
+    def train(self, X, Y, learning_rate=0.01, momentum=0.0):
         # self.do1.test = False
         val = pl.valuation()
         val['X'] = X
@@ -140,7 +155,11 @@ class Alexnet(object):
                 bgsum = misc.sum(pl.qs[0], grad[name], axis=0)
                 value -= learning_rate*bgsum
             else:
-                value -= learning_rate*grad[name]
+                dv = learning_rate*grad[name]
+                if self.prev_grad is not None and momentum > 0:
+                    dv += momentum*self.prev_grad[name]
+                value -= dv
+        self.prev_grad = grad
 
     def test(self, X, Y):
         val = pl.valuation()
@@ -153,18 +172,23 @@ class Alexnet(object):
         return err.get()
 
 
-def load_net(netf):
-    params = []
+def load_net(q, netf):
     with open(netf, 'rb') as f:
         params = cPickle.load(f)
-    if len(params) > 0:
-        # TODO konstruisi mrezu i vrati je
-        pass
-    return None
+        for p in params:
+            params[p] = clarray.to_device(q, params[p])
+        return params
+    raise ValueError('unable to load the specified net')
 
 
 def save_net(nnet, netf):
-    pass
+    ps = []
+    for param, value in nnet.params:
+        ps.append((param, value.get()))
+    if len(ps) == 0:
+        raise ValueError('No params to save')
+    with open(netf, 'wb') as f:
+        cPickle.dump(dict(ps), f)
 
 
 def load_cifar(file):
@@ -176,8 +200,20 @@ def load_cifar(file):
 
 def main():
     pl.init_cl(1)
+    q = pl.qs[0]
+
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('--params', help='saved network parameters')
+    argparser.add_argument('-v', '--validate', action='store_true',
+                           help='use last batch as validation set')
+    args = argparser.parse_args()
+
+    net_params=None
+    if args.params:
+        net_params = load_net(q, args.params)
+
     rng = np.random.RandomState(1234)
-    anet = Alexnet(rng, 10)
+    anet = Alexnet(rng, 10, params=net_params)
 
     db1 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
     db2 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_2')
@@ -205,7 +241,7 @@ def main():
     tX = tdb['data'].reshape(-1, 3, 32, 32).astype(np.float32)/255.0
     tY = np.asarray(tdb['labels'], dtype=np.float32)
 
-    n_epochs = 20
+    n_epochs = 10
     batch_size = 128
     n_train_batches = trainY1.shape[0] / batch_size
     n_valid_batches = trainY5.shape[0] / batch_size
@@ -213,21 +249,30 @@ def main():
 
     epoch = 0
     lrn_rate = 0.01
+    momentum = 0.0
     while epoch < n_epochs:
         epoch += 1
-        print 'epoch:', epoch, 'of', n_epochs, 'learning rate:', lrn_rate
+        print 'epoch:', epoch, 'of', n_epochs, 'lr:', lrn_rate, 'm:', momentum
         for mbi in xrange(n_train_batches):
             print '\r>training batch', mbi, 'of', n_train_batches,
             sys.stdout.flush()
             anet.train(X1[mbi*batch_size:(mbi+1)*batch_size, :],
-                       trainY1[mbi*batch_size:(mbi+1)*batch_size, :], lrn_rate)
+                       trainY1[mbi*batch_size:(mbi+1)*batch_size, :],
+                       lrn_rate, momentum)
             anet.train(X2[mbi*batch_size:(mbi+1)*batch_size, :],
-                       trainY2[mbi*batch_size:(mbi+1)*batch_size, :], lrn_rate)
+                       trainY2[mbi*batch_size:(mbi+1)*batch_size, :],
+                       lrn_rate, momentum)
             anet.train(X3[mbi*batch_size:(mbi+1)*batch_size, :],
-                       trainY3[mbi*batch_size:(mbi+1)*batch_size, :], lrn_rate)
+                       trainY3[mbi*batch_size:(mbi+1)*batch_size, :],
+                       lrn_rate, momentum)
             anet.train(X4[mbi*batch_size:(mbi+1)*batch_size, :],
-                       trainY4[mbi*batch_size:(mbi+1)*batch_size, :], lrn_rate)
-            if mbi % 13 == 0:
+                       trainY4[mbi*batch_size:(mbi+1)*batch_size, :],
+                       lrn_rate, momentum)
+            if not args.validate:
+                anet.train(X5[mbi*batch_size:(mbi+1)*batch_size, :],
+                           trainY5[mbi*batch_size:(mbi+1)*batch_size, :],
+                           lrn_rate, momentum)
+            if args.validate and mbi % 13 == 0:
                 # TODO validation
                 verr = np.mean([float(anet.test(X5[vbi*batch_size:(vbi+1)*batch_size],
                                                 validY[vbi*batch_size:(vbi+1)*batch_size]))
@@ -235,6 +280,7 @@ def main():
                 print '\rvalidation error:', verr
         if epoch % 8 == 0 and epoch > 0:
             lrn_rate /= 10.0
+            # momentum += 0.1
         print
         print '='*70
         # print '>>final wc:\n', anet.conv1.params[0][1]
@@ -247,6 +293,7 @@ def main():
         # print 'test batch', mbi, 'error:', er
         es.append(er)
     print np.mean([float(e) for e in es])
+    save_net(anet, 'alexnet_cifar.pkl')
 
 
 if __name__ == '__main__':
