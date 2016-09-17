@@ -23,6 +23,7 @@ def _col2im_cpu(col, sy, sx, ph, pw, h, w):
     return img[:, :, ph:h + ph, pw:w + pw]
 
 
+@unittest.skip('unfinished test case for convolution operator')
 class Conv2dTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -9,4 +9,5 @@ syntax: glob
 **/*.so
 **/*.orig
 **/*.gz
-
+shaderrider/aux/clblaswrap.c
+shaderrider/aux/clblaswrap.pyxbldc

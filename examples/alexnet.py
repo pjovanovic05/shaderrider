@@ -4,6 +4,7 @@ import pandas as pd
 import pyopencl as cl
 from pyopencl import array as clarray
 
+import cPickle
 import sys
 sys.path.append('..')
 from shaderrider import clplatf as pl
@@ -15,18 +16,25 @@ from shaderrider.utils import misc
 class ConvLayer(object):
     def __init__(self, label, rng, img, filter_shape,
                  fstrides=(0, 0), zero_pad=(0, 0),
-                 poolsize=(0, 0), activation_fn=None):
+                 poolsize=(0, 0), W=None, b=None,
+                 activation_fn=None):
         q = pl.qs[0]
         self.img = img
         # init W and b
-        fan_in = np.prod(filter_shape[1:])
-        fan_out = filter_shape[0]*np.prod(filter_shape[2:])
-        W_bound = np.sqrt(6./(fan_in+fan_out))
-        nW = np.asarray(rng.uniform(low=-W_bound, high=W_bound,
-                                    size=filter_shape), dtype=np.float32)
+        if W is None:
+            fan_in = np.prod(filter_shape[1:])
+            fan_out = filter_shape[0]*np.prod(filter_shape[2:])
+            W_bound = np.sqrt(6./(fan_in+fan_out))
+            nW = np.asarray(rng.uniform(low=-W_bound, high=W_bound,
+                                        size=filter_shape), dtype=np.float32)
 
-        self.W = clarray.to_device(q, nW)
-        self.b = clarray.zeros(q, (filter_shape[0],), dtype=np.float32)
+            self.W = clarray.to_device(q, nW)
+        else:
+            self.W = W
+        if b is None:
+            self.b = clarray.zeros(q, (filter_shape[0],), dtype=np.float32)
+        else:
+            self.b = b
 
         pf, ps = poolsize
 
@@ -67,11 +75,18 @@ class FullyConnectedLayer(object):
 
 
 class SoftmaxLayer(object):
-    def __init__(self, label, rng, input, n_in, n_out):
+    def __init__(self, label, rng, input, n_in, n_out, W=None, b=None):
         q = pl.qs[0]
         self.input = input
-        self.W = clarray.zeros(q, (n_in, n_out), dtype=np.float32)
-        self.b = clarray.zeros(q, (n_out,), dtype=np.float32)
+        if W is None:
+            self.W = clarray.zeros(q, (n_in, n_out), dtype=np.float32)
+        else:
+            self.W = W
+        if b is None:
+            self.b = clarray.zeros(q, (n_out,), dtype=np.float32)
+        else:
+            self.b = b
+
         vW = expr.Variable('W'+label)
         vb = expr.Variable('b'+label)
 
@@ -96,14 +111,17 @@ class Alexnet(object):
                                poolsize=(2, 2), activation_fn=op.ReLU)
         nin = 64*4*4
         reshaped_conv_out = op.Reshape(self.conv3.output, (-1, nin))
-        self.fc64 = FullyConnectedLayer('_F1', rng, reshaped_conv_out, nin, 64, activation_fn=op.ReLU)
-        self.fc10 = FullyConnectedLayer('_F2', rng, self.fc64.output, 64, 10, activation_fn=op.ReLU)
+        self.fc64 = FullyConnectedLayer('_F1', rng, reshaped_conv_out, nin, 64,
+                                        activation_fn=op.ReLU)
+        self.fc10 = FullyConnectedLayer('_F2', rng, self.fc64.output, 64, 10,
+                                        activation_fn=op.ReLU)
         # self.do1 = op.Dropout(self.fc10.output)
         self.layer3 = SoftmaxLayer('_S1', rng, self.fc10.output, 10, n_out)
         self.cost = op.MeanSquaredErr(self.layer3.p_y_given_x, Y)
         self.error = op.Mean(op.NotEq(self.layer3.y_pred, Y))
         self.params = self.conv1.params + self.conv2.params + \
-            self.conv3.params + self.fc64.params + self.fc10.params + self.layer3.params
+            self.conv3.params + self.fc64.params + self.fc10.params + \
+            self.layer3.params
 
     def train(self, X, Y, learning_rate=0.01):
         # self.do1.test = False
@@ -136,15 +154,20 @@ class Alexnet(object):
 
 
 def load_net(netf):
-    pass
+    params = []
+    with open(netf, 'rb') as f:
+        params = cPickle.load(f)
+    if len(params) > 0:
+        # TODO konstruisi mrezu i vrati je
+        pass
+    return None
 
 
 def save_net(nnet, netf):
     pass
 
 
-def unpickle(file):
-    import cPickle
+def load_cifar(file):
     fo = open(file, 'rb')
     dict = cPickle.load(fo)
     fo.close()
@@ -156,12 +179,12 @@ def main():
     rng = np.random.RandomState(1234)
     anet = Alexnet(rng, 10)
 
-    db1 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
-    db2 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_2')
-    db3 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_3')
-    db4 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_4')
-    db5 = unpickle('/home/petar/datasets/cifar-10-batches-py/data_batch_5')
-    tdb = unpickle('/home/petar/datasets/cifar-10-batches-py/test_batch')
+    db1 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
+    db2 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_2')
+    db3 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_3')
+    db4 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_4')
+    db5 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_5')
+    tdb = load_cifar('/home/petar/datasets/cifar-10-batches-py/test_batch')
     X1 = db1['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
     Y1 = db1['labels']
     trainY1 = pd.get_dummies(Y1).values.astype(np.float32)
@@ -207,7 +230,7 @@ def main():
             if mbi % 13 == 0:
                 # TODO validation
                 verr = np.mean([float(anet.test(X5[vbi*batch_size:(vbi+1)*batch_size],
-                                          validY[vbi*batch_size:(vbi+1)*batch_size]))
+                                                validY[vbi*batch_size:(vbi+1)*batch_size]))
                                 for vbi in range(n_valid_batches)])
                 print '\rvalidation error:', verr
         if epoch % 8 == 0 and epoch > 0:
