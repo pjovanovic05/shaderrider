@@ -112,7 +112,7 @@ def main():
             mlp.train(trainX[minibatch_index*batch_size:(minibatch_index+1)*batch_size, :],
                       trainY[minibatch_index*batch_size:(minibatch_index+1)*batch_size, :])
 
-            if (minibatch_index % 5 == 0) and minibatch_index>0:
+            if (minibatch_index == n_train_batches-1) and minibatch_index>0:
                 err = mlp.test(validX, validY)
                 print '>>>>>>>>validation error:', err, 'batch:', minibatch_index, '/', n_train_batches
 

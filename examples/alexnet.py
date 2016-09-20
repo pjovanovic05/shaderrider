@@ -159,7 +159,8 @@ class Alexnet(object):
                 if self.prev_grad is not None and momentum > 0:
                     dv += momentum*self.prev_grad[name]
                 value -= dv
-        self.prev_grad = grad
+        if momentum > 0:
+            self.prev_grad = grad
 
     def test(self, X, Y):
         val = pl.valuation()
