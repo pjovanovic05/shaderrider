@@ -39,6 +39,11 @@ ctx=None
 qs=[]
 
 
+# TODO za kesiranje kernela, u svakom modulu koji pravi svoje kernele pozvati ovako nesto
+def precompile_kernels(ctx, q):
+    pass
+
+
 def init_cl(ngpus=0):
     global ctx, qs
     ctx, qs = setup_context(ngpus)
