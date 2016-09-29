@@ -35,8 +35,8 @@ def setup_context(ngpus=0):
     return ctx, qs
 
 
-ctx=None
-qs=[]
+ctx = None
+qs = []
 
 
 # TODO za kesiranje kernela, u svakom modulu koji pravi svoje kernele pozvati ovako nesto

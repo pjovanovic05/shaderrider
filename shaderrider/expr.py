@@ -1,6 +1,5 @@
 """
 Abstract syntax tree for expression graphs that support automatic differentiation.
-
 """
 
 import weakref
