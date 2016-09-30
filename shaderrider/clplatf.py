@@ -1,7 +1,4 @@
-"""
-PyOpenCL platform specific stuff.
-
-"""
+"""PyOpenCL platform specific stuff."""
 
 import numpy as np
 
