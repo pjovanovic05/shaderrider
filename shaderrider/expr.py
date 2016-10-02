@@ -1,6 +1,4 @@
-"""
-Abstract syntax tree for expression graphs that support automatic differentiation.
-"""
+"""Abstract syntax tree for expression graphs that support autodiff."""
 
 import weakref
 from pyopencl import array as clarray
