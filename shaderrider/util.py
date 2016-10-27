@@ -60,3 +60,5 @@ class OrderedSet(collections.MutableSet):
         return set(self) == set(other)
 
 
+class CachedKernelBuilder(object):
+    pass
