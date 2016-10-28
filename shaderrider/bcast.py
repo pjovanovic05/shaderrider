@@ -170,16 +170,20 @@ def bcast_mul(A, B, out=None):
         c_shape.append(max(a_shape[i], b_shape[i]))
 
     # generate kernel
-    kdesc = {
-        'nargs': 3,
-        'nd': ndim,
-        'kname': 'ewk_mul_%s_%d' % (dtype, ndim),
-        'expression': '*arg2 = *arg0 * *arg1;',
-        'dtype': dtype
-    }
-    ksource = yaptu.generate_kernel(_kernel_template, kdesc)
-    prg = cl.Program(pl.ctx, ksource).build()
-    krnl = eval('prg.'+kdesc['kname'])
+    kname = 'ewk_mul_%s_%d' % (dtype, ndim)
+    if kname not in _kernel_cache:
+        kdesc = {
+            'nargs': 3,
+            'nd': ndim,
+            'kname': kname,
+            'expression': '*arg2 = *arg0 * *arg1;',
+            'dtype': dtype
+        }
+        ksource = yaptu.generate_kernel(_kernel_template, kdesc)
+        prg = cl.Program(pl.ctx, ksource).build()
+        _kernel_cache[kname] = eval('prg.' + kname)
+    # krnl = eval('prg.'+kdesc['kname'])
+    krnl = _kernel_cache[kname]
 
     if out is None:
         # c_shape = a_shape if nda > ndb else b_shape
@@ -239,16 +243,20 @@ def bcast_sub(A, B, out=None):
         c_shape.append(max(a_shape[i], b_shape[i]))
 
     # generate kernel
-    kdesc = {
-        'nargs': 3,
-        'nd': ndim,
-        'kname': 'ewk_sub_%s_%d' % (dtype, ndim),
-        'expression': '*arg2 = *arg0 - *arg1;',
-        'dtype': dtype
-    }
-    ksource = yaptu.generate_kernel(_kernel_template, kdesc)
-    prg = cl.Program(pl.ctx, ksource).build()
-    krnl = eval('prg.'+kdesc['kname'])
+    kname = 'ewk_sub_%s_%d' % (dtype, ndim)
+    if kname not in _kernel_cache:
+        kdesc = {
+            'nargs': 3,
+            'nd': ndim,
+            'kname': kname,
+            'expression': '*arg2 = *arg0 - *arg1;',
+            'dtype': dtype
+        }
+        ksource = yaptu.generate_kernel(_kernel_template, kdesc)
+        prg = cl.Program(pl.ctx, ksource).build()
+        _kernel_cache[kname] = eval('prg.' + kname)
+    # krnl = eval('prg.'+kdesc['kname'])
+    krnl = _kernel_cache[kname]
 
     if out is None:
         # c_shape = a_shape if nda > ndb else b_shape
@@ -308,16 +316,20 @@ def bcast_div(A, B, out=None):
         c_shape.append(max(a_shape[i], b_shape[i]))
 
     # generate kernel
-    kdesc = {
-        'nargs': 3,
-        'nd': ndim,
-        'kname': 'ewk_div_%s_%d' % (dtype, ndim),
-        'expression': '*arg2 = *arg0 / *arg1;',
-        'dtype': dtype
-    }
-    ksource = yaptu.generate_kernel(_kernel_template, kdesc)
-    prg = cl.Program(pl.ctx, ksource).build()
-    krnl = eval('prg.'+kdesc['kname'])
+    kname = 'ewk_div_%s_%d' % (dtype, ndim)
+    if kname not in _kernel_cache:
+        kdesc = {
+            'nargs': 3,
+            'nd': ndim,
+            'kname': kname,
+            'expression': '*arg2 = *arg0 / *arg1;',
+            'dtype': dtype
+        }
+        ksource = yaptu.generate_kernel(_kernel_template, kdesc)
+        prg = cl.Program(pl.ctx, ksource).build()
+        _kernel_cache[kname] = eval('prg.' + kname)
+    # krnl = eval('prg.'+kdesc['kname'])
+    krnl = _kernel_cache[kname]
 
     if out is None:
         # c_shape = a_shape if nda > ndb else b_shape
