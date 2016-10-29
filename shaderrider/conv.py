@@ -9,6 +9,9 @@ from pyopencl.elementwise import ElementwiseKernel
 from shaderrider import clplatf
 
 
+_kernel_cache = {}
+
+
 def im2col_old(img, rec_field, n_filters, stride=1, zero_pad=0, wait_for=None):
     """
 
@@ -91,39 +94,44 @@ def im2col(q, img, kh, kw, sy, sx, ph, pw, cover_all=False):
     out_w = get_conv_outsize(w, kw, sx, pw, cover_all)
 
     col = clarray.empty(q, (n, c, kh, kw, out_h, out_w), img.dtype)
-    prg = cl.Program(clplatf.ctx, """
-    __kernel void im2col(__global %(dtype)s *img, int h, int w, int out_h, int out_w,
-                         int kh, int kw, int sy, int sx, int ph, int pw,
-                         __global %(dtype)s *col) {
-        int gid = get_global_id(0);
-        int c0 = gid / (kh * kw * out_h * out_w);
-        int ky = gid / (kw * out_h * out_w) %% kh;
-        int kx = gid / (out_h * out_w) %% kw;
-        int out_y = gid / out_w %% out_h;
-        int out_x = gid %% out_w;
-        int in_y = ky + out_y * sy - ph;
-        int in_x = kx + out_x * sx - pw;
 
-        if (in_y>=0 && in_y<h && in_x>=0 && in_x<w)
-            col[gid] = img[in_x + w * (in_y + h * c0)];
-        else
-            col[gid] = 0;
-    }
-    """ % locals()).build()
-    # TODO cache the kernel, this creates new one every time
-    evt = prg.im2col(q, (n*c*kh*kw*out_h*out_w,), None,
-                     img.data,
-                     np.int32(h),
-                     np.int32(w),
-                     np.int32(out_h),
-                     np.int32(out_w),
-                     np.int32(kh),
-                     np.int32(kw),
-                     np.int32(sy),
-                     np.int32(sx),
-                     np.int32(ph),
-                     np.int32(pw),
-                     col.data)
+    kname = 'im2col_' + dtype
+    if kname not in _kernel_cache:
+        prg = cl.Program(clplatf.ctx, """
+        __kernel void im2col(__global %(dtype)s *img,
+                             int h, int w, int out_h, int out_w,
+                             int kh, int kw, int sy, int sx, int ph, int pw,
+                             __global %(dtype)s *col) {
+            int gid = get_global_id(0);
+            int c0 = gid / (kh * kw * out_h * out_w);
+            int ky = gid / (kw * out_h * out_w) %% kh;
+            int kx = gid / (out_h * out_w) %% kw;
+            int out_y = gid / out_w %% out_h;
+            int out_x = gid %% out_w;
+            int in_y = ky + out_y * sy - ph;
+            int in_x = kx + out_x * sx - pw;
+
+            if (in_y>=0 && in_y<h && in_x>=0 && in_x<w)
+                col[gid] = img[in_x + w * (in_y + h * c0)];
+            else
+                col[gid] = 0;
+        }
+        """ % locals()).build()
+        _kernel_cache[kname] = prg.im2col
+    kim2col = _kernel_cache[kname]
+    evt = kim2col(q, (n*c*kh*kw*out_h*out_w,), None,
+                  img.data,
+                  np.int32(h),
+                  np.int32(w),
+                  np.int32(out_h),
+                  np.int32(out_w),
+                  np.int32(kh),
+                  np.int32(kw),
+                  np.int32(sy),
+                  np.int32(sx),
+                  np.int32(ph),
+                  np.int32(pw),
+                  col.data)
 
     return col, evt
 
@@ -134,47 +142,50 @@ def col2im(q, col, sy, sx, ph, pw, h, w, wait_for=None):
     n, c, kh, kw, out_h, out_w = col.shape
     img = clarray.empty(q, (n, c, h, w), col.dtype)
 
-    prg = cl.Program(clplatf.ctx, """
-    __kernel void col2im(__global %(dtype)s *col, int h, int w, int out_h, int out_w,
-                         int kh, int kw, int sy, int sx, int ph, int pw,
-                         __global %(dtype)s *img) {
-        int gid = get_global_id(0);
-        int c0 = gid / (h*w);
-        int y = gid / w %% h + ph;
-        int x = gid %% w + pw;
+    kname = 'col2im_' + dtype
+    if kname not in _kernel_cache:
+        prg = cl.Program(clplatf.ctx, """
+        __kernel void col2im(__global %(dtype)s *col, int h, int w, int out_h, int out_w,
+                             int kh, int kw, int sy, int sx, int ph, int pw,
+                             __global %(dtype)s *img) {
+            int gid = get_global_id(0);
+            int c0 = gid / (h*w);
+            int y = gid / w %% h + ph;
+            int x = gid %% w + pw;
 
-        int out_y_0 = max(0, (y-kh+sy)/sy);
-        int out_y_1 = min(out_h, (y+sy)/sy);
-        int out_x_0 = max(0, (x-kw+sx)/sx);
-        int out_x_1 = min(out_w, (x+sx)/sx);
+            int out_y_0 = max(0, (y-kh+sy)/sy);
+            int out_y_1 = min(out_h, (y+sy)/sy);
+            int out_x_0 = max(0, (x-kw+sx)/sx);
+            int out_x_1 = min(out_w, (x+sx)/sx);
 
-        %(dtype)s val = 0;
-        for (int out_y=out_y_0; out_y<out_y_1; out_y++) {
-            int ky = y-out_y*sy;
-            for (int out_x=out_x_0; out_x<out_x_1; out_x++) {
-                int kx = x-out_x*sx;
-                int k = out_y+out_h*(kx+kw*(ky+kh*c0));
-                val += col[out_x+out_w*k];
+            %(dtype)s val = 0;
+            for (int out_y=out_y_0; out_y<out_y_1; out_y++) {
+                int ky = y-out_y*sy;
+                for (int out_x=out_x_0; out_x<out_x_1; out_x++) {
+                    int kx = x-out_x*sx;
+                    int k = out_y+out_h*(kx+kw*(ky+kh*c0));
+                    val += col[out_x+out_w*k];
+                }
             }
+            img[gid] = val;
         }
-        img[gid] = val;
-    }
-    """ % locals()).build()
-    # TODO cache the kernel, this creates new one every time
-    evt = prg.col2im(q, (n*c*h*w,), None,
-                     col.data,
-                     np.int32(h),
-                     np.int32(w),
-                     np.int32(out_h),
-                     np.int32(out_w),
-                     np.int32(kh),
-                     np.int32(kw),
-                     np.int32(sy),
-                     np.int32(sx),
-                     np.int32(ph),
-                     np.int32(pw),
-                     img.data,
-                     wait_for=wait_for)
+        """ % locals()).build()
+        _kernel_cache[kname] = prg.col2im
+    kcol2im = _kernel_cache[kname]
+    evt = kcol2im(q, (n*c*h*w,), None,
+                  col.data,
+                  np.int32(h),
+                  np.int32(w),
+                  np.int32(out_h),
+                  np.int32(out_w),
+                  np.int32(kh),
+                  np.int32(kw),
+                  np.int32(sy),
+                  np.int32(sx),
+                  np.int32(ph),
+                  np.int32(pw),
+                  img.data,
+                  wait_for=wait_for)
     return img, evt
 
 
@@ -225,8 +236,10 @@ def maxpool2d(q, A, f, stride, out=None, indices=None):
     if indices is None:
         indices = clarray.empty(q, (n, c, out_h, out_w), dtype=np.int32)
 
-    prg = cl.Program(clplatf.ctx, _maxpool_template % {'dtype': dtype}).build()
-    krnl = prg.max_pool
+    if 'max_pool' not in _kernel_cache:
+        prg = cl.Program(clplatf.ctx, _maxpool_template % {'dtype': dtype}).build()
+        _kernel_cache['max_pool'] = prg.max_pool
+    krnl = _kernel_cache['max_pool']
     # TODO better global and local dimensions (make divisible by 64 etc.)
     ev = krnl(q, (n*c*out_h*out_w,), None,
               A.data, out.data, indices.data,
@@ -276,8 +289,10 @@ def maxpool2d_backprop(q, adjoint, indices, x, f, stride, out=None):
     if out is None:
         out = clarray.empty_like(x)
 
-    prg = cl.Program(clplatf.ctx, _maxpool_backprop_template % {'dtype': dtype}).build()
-    krnl = prg.max_unpool
+    if 'max_unpool' not in _kernel_cache:
+        prg = cl.Program(clplatf.ctx, _maxpool_backprop_template % {'dtype': dtype}).build()
+        _kernel_cache['max_unpool'] = prg.max_unpool
+    krnl = _kernel_cache['max_unpool']
     ev = krnl(q, (n*c*h*w, ), None,
               adjoint.data, indices.data, out.data,
               np.int32(h), np.int32(w), np.int32(y_h), np.int32(y_w),
@@ -325,56 +340,62 @@ def bgrads_sum(q, gY, out=None):
     else:
         raise ValueError
 
-    prg = cl.Program(clplatf.ctx, """
-        __kernel void sumLastD(__global %(dtype)s *gdata, int w, __global %(dtype)s *output) {
-            int gid = get_global_id(0);
-            int offset = gid*w;
-            %(dtype)s sum = 0;
-            for (int i=0; i<w; i++) {
-                sum += gdata[i + offset];
+    kname1 = 'sumLastD_' + dtype
+    kname2 = 'rsum_' + dtype
+    if kname1 not in _kernel_cache or kname2 not in _kernel_cache:
+        prg = cl.Program(clplatf.ctx, """
+            __kernel void sumLastD(__global %(dtype)s *gdata, int w,
+                                   __global %(dtype)s *output) {
+                int gid = get_global_id(0);
+                int offset = gid*w;
+                %(dtype)s sum = 0;
+                for (int i=0; i<w; i++) {
+                    sum += gdata[i + offset];
+                }
+                output[gid] = sum;
             }
-            output[gid] = sum;
-        }
 
-        __kernel void rsum(__global %(dtype)s *gdata, __global %(dtype)s *odata,
-                           int n, int c, __local %(dtype)s *sdata) {
-            int gid = get_global_id(0);
-            int tid = get_local_id(0);
-            int blockSize = get_local_size(0)/2;
-            int gridSize = get_global_size(0);
-            int i;
+            __kernel void rsum(__global %(dtype)s *gdata, __global %(dtype)s *odata,
+                               int n, int c, __local %(dtype)s *sdata) {
+                int gid = get_global_id(0);
+                int tid = get_local_id(0);
+                int blockSize = get_local_size(0)/2;
+                int gridSize = get_global_size(0);
+                int i;
 
-            for (i=0; i<c; i++)
-                sdata[c*tid+i] = 0;
+                for (i=0; i<c; i++)
+                    sdata[c*tid+i] = 0;
 
-            i = gid;
-            while (i < n) {
-                for (unsigned short d=0; d<c; d++)
-                    sdata[c*tid+d] += gdata[c*i+d] + gdata[c*(i+blockSize)+d];
-                i += gridSize;
-            }
-            barrier(CLK_LOCAL_MEM_FENCE);
-
-            for (unsigned int s=blockSize/2; s>0; s>>=1) {
-                if (tid < s)
+                i = gid;
+                while (i < n) {
                     for (unsigned short d=0; d<c; d++)
-                        sdata[c*tid+d] += sdata[c*(tid + s)+d];
+                        sdata[c*tid+d] += gdata[c*i+d] + gdata[c*(i+blockSize)+d];
+                    i += gridSize;
+                }
                 barrier(CLK_LOCAL_MEM_FENCE);
-            }
 
-            if (tid == 0) {
-                for (unsigned short d=0; d<c; d++)
-                    gdata[c*gid+d] = sdata[d];
-            }
-            if (gid == 0) {
-                for (unsigned short d=0; d<c; d++)
-                    odata[d] += sdata[d];
-            }
-        }
-        """ % locals()).build()
+                for (unsigned int s=blockSize/2; s>0; s>>=1) {
+                    if (tid < s)
+                        for (unsigned short d=0; d<c; d++)
+                            sdata[c*tid+d] += sdata[c*(tid + s)+d];
+                    barrier(CLK_LOCAL_MEM_FENCE);
+                }
 
-    kstep1 = prg.sumLastD
-    kstep3 = prg.rsum
+                if (tid == 0) {
+                    for (unsigned short d=0; d<c; d++)
+                        gdata[c*gid+d] = sdata[d];
+                }
+                if (gid == 0) {
+                    for (unsigned short d=0; d<c; d++)
+                        odata[d] += sdata[d];
+                }
+            }
+            """ % locals()).build()
+        _kernel_cache[kname1] = prg.sumLastD
+        _kernel_cache[kname2] = prg.rsum
+
+    kstep1 = _kernel_cache[kname1]
+    kstep3 = _kernel_cache[kname2]
     temp1 = clarray.zeros(q, (n, c, h), gY.dtype)
     temp2 = clarray.zeros(q, (n, c), gY.dtype)
     ev1 = kstep1(q, (n*c*h,), None, gY.data, np.int32(w), temp1.data)
