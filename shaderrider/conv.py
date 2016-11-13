@@ -83,7 +83,7 @@ def get_conv_outsize(size, k, s, p, cover_all=False):
     if cover_all:
         return (size + p * 2 - k + s - 1) // s + 1
     else:
-        return (size + p * 2 -k) // s + 1
+        return (size + p * 2 - k) // s + 1
 
 
 def im2col(q, img, kh, kw, sy, sx, ph, pw, cover_all=False):
