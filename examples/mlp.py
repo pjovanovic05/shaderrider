@@ -7,8 +7,8 @@ from pyopencl import clrandom
 
 import time
 import sys
-sys.path.append('..')
 
+sys.path.append('..')
 from shaderrider import clplatf as pl
 from shaderrider import expr
 from shaderrider import operators as op
