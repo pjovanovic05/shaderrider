@@ -6,6 +6,7 @@ from pyopencl import array as clarray
 
 import cPickle
 import argparse
+import timeit
 import sys
 sys.path.append('..')
 from shaderrider import clplatf as pl
@@ -248,6 +249,9 @@ def main():
     n_valid_batches = trainY5.shape[0] / batch_size
     n_test_batches = tY.shape[0] / batch_size
 
+    print 'starting training...'
+    start_time = timeit.default_timer()
+
     epoch = 0
     lrn_rate = 0.01
     momentum = 0.0
@@ -294,6 +298,8 @@ def main():
         # print 'test batch', mbi, 'error:', er
         es.append(er)
     print np.mean([float(e) for e in es])
+    end_time = timeit.default_timer()
+    print 'ran for %.2fm' % ((end_time - start_time)/60.)
     save_net(anet, 'alexnet_cifar.pkl')
 
 
