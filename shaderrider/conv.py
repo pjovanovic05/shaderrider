@@ -403,9 +403,9 @@ def bgrads_sum(q, gY, out=None):
                  wait_for=[ev1])
     if out is None:
         out = clarray.zeros(q, (c,), gY.dtype)
-    locMemSize = step3_gridsize*c*(4 if gY.dtype==np.float32 else 8)
-    ev3 =  kstep3(q, (step3_gridsize,), (step3_gridsize,),
-                  temp2.data, out.data, np.int32(n), np.int32(c),
-                  cl.LocalMemory(locMemSize),
-                  wait_for=[ev2])
+    locMemSize = step3_gridsize*c*(4 if gY.dtype == np.float32 else 8)
+    ev3 = kstep3(q, (step3_gridsize,), (step3_gridsize,),
+                 temp2.data, out.data, np.int32(n), np.int32(c),
+                 cl.LocalMemory(locMemSize),
+                 wait_for=[ev2])
     return out, ev3
