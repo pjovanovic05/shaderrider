@@ -116,6 +116,9 @@ def main():
                 err = mlp.test(validX, validY)
                 print '>>>>>>>>validation error:', err, 'batch:', minibatch_index, '/', n_train_batches
 
+    err = mlp.test(testX, testY)
+    print 'TEST ERROR:', err
+
     for param, value in mlp.params:
         val = value.get()
         print '>PARAM', param, val.shape
