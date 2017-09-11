@@ -1,270 +1,413 @@
-"""Theano test for comparison with shaderrider."""
+"""reimplementacija alexneta preko lenet5 tutorijala za theano."""
 
-import numpy as np
-import pandas as pd
+import os
+import sys
+import timeit
+import cPickle
+
+import numpy
+
 import theano
 import theano.tensor as T
 from theano.tensor.signal import pool
-from theano.tensor.nnet import conv2d, sigmoid, relu
+from theano.tensor.nnet import conv2d, relu
 
-import cPickle
-import argparse
-import sys
-
-
-class ConvLayer(object):
-    def __init__(self, label, rng, img, filter_shape,
-                 fstrides=(1, 1), zero_pad=(0, 0),
-                 poolsize=(0, 0), W=None, b=None,
-                 activation_fn=None):
-        if W is None:
-            fan_in = np.prod(filter_shape[1:])
-            fan_out = filter_shape[0]*np.prod(filter_shape[2:])
-            W_bound = np.sqrt(6./(fan_in+fan_out))
-            nW = np.asarray(rng.uniform(low=-W_bound, high=W_bound,
-                                        size=filter_shape),
-                            dtype=theano.config.floatX)
-            self.W = theano.shared(nW, borrow=True)
-        else:
-            self.W = W
-
-        if b is None:
-            self.b = theano.shared(np.zeros((filter_shape[0],),
-                                            dtype=theano.config.floatX),
-                                   borrow=True)
-        else:
-            self.b = b
-
-        conv_out = conv2d(input=img, filters=self.W, filter_shape=filter_shape,
-                          border_mode=zero_pad, subsample=fstrides)
-
-        pooled_out = pool.pool_2d(input=conv_out, ds=poolsize)  # ignore_border
-        if activation_fn:
-            self.output = activation_fn(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
-        else:
-            self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
-        self.params = [self.W, self.b]
-        self.input = img
+from logistic_sgd import LogisticRegression
+from mlp import HiddenLayer
 
 
-class FullyConnectedLayer(object):
-    def __init__(self, label, rng, input, nin, nout, W=None, b=None,
-                 activation_fn=sigmoid):
-        self.input = input
-        if W is None:
-            nw = np.asarray(rng.uniform(low=-np.sqrt(6./(nin+nout)),
-                                        high=np.sqrt(6./(nin+nout)),
-                                        size=(nin, nout)),
-                            dtype=theano.config.floatX)
-            if activation_fn == theano.tensor.nnet.sigmoid:
-                nw *= 4
-            W = theano.shared(value=nw, name='W', borrow=True)
-        if b is None:
-            b = theano.shared(np.zeros((nout,), dtype=theano.config.floatX),
-                              name='b', borrow=True)
-        self.W = W
-        self.b = b
-
-        lin_out = T.dot(input, self.W) + self.b
-        self.output = lin_out if activation_fn is None else activation_fn(lin_out)
-        self.params = [self.W, self.b]
+def load_data(dataset=''):
+    df = open(dataset, 'rb')
+    datasets = cPickle.load(df)
+    df.close()
+    train_set_x, train_set_y = shared_dataset(datasets[0])
+    valid_set_x, valid_set_y = shared_dataset(datasets[1])
+    test_set_x, test_set_y = shared_dataset(datasets[2])
+    return [(train_set_x, train_set_y),
+            (valid_set_x, valid_set_y),
+            (test_set_x, test_set_y)]
 
 
-class SoftmaxLayer(object):
-    def __init__(self, label, rng, input, n_in, n_out, W=None, b=None):
-        if W is None:
-            self.W = theano.shared(
-                value=np.zeros((n_in, n_out), dtype=theano.config.floatX),
-                name='W', borrow=True)
-        else:
-            self.W = W
-        if b is None:
-            self.b = theano.shared(
-                value=np.zeros((n_out,), dtype=theano.config.floatX),
-                name='b', borrow=True)
-        else:
-            self.b = b
-        self.p_y_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
-        self.y_pred = T.argmax(self.p_y_given_x, axis=1)
-        self.params = [self.W, self.b]
+def shared_dataset(data_xy, borrow=True):
+    """
+    Function that loads the dataset into shared variables.
+
+    The reason we store our dataset in shared variables is to allow
+    Theano to copy it into the GPU memory (when code is run on GPU).
+    Since copying data into the GPU is slow, copying a minibatch everytime
+    is needed (the default behaviour if the data is not in a shared
+    variable) would lead to a large decrease in performance.
+    """
+    data_x, data_y = data_xy
+    shared_x = theano.shared(numpy.asarray(data_x,
+                                           dtype=theano.config.floatX),
+                             borrow=borrow)
+    shared_y = theano.shared(numpy.asarray(data_y,
+                                           dtype=theano.config.floatX),
+                             borrow=borrow)
+    # When storing data on the GPU it has to be stored as floats
+    # therefore we will store the labels as ``floatX`` as well
+    # (``shared_y`` does exactly that). But during our computations
+    # we need them as ints (we use labels as index, and if they are
+    # floats it doesn't make sense) therefore instead of returning
+    # ``shared_y`` we will have to cast it to int. This little hack
+    # lets ous get around this issue
+    return shared_x, T.cast(shared_y, 'int32')
+
+
+class LeNetConvPoolLayer(object):
+    """Pool Layer of a convolutional network """
+
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2),
+                 zero_pad=None):
+        """
+        Allocate a LeNetConvPoolLayer with shared variable internal parameters.
+
+        :type rng: numpy.random.RandomState
+        :param rng: a random number generator used to initialize weights
+
+        :type input: theano.tensor.dtensor4
+        :param input: symbolic image tensor, of shape image_shape
+
+        :type filter_shape: tuple or list of length 4
+        :param filter_shape: (number of filters, num input feature maps,
+                              filter height, filter width)
+
+        :type image_shape: tuple or list of length 4
+        :param image_shape: (batch size, num input feature maps,
+                             image height, image width)
+
+        :type poolsize: tuple or list of length 2
+        :param poolsize: the downsampling (pooling) factor (#rows, #cols)
+        """
+
+        assert image_shape[1] == filter_shape[1]
         self.input = input
 
-    def negative_log_likelihood(self, y):
-        # TODO da li treba nll ili nesto drugo?
-        # mislim da sam ovamo koristio MeanSquaredErr
-        return -T.mean(T.log(self.p_y_given_x)[T.arange(y.shape[0]), y])
+        # there are "num input feature maps * filter height * filter width"
+        # inputs to each hidden unit
+        fan_in = numpy.prod(filter_shape[1:])
+        # each unit in the lower layer receives a gradient from:
+        # "num output feature maps * filter height * filter width" /
+        #   pooling size
+        fan_out = (filter_shape[0] * numpy.prod(filter_shape[2:]) //
+                   numpy.prod(poolsize))
+        # initialize weights with random weights
+        W_bound = numpy.sqrt(6. / (fan_in + fan_out))
+        self.W = theano.shared(
+            numpy.asarray(
+                rng.uniform(low=-W_bound, high=W_bound, size=filter_shape),
+                dtype=theano.config.floatX
+            ),
+            borrow=True
+        )
 
-    def mean_squared_error(self, y):
-        # raise NotImplemented()
-        return T.mean((self.p_y_given_x[T.arange(y.shape[0]), y] - y)**2)
+        # the bias is a 1D tensor -- one bias per output feature map
+        b_values = numpy.zeros((filter_shape[0],), dtype=theano.config.floatX)
+        self.b = theano.shared(value=b_values, borrow=True)
 
+        # convolve input feature maps with filters
+        if zero_pad is None:
+            conv_out = conv2d(
+                input=input,
+                filters=self.W,
+                filter_shape=filter_shape,
+                input_shape=image_shape
+            )
+        else:
+            conv_out = conv2d(
+                input=input,
+                filters=self.W,
+                filter_shape=filter_shape,
+                input_shape=image_shape,
+                border_mode=zero_pad
+            )
 
-class Alexnet(object):
-    def __init__(self, rng, n_out, params=None):
-        self.X = T.tensor4('X')
-        self.Y = T.ivector('Y')
+        # pool each feature map individually, using maxpooling
+        pooled_out = pool.pool_2d(
+            input=conv_out,
+            ds=poolsize,
+            ignore_border=False
+        )
 
-        self.conv1 = ConvLayer('_C1', rng, self.X, (32, 3, 5, 5),
-                               fstrides=(1, 1), zero_pad=(2, 2),
-                               poolsize=(2, 2), activation_fn=relu,
-                               W=None if params is None else params['W_C1'],
-                               b=None if params is None else params['b_C1'])
-        self.conv2 = ConvLayer('_C2', rng, self.conv1.output, (32, 32, 5, 5),
-                               fstrides=(1, 1), zero_pad=(2, 2),
-                               poolsize=(2, 2), activation_fn=relu,
-                               W=None if params is None else params['W_C2'],
-                               b=None if params is None else params['b_C2'])
-        self.conv3 = ConvLayer('_C3', rng, self.conv2.output, (64, 32, 5, 5),
-                               fstrides=(1, 1), zero_pad=(2, 2),
-                               poolsize=(2, 2), activation_fn=relu,
-                               W=None if params is None else params['W_C3'],
-                               b=None if params is None else params['b_C3'])
-        nin = 64*4*4
-        # NOTE provereno, reshape se ponasa kako treba.
-        reshaped_conv_out = T.reshape(self.conv3.output, (-1, nin))
-        self.fc64 = FullyConnectedLayer('_F1', rng, reshaped_conv_out, nin, 64,
-                                        activation_fn=relu,
-                                        W=None if params is None else params['W_F1'],
-                                        b=None if params is None else params['b_F1'])
-        self.fc10 = FullyConnectedLayer('_F2', rng, self.fc64.output, 64, 10,
-                                        activation_fn=relu,
-                                        W=None if params is None else params['W_F2'],
-                                        b=None if params is None else params['b_F2'])
-        self.layer3 = SoftmaxLayer('_S1', rng, self.fc10.output, 10, n_out,
-                                   W=None if params is None else params['W_S1'],
-                                   b=None if params is None else params['b_S1'])
-        # NOTE koristim mean squared error jer neg.log likelihood ne mogu sad
-        # da implementiram u shaderrideru zbog ogranicenog indeksiranja?
-        self.cost = self.layer3.mean_squared_error(self.Y)
-        self.error = T.mean(T.neq(self.layer3.y_pred, self.Y))
-        self.params = self.conv1.params + self.conv2.params + \
-            self.conv3.params + self.fc64.params + self.fc10.params + \
-            self.layer3.params
-        self.prev_grad = None
-        self.grads = T.grad(self.cost, self.params)
-        # TODO ovde kreirati theano funkcije za trening, validaciju i test...
-        self.testf = theano.function([self.X, self.Y], self.error)
+        # add the bias term. Since the bias is a vector (1D array), we first
+        # reshape it to a tensor of shape (1, n_filters, 1, 1). Each bias will
+        # thus be broadcasted across mini-batches and feature map
+        # width & height
+        #self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+        self.output = relu(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+        # TODO ReLU umesto tanh?
 
-    def get_trainf(self, learning_rate=0.01):
-        # NOTE bez momentuma jer ni u shaderrider verziji realno nije koriscen
-        # X = T.tensor4('X')
-        # Y = T.ivector('Y')
-        updates = [(param_i, param_i - learning_rate*grad_i)
-                   for param_i, grad_i in zip(self.params, self.grads)]
-        trainf = theano.function([self.X, self.Y], self.cost, updates=updates)
-        return trainf
+        # store parameters of this layer
+        self.params = [self.W, self.b]
 
-    def test(self, X, Y):
-        return self.testf(X, Y)
+        # keep track of model input
+        self.input = input
 
 
-def load_net(q, netf):
-    with open(netf, 'rb') as f:
-        params = cPickle.load(f)
-        return params
-    raise ValueError('unable to load the specified net')
+def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
+                    dataset='mnist.pkl.gz', batch_size=500):
+    nkerns = [32, 32, 64]
+    #rng = numpy.random.RandomState(1234)
+    rng = numpy.random.RandomState()
 
+    datasets = load_data(dataset)
 
-def save_net(nnet, netf):
-    ps = []
-    for param in nnet.params:
-        ps.append((param.name, param.get_value()))  # TODO borrow maybe?
-    with open(netf, 'wb') as f:
-        cPickle.dump(dict(ps), f)
+    train_set_x, train_set_y = datasets[0]
+    valid_set_x, valid_set_y = datasets[1]
+    test_set_x, test_set_y = datasets[2]
 
+    # compute number of minibatches for training, validation and testing
+    n_train_batches = train_set_x.get_value(borrow=True).shape[0]
+    n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
+    n_test_batches = test_set_x.get_value(borrow=True).shape[0]
+    n_train_batches //= batch_size
+    n_valid_batches //= batch_size
+    n_test_batches //= batch_size
 
-def load_cifar(file):
-    fo = open(file, 'rb')
-    dictionary = cPickle.load(fo)
-    fo.close()
-    return dictionary
+    # allocate symbolic variables for the data
+    index = T.lscalar()  # index to a [mini]batch
 
+    # start-snippet-1
+    x = T.matrix('x')   # the data is presented as rasterized images
+    y = T.ivector('y')  # the labels are presented as 1D vector of
+                        # [int] labels
 
-def main():
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument('--params', help='saved network parameters')
-    argparser.add_argument('-v', '--validate', action='store_true',
-                           help='use the last batch as validation set')
-    args = argparser.parse_args()
+    ######################
+    # BUILD ACTUAL MODEL #
+    ######################
+    print '... building the model'
 
-    net_params = None
-    if args.params:
-        net_params = load_net(args.params)
-    rng = np.random.RandomState(1234)
-    anet = Alexnet(rng, 10, params=net_params)
+    layer0_input = x.reshape((batch_size, 3, 32, 32))
 
-    db1 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
-    db2 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_2')
-    db3 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_3')
-    db4 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_4')
-    db5 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_5')
-    tdb = load_cifar('/home/petar/datasets/cifar-10-batches-py/test_batch')
-    X1 = db1['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    Y1 = db1['labels']
-    trainY1 = np.asarray(Y1, dtype=np.int32)    # pd.get_dummies(Y1).values.astype(np.int32)
-    X2 = db2['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    Y2 = db2['labels']
-    trainY2 = np.asarray(Y2, dtype=np.int32)    # pd.get_dummies(Y2).values.astype(np.int32)
-    X3 = db3['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    Y3 = db3['labels']
-    trainY3 = np.asarray(Y3, dtype=np.int32)    # pd.get_dummies(Y3).values.astype(np.int32)
-    X4 = db4['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    Y4 = db4['labels']
-    trainY4 = np.asarray(Y4, dtype=np.int32)    # pd.get_dummies(Y4).values.astype(np.int32)
-    X5 = db5['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    Y5 = db5['labels']
-    trainY5 = np.asarray(Y5, dtype=np.int32)    # pd.get_dummies(Y5).values.astype(np.int32)
-    validY = np.asarray(Y5, dtype=np.int32)
+    layer0 = LeNetConvPoolLayer(
+        rng,
+        input=layer0_input,
+        image_shape=(batch_size, 3, 32, 32),
+        filter_shape=(nkerns[0], 3, 5, 5),
+        poolsize=(2, 2),
+        zero_pad=2
+    )
 
-    tX = tdb['data'].reshape(-1, 3, 32, 32).astype(np.float32)/255.0
-    tY = np.asarray(tdb['labels'], dtype=np.int32)
+    layer1 = LeNetConvPoolLayer(
+        rng,
+        input=layer0.output,
+        image_shape=(batch_size, nkerns[0], 16, 16),
+        filter_shape=(nkerns[1], nkerns[0], 5, 5),
+        poolsize=(2, 2),
+        zero_pad=2
+    )
 
-    n_epochs = 10
-    batch_size = 128
-    n_train_batches = trainY1.shape[0]/batch_size
-    n_valid_batches = trainY5.shape[0]/batch_size
-    n_test_batches = tY.shape[0]/batch_size
+    # TODO raspisati dimenzije slika i filtera kroz layere
+    layer2 = LeNetConvPoolLayer(
+        rng,
+        input=layer1.output,
+        image_shape=(batch_size, nkerns[1], 8, 8),
+        filter_shape=(nkerns[2], nkerns[1], 5, 5),
+        poolsize=(2, 2),
+        zero_pad=2
+    )
+
+    layer3_input = layer2.output.flatten(2)
+
+    # construct a fully-connected sigmoidal layer
+    layer3 = HiddenLayer(
+        rng,
+        input=layer3_input,
+        n_in=nkerns[2] * 4 * 4,
+        n_out=64,
+        activation=relu
+    )
+
+    layer4 = HiddenLayer(
+        rng,
+        input=layer3.output,
+        n_in=64,
+        n_out=10,
+        activation=relu
+    )
+
+    # classify the values of the fully-connected sigmoidal layer
+    layer5 = LogisticRegression(input=layer4.output, n_in=10, n_out=10)
+
+    # the cost we minimize during training is the NLL of the model
+    cost = layer5.negative_log_likelihood(y)
+    # cost = layer5.mean_squared_error(y)
+
+    # create a function to compute the mistakes that are made by the model
+    test_model = theano.function(
+        [index],
+        layer5.errors(y),
+        givens={
+            x: test_set_x[index * batch_size: (index + 1) * batch_size],
+            y: test_set_y[index * batch_size: (index + 1) * batch_size]
+        }
+    )
+
+    validate_model = theano.function(
+        [index],
+        layer5.errors(y),
+        givens={
+            x: valid_set_x[index * batch_size: (index + 1) * batch_size],
+            y: valid_set_y[index * batch_size: (index + 1) * batch_size]
+        }
+    )
+
+    # create a list of all model parameters to be fit by gradient descent
+    params = layer5.params + layer4.params + layer3.params + layer2.params + \
+        layer1.params + layer0.params
+
+    # create a list of gradients for all model parameters
+    grads = T.grad(cost, params)
+
+    # train_model is a function that updates the model parameters by
+    # SGD Since this model has many parameters, it would be tedious to
+    # manually create an update rule for each model parameter. We thus
+    # create the updates list by automatically looping over all
+    # (params[i], grads[i]) pairs.
+    updates = [
+        (param_i, param_i - learning_rate * grad_i)
+        for param_i, grad_i in zip(params, grads)
+    ]
+
+    updates_slow = [
+        (param_i, param_i - learning_rate/10 * grad_i)
+        for param_i, grad_i in zip(params, grads)
+    ]
+
+    updates_slower = [
+        (param_i, param_i - learning_rate/100 * grad_i)
+        for param_i, grad_i in zip(params, grads)
+    ]
+
+    train_model = theano.function(
+        [index],
+        cost,
+        updates=updates,
+        givens={
+            x: train_set_x[index * batch_size: (index + 1) * batch_size],
+            y: train_set_y[index * batch_size: (index + 1) * batch_size]
+        }
+    )
+    
+    train_model_slow = theano.function(
+        [index],
+        cost,
+        updates=updates_slow,
+        givens={
+            x: train_set_x[index * batch_size: (index + 1) * batch_size],
+            y: train_set_y[index * batch_size: (index + 1) * batch_size]
+        }
+
+    )
+
+    train_model_slower = theano.function(
+        [index],
+        cost,
+        updates=updates_slower,
+        givens={
+            x: train_set_x[index * batch_size: (index + 1) * batch_size],
+            y: train_set_y[index * batch_size: (index + 1) * batch_size]
+        }
+
+    )
+    # end-snippet-1
+
+    ###############
+    # TRAIN MODEL #
+    ###############
+    print '... training'
+    # early-stopping parameters
+    patience = 10000  # look as this many examples regardless
+    patience_increase = 2  # wait this much longer when a new best is
+                           # found
+    improvement_threshold = 0.995  # a relative improvement of this much is
+                                   # considered significant
+    validation_frequency = min(n_train_batches, patience // 2)
+                                  # go through this many
+                                  # minibatche before checking the network
+                                  # on the validation set; in this case we
+                                  # check every epoch
+
+    best_validation_loss = numpy.inf
+    best_iter = 0
+    test_score = 0.
+    start_time = timeit.default_timer()
 
     epoch = 0
-    lrn_rate = 0.01
-    momentum = 0.0
-    trainfn = anet.get_trainf(lrn_rate)
-    while epoch < n_epochs:
-        epoch += 1
-        print 'epoch:', epoch, 'of', n_epochs, 'lr:', lrn_rate, 'm:', momentum
-        for mbi in xrange(n_train_batches):
-            print '\r>training batch', mbi, 'of', n_train_batches,
-            sys.stdout.flush()
-            trainfn(X1[mbi*batch_size:(mbi+1)*batch_size, :],
-                    trainY1[mbi*batch_size:(mbi+1)*batch_size])
-            trainfn(X2[mbi*batch_size:(mbi+1)*batch_size, :],
-                    trainY2[mbi*batch_size:(mbi+1)*batch_size])
-            trainfn(X3[mbi*batch_size:(mbi+1)*batch_size, :],
-                    trainY3[mbi*batch_size:(mbi+1)*batch_size])
-            trainfn(X4[mbi*batch_size:(mbi+1)*batch_size, :],
-                    trainY4[mbi*batch_size:(mbi+1)*batch_size])
-            if not args.validate:
-                trainfn(X5[mbi*batch_size:(mbi+1)*batch_size, :],
-                        trainY5[mbi*batch_size:(mbi+1)*batch_size])
-            if args.validate and mbi % 13 == 0:
-                verr = np.mean([anet.test(X5[vbi*batch_size:(vbi+1)*batch_size],
-                                          validY[vbi*batch_size:(vbi+1)*batch_size])
-                                for vbi in range(n_valid_batches)])
-                print '\rvalidation error:', verr
-        if epoch % 8 == 0 and epoch > 0:
-            lrn_rate /= 10.0
-            # TODO rekreiraj trainf sa novim learning rateom
-        print
-        print '='*70
-    print 'test error:',
-    es = []
-    for mbi in xrange(n_test_batches):
-        er = anet.test(tX[mbi*batch_size:(mbi+1)*batch_size],
-                       tY[mbi*batch_size:(mbi+1)*batch_size])
-        es.append(er)
-    print np.mean([float(e) for e in es])
-    save_net(anet, 'alexnet_cifar.pkl')
+    done_looping = False
+
+    while (epoch < n_epochs) and (not done_looping):
+        epoch = epoch + 1
+        for minibatch_index in range(n_train_batches):
+
+            iter = (epoch - 1) * n_train_batches + minibatch_index
+
+            if iter % 100 == 0:
+                print 'training @ iter = ', iter
+            if epoch < n_epochs*0.3:
+                cost_ij = train_model(minibatch_index)
+            elif n_epochs*0.3 < epoch < n_epochs*0.6:
+                cost_ij = train_model_slow(minibatch_index)
+            else:
+                cost_ij = train_model_slower(minibatch_index)
+
+            if (iter + 1) % validation_frequency == 0:
+
+                # compute zero-one loss on validation set
+                validation_losses = [validate_model(i) for i
+                                     in range(n_valid_batches)]
+                this_validation_loss = numpy.mean(validation_losses)
+                print 'epoch %i, minibatch %i/%i, validation error %f %%' % \
+                      (epoch, minibatch_index + 1, n_train_batches,
+                       this_validation_loss * 100.)
+
+                # if we got the best validation score until now
+                if this_validation_loss < best_validation_loss:
+
+                    #improve patience if loss improvement is good enough
+                    if this_validation_loss < best_validation_loss *  \
+                       improvement_threshold:
+                        patience = max(patience, iter * patience_increase)
+
+                    # save best validation score and iteration number
+                    best_validation_loss = this_validation_loss
+                    best_iter = iter
+
+                    # test it on the test set
+                    test_losses = [
+                        test_model(i)
+                        for i in range(n_test_batches)
+                    ]
+                    test_score = numpy.mean(test_losses)
+                    print ('     epoch %i, minibatch %i/%i, test error of '
+                           'best model %f %%') % \
+                          (epoch, minibatch_index + 1, n_train_batches,
+                           test_score * 100.)
+
+            # if patience <= iter:
+            #     done_looping = True
+            #     break
+
+    end_time = timeit.default_timer()
+    print 'Optimization complete.'
+    print 'Best validation score of %f %% obtained at iteration %i, ' \
+          'with test performance %f %%' % \
+          (best_validation_loss * 100., best_iter + 1, test_score * 100.)
+    print >>sys.stderr, ('The code for file ' +
+                         os.path.split(__file__)[1] +
+                         ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
 
 if __name__ == '__main__':
-    main()
+    lr = 0.01
+    nep = 10
+    batchs = 128
+    print 'rand_init relu relu relu relu relu softmax'
+    print 'Learning rate: %f, n epochs: %d, batch size: %d' % (lr, nep, batchs)
+    evaluate_lenet5(learning_rate=lr, n_epochs=nep, batch_size=batchs,
+                    dataset='/home/petarj/cifar_compact2.pkl')
+
+
+def experiment(state, channel):
+    evaluate_lenet5(state.learning_rate, dataset=state.dataset)
