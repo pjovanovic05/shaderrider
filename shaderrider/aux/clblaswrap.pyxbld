@@ -1,20 +1,23 @@
 def make_ext(modname, pyxfilename):
     from distutils.extension import Extension
     import platform
-    lddir = '-L/opt/clBLAS/lib64'
-    idir = '-I/opt/clBLAS/include -I/opt/AMDAPPSDK-3.0/include'
+    #lddir = '-L/opt/clBLAS/lib64'
+    #idir = '-I/opt/clBLAS/include -I/opt/AMDAPPSDK-3.0/include'
     clopts = []
     if platform.system() == 'Darwin':
-        lddir = '-L/usr/local/Cellar/clblas/2.6/lib'
-        idir = '-I/usr/local/Cellar/clblas/2.6/include'
+        lddir = ['-L/usr/local/Cellar/clblas/2.12/lib']
+        idir = ['-I/usr/local/Cellar/clblas/2.12/include']
         clopts = ['-framework', 'OpenCL']
     elif platform.system() == 'Linux':
-        clopts = ['-L/opt/AMDAPPSDK-3.0/lib/x86_64', '-lOpenCL']
+        #clopts = ['-L/opt/AMDAPPSDK-3.0/lib/x86_64', '-lOpenCL']
+        clopts = ['-lOpenCL']
+        lddir = []
+        idir = []
 
     ext = Extension(name=modname,
                     sources=[pyxfilename],
-                    extra_compile_args=[idir],
-                    extra_link_args=[lddir, '-lclBLAS'] + clopts)
+                    extra_compile_args=idir,
+                    extra_link_args=lddir + ['-lclBLAS'] + clopts)
     return ext
 
 
