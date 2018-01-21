@@ -141,7 +141,7 @@ class Alexnet(object):
 
     def train(self, X, Y, learning_rate=0.01, momentum=0.0):
         # self.do1.test = False
-        val = pl.valuation()
+        val = pl.valuation()    # TODO Ovo uzrokuje trasfere
         val['X'] = X
         val['Y'] = Y
         for name, value in self.params:
