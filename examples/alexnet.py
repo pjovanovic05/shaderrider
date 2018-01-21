@@ -210,7 +210,7 @@ def main():
                            help='use last batch as validation set')
     args = argparser.parse_args()
 
-    net_params=None
+    net_params = None
     if args.params:
         net_params = load_net(q, args.params)
 
@@ -243,6 +243,9 @@ def main():
     tX = tdb['data'].reshape(-1, 3, 32, 32).astype(np.float32)/255.0
     tY = np.asarray(tdb['labels'], dtype=np.float32)
 
+    X = np.concatenate((X1, X2, X3, X4, X5), axis=0)
+    Y = np.concatenate((trainY1, trainY2, trainY3, trainY4, trainY5), axis=0)
+
     n_epochs = 10
     batch_size = 128
     n_train_batches = trainY1.shape[0] / batch_size
@@ -251,6 +254,14 @@ def main():
 
     print 'starting training...'
     start_time = timeit.default_timer()
+
+    # TODO preload batches into GPU memory
+    X_batches = []
+    Y_batches = []
+    for minibatch_index in xrange(n_train_batches):
+        # TODO ovo treba da se kopira u clarray.Array (trebace i command queue za to)
+        X_batches.append(X[minibatch_index*batch_size:(minibatch_index+1)*batch_size])
+        Y_batches.append(Y[minibatch_index*batch_size:(minibatch_index+1)*batch_size])
 
     epoch = 0
     lrn_rate = 0.01
