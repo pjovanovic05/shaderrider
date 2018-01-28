@@ -243,7 +243,7 @@ def main():
     # tX = tdb['data'].reshape(-1, 3, 32, 32).astype(np.float32)/255.0
     # tY = np.asarray(tdb['labels'], dtype=np.float32)
 
-    with open('/home/petarj/datasets/cifar-10.pkl', 'rb') as f:
+    with open('/home/petar/datasets/cifar-10.pkl', 'rb') as f:
         [(X, Y), (testX, testY)] = cPickle.load(f)
 
     n_epochs = 10
