@@ -270,7 +270,7 @@ def main():
         X_batches.append(clarray.to_device(pl.qs[0],
                          X[minibatch_index*batch_size:(minibatch_index+1)*batch_size]))
         Y_batches.append(clarray.to_device(pl.qs[0],
-                         Y[minibatch_index*batch_size:(minibatch_index+1)*batch_size]))
+                         pd.get_dummies(Y[minibatch_index*batch_size:(minibatch_index+1)*batch_size])).values.astype(np.float32))
     for minibatch_index in xrange(n_train_batches, n_train_batches+n_valid_batches):
         X_validbs.append(clarray.to_device(pl.qs[0],
                          X[minibatch_index*batch_size:(minibatch_index+1)*batch_size]))
