@@ -308,7 +308,7 @@ def main():
             #                trainY5[mbi*batch_size:(mbi+1)*batch_size, :],
             #                lrn_rate, momentum)
             anet.train(X_batches[mbi], Y_batches[mbi], lrn_rate, momentum)
-            if args.validate and mbi % 13 == 0:
+            if args.validate and mbi % 65 == 0:
                 # verr = np.mean([float(anet.test(X5[vbi*batch_size:(vbi+1)*batch_size],
                 #                                 validY[vbi*batch_size:(vbi+1)*batch_size]))
                 #                 for vbi in range(n_valid_batches)])
@@ -325,8 +325,7 @@ def main():
     print 'test error:',
     es = []
     for mbi in xrange(n_test_batches):
-        er = anet.test(X_test[mbi*batch_size:(mbi+1)*batch_size],
-                       Y_test[mbi*batch_size:(mbi+1)*batch_size])
+        er = anet.test(X_test[mbi], Y_test[mbi])
 
         # print 'test batch', mbi, 'error:', er
         es.append(er)
