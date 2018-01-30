@@ -217,32 +217,6 @@ def main():
     rng = np.random.RandomState(1234)
     anet = Alexnet(rng, 10, params=net_params)
 
-    # db1 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_1')
-    # db2 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_2')
-    # db3 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_3')
-    # db4 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_4')
-    # db5 = load_cifar('/home/petar/datasets/cifar-10-batches-py/data_batch_5')
-    # tdb = load_cifar('/home/petar/datasets/cifar-10-batches-py/test_batch')
-    # X1 = db1['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    # Y1 = db1['labels']
-    # trainY1 = pd.get_dummies(Y1).values.astype(np.float32)
-    # X2 = db2['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    # Y2 = db2['labels']
-    # trainY2 = pd.get_dummies(Y2).values.astype(np.float32)
-    # X3 = db3['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    # Y3 = db3['labels']
-    # trainY3 = pd.get_dummies(Y3).values.astype(np.float32)
-    # X4 = db4['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    # Y4 = db4['labels']
-    # trainY4 = pd.get_dummies(Y4).values.astype(np.float32)
-    # X5 = db5['data'].reshape(10000, 3, 32, 32).astype(np.float32)/255.0
-    # Y5 = db5['labels']
-    # trainY5 = pd.get_dummies(Y5).values.astype(np.float32)
-    # validY = np.asarray(Y5, dtype=np.float32)
-    #
-    # tX = tdb['data'].reshape(-1, 3, 32, 32).astype(np.float32)/255.0
-    # tY = np.asarray(tdb['labels'], dtype=np.float32)
-
     with open('/home/petar/datasets/cifar-10.pkl', 'rb') as f:
         [(X, Y), (testX, testY)] = cPickle.load(f)
 
@@ -258,7 +232,7 @@ def main():
     print 'starting training...'
     start_time = timeit.default_timer()
 
-    # TODO preload batches into GPU memory
+    # preload batches into GPU memory
     X_batches = []
     Y_batches = []
     X_validbs = []
@@ -266,7 +240,6 @@ def main():
     X_test = []
     Y_test = []
     for minibatch_index in xrange(n_train_batches):
-        # TODO ovo treba da se kopira u clarray.Array (trebace i command queue za to)
         X_batches.append(clarray.to_device(pl.qs[0],
                          X[minibatch_index*batch_size:(minibatch_index+1)*batch_size]))
         Y_batches.append(clarray.to_device(pl.qs[0],
@@ -291,27 +264,8 @@ def main():
         for mbi in xrange(n_train_batches):
             print '\r>training batch', mbi, 'of', n_train_batches,
             sys.stdout.flush()
-            # anet.train(X1[mbi*batch_size:(mbi+1)*batch_size, :],
-            #            trainY1[mbi*batch_size:(mbi+1)*batch_size, :],
-            #            lrn_rate, momentum)
-            # anet.train(X2[mbi*batch_size:(mbi+1)*batch_size, :],
-            #            trainY2[mbi*batch_size:(mbi+1)*batch_size, :],
-            #            lrn_rate, momentum)
-            # anet.train(X3[mbi*batch_size:(mbi+1)*batch_size, :],
-            #            trainY3[mbi*batch_size:(mbi+1)*batch_size, :],
-            #            lrn_rate, momentum)
-            # anet.train(X4[mbi*batch_size:(mbi+1)*batch_size, :],
-            #            trainY4[mbi*batch_size:(mbi+1)*batch_size, :],
-            #            lrn_rate, momentum)
-            # if not args.validate:
-            #     anet.train(X5[mbi*batch_size:(mbi+1)*batch_size, :],
-            #                trainY5[mbi*batch_size:(mbi+1)*batch_size, :],
-            #                lrn_rate, momentum)
             anet.train(X_batches[mbi], Y_batches[mbi], lrn_rate, momentum)
             if args.validate and mbi % 65 == 0:
-                # verr = np.mean([float(anet.test(X5[vbi*batch_size:(vbi+1)*batch_size],
-                #                                 validY[vbi*batch_size:(vbi+1)*batch_size]))
-                #                 for vbi in range(n_valid_batches)])
                 verr = np.mean([float(anet.test(X_validbs[vbi],
                                                 Y_validbs[vbi]))
                                 for vbi in range(n_valid_batches)])
