@@ -8,6 +8,6 @@ syntax: glob
 **/*.o
 **/*.so
 **/*.orig
-**/*.gz
+#**/*.gz
 shaderrider/aux/clblaswrap.c
 shaderrider/aux/clblaswrap.pyxbldc
